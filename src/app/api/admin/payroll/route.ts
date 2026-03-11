@@ -1,0 +1,215 @@
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+// GET - List all payroll records
+export async function GET(request: Request) {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user || user.role !== "ADMIN") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search") || "";
+    const status = searchParams.get("status") || "";
+    const employeeId = searchParams.get("employeeId") || "";
+    const month = searchParams.get("month") || "";
+    const year = searchParams.get("year") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
+
+    // Build search filter
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { paymentId: { contains: search, mode: "insensitive" as const } },
+        {
+          employee: {
+            OR: [
+              { firstName: { contains: search, mode: "insensitive" as const } },
+              { lastName: { contains: search, mode: "insensitive" as const } },
+              { cpf: { contains: search, mode: "insensitive" as const } },
+              { employeeId: { contains: search, mode: "insensitive" as const } },
+            ],
+          },
+        },
+      ];
+    }
+
+    if (status && status !== "ALL") {
+      where.status = status;
+    }
+
+    if (employeeId) {
+      where.employeeId = employeeId;
+    }
+
+    if (month) {
+      where.referenceMonth = parseInt(month);
+    }
+
+    if (year) {
+      where.referenceYear = parseInt(year);
+    }
+
+    const [payrolls, total] = await Promise.all([
+      prisma.payroll.findMany({
+        where,
+        include: {
+          employee: {
+            select: {
+              id: true,
+              employeeId: true,
+              firstName: true,
+              lastName: true,
+              position: true,
+              cpf: true,
+              salary: true,
+            },
+          },
+        },
+        orderBy: {
+          scheduledDate: "desc",
+        },
+        skip,
+        take: limit,
+      }),
+      prisma.payroll.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      data: payrolls,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error: any) {
+    console.error("Error fetching payrolls:", error);
+    return NextResponse.json(
+      { message: error.message || "Erro ao buscar folha de pagamento" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Create new payroll record
+export async function POST(request: Request) {
+  try {
+    const user = await getCurrentUser();
+
+    if (!user || user.role !== "ADMIN") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      employeeId,
+      baseSalary,
+      bonus,
+      deductions,
+      referenceMonth,
+      referenceYear,
+      scheduledDate,
+      notes,
+    } = body;
+
+    // Validate required fields
+    if (
+      !employeeId ||
+      baseSalary === undefined ||
+      !referenceMonth ||
+      !referenceYear ||
+      !scheduledDate
+    ) {
+      return NextResponse.json(
+        { message: "Campos obrigatórios faltando" },
+        { status: 400 }
+      );
+    }
+
+    // Check if employee exists
+    const employee = await prisma.employee.findUnique({
+      where: { id: employeeId },
+    });
+
+    if (!employee) {
+      return NextResponse.json(
+        { message: "Funcionário não encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Check if payroll already exists for this employee in this period
+    const existingPayroll = await prisma.payroll.findUnique({
+      where: {
+        employeeId_referenceMonth_referenceYear: {
+          employeeId,
+          referenceMonth: parseInt(referenceMonth),
+          referenceYear: parseInt(referenceYear),
+        },
+      },
+    });
+
+    if (existingPayroll) {
+      return NextResponse.json(
+        {
+          message: "Já existe um pagamento para este funcionário neste período",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Calculate total amount
+    const bonusAmount = bonus ? parseFloat(bonus) : 0;
+    const deductionsAmount = deductions ? parseFloat(deductions) : 0;
+    const totalAmount = parseFloat(baseSalary) + bonusAmount - deductionsAmount;
+
+    // Generate unique payment ID
+    const payrollCount = await prisma.payroll.count();
+    const paymentId = `PAY${new Date().getFullYear()}${String(payrollCount + 1).padStart(6, "0")}`;
+
+    // Create payroll
+    const payroll = await prisma.payroll.create({
+      data: {
+        paymentId,
+        employeeId,
+        baseSalary: parseFloat(baseSalary),
+        bonus: bonusAmount,
+        deductions: deductionsAmount,
+        totalAmount,
+        referenceMonth: parseInt(referenceMonth),
+        referenceYear: parseInt(referenceYear),
+        status: "SCHEDULED",
+        scheduledDate: new Date(scheduledDate),
+        notes: notes || null,
+      },
+      include: {
+        employee: {
+          select: {
+            firstName: true,
+            lastName: true,
+            position: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(
+      { message: "Pagamento programado com sucesso", data: payroll },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Error creating payroll:", error);
+    return NextResponse.json(
+      { message: error.message || "Erro ao criar pagamento" },
+      { status: 500 }
+    );
+  }
+}

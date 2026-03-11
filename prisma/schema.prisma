@@ -1,0 +1,1051 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS EXISTENTES (com atualizações)
+// ============================================
+
+enum UserRole {
+  ADMIN
+  PARENT
+  STUDENT
+  TEACHER // 🆕 Adicionado para login de professores
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum PaymentStatus {
+  DRAFT
+  PENDING
+  PAID
+  OVERDUE
+  RENEGOTIATED // 🆕 Para renegociações
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum EmployeeType {
+  TEACHER
+  COORDINATOR
+  ADMINISTRATIVE
+  MAINTENANCE
+  CLEANING
+  CLASSROOM_ASSISTANT
+  HALLWAY_ASSISTANT
+  PSYCHOLOGIST
+  PRINCIPAL
+  STAFF
+  ADMIN
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+enum BillingType {
+  TUITION
+  MATERIAL
+  EVENT
+  OTHER
+}
+
+enum RecurrenceType {
+  NONE
+  MONTHLY
+  QUARTERLY
+  ANNUALLY
+}
+
+enum PayrollStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================
+// 🆕 NOVOS ENUMS - MÓDULOS AVANÇADOS
+// ============================================
+
+enum EnrollmentRequestStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum GuardianType {
+  FINANCIAL    // Responsável Financeiro
+  PEDAGOGICAL  // Responsável Pedagógico
+  BOTH         // Ambos
+}
+
+enum ReminderType {
+  EMAIL
+  WHATSAPP
+  SMS
+  SYSTEM
+}
+
+enum ReminderStatus {
+  SENT
+  DELIVERED
+  FAILED
+  OPENED
+}
+
+enum OccurrenceType {
+  BEHAVIORAL  // Comportamento
+  ACADEMIC    // Acadêmico
+  HEALTH      // Saúde
+  ATTENDANCE  // Frequência
+  POSITIVE    // Elogio/Reconhecimento
+  OTHER
+}
+
+enum OccurrenceSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum DocumentType {
+  ENROLLMENT_DECLARATION // Declaração de Matrícula
+  SERVICE_CONTRACT       // Contrato de Prestação de Serviços
+  ACADEMIC_TRANSCRIPT    // Histórico Escolar
+  CONDUCT_CERTIFICATE    // Atestado de Conduta
+  ENROLLMENT_CERTIFICATE // Certificado de Matrícula
+  CUSTOM                 // Personalizado
+}
+
+// ============================================
+// MODELOS PRINCIPAIS (Core)
+// ============================================
+
+// Core User Model
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  role      UserRole
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  student       Student?
+  parent        Parent?
+  employee      Employee?
+  accounts      Account[]
+  sessions      Session[]
+  notifications Notification[]
+
+  @@index([email])
+  @@index([role])
+}
+
+// Student Model
+model Student {
+  id        String @id @default(cuid())
+  studentId String @unique
+  userId    String @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstName      String
+  lastName       String
+  dateOfBirth    DateTime
+  gender         Gender
+  address        String
+  phoneNumber    String?
+  gradeLevel     String
+  section        String
+  enrollmentDate DateTime @default(now())
+  profilePhoto   String?
+
+  parentId String?
+  parent   Parent? @relation(fields: [parentId], references: [id])
+
+  // Relations existentes
+  enrollments Enrollment[]
+  grades      Grade[]
+  attendance  Attendance[]
+  tuitions    Tuition[]
+  reports     AcademicReport[]
+
+  // 🆕 Novos relacionamentos - Módulos Avançados
+  enrollmentRequest     EnrollmentRequest?
+  guardianRelationships GuardianRelationship[]
+  assessments           Assessment[]
+  attendanceRecords     AttendanceRecord[]
+  occurrences           Occurrence[]
+  generatedDocuments    GeneratedDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([parentId])
+  @@index([gradeLevel, section])
+}
+
+// Parent Model
+model Parent {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstName   String
+  lastName    String
+  phoneNumber String
+  address     String
+  occupation  String?
+  cpf         String? @unique
+  email       String?
+
+  // 🆕 Novo campo - Módulo 3
+  whatsappNumber String?
+
+  // Relations existentes
+  students Student[]
+  billings Billing[]
+
+  // 🆕 Novos relacionamentos - Módulos Avançados
+  guardianRelationships GuardianRelationship[]
+  financialContacts     FinancialContact[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cpf])
+}
+
+// Employee Model
+model Employee {
+  id         String @id @default(cuid())
+  employeeId String @unique
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime
+  gender       Gender
+  phoneNumber  String
+  address      String
+  employeeType EmployeeType
+  position     String
+  department   String?
+  salary       Float
+  hireDate     DateTime     @default(now())
+  profilePhoto String?
+  cpf          String?      @unique
+  pixKey       String?
+  bankName     String?
+  bankAgency   String?
+  bankAccount  String?
+
+  // Relations
+  teacher  Teacher?
+  payrolls Payroll[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([employeeType])
+  @@index([cpf])
+}
+
+// Teacher Model (extends Employee)
+model Teacher {
+  id         String   @id @default(cuid())
+  employeeId String   @unique
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  qualification  String
+  specialization String
+  experience     Int // years of experience
+
+  // Relations existentes
+  subjects TeacherSubject[]
+  grades   Grade[]
+
+  // 🆕 Novos relacionamentos - Módulo 2
+  assessments       Assessment[]
+  attendanceRecords AttendanceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+}
+
+// Subject Model
+model Subject {
+  id          String  @id @default(cuid())
+  name        String
+  code        String  @unique
+  description String?
+  gradeLevel  String
+  creditHours Int     @default(3)
+
+  // Relations existentes
+  teachers TeacherSubject[]
+  grades   Grade[]
+
+  // 🆕 Novos relacionamentos - Módulo 2
+  assessments       Assessment[]
+  attendanceRecords AttendanceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([gradeLevel])
+  @@index([code])
+}
+
+// Teacher-Subject Assignment (Many-to-Many)
+model TeacherSubject {
+  id        String  @id @default(cuid())
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([teacherId, subjectId])
+  @@index([teacherId])
+  @@index([subjectId])
+}
+
+// Class Model
+model Class {
+  id           String  @id @default(cuid())
+  name         String
+  gradeLevel   String
+  section      String
+  academicYear String
+  roomNumber   String?
+  schedule     String?
+  capacity     Int?
+
+  // Relations existentes
+  enrollments Enrollment[]
+
+  // 🆕 Novos relacionamentos - Módulo 2
+  assessments       Assessment[]
+  attendanceRecords AttendanceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([gradeLevel, section, academicYear])
+  @@index([gradeLevel, section])
+}
+
+// Enrollment Model (Student-Class relationship)
+model Enrollment {
+  id        String  @id @default(cuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId   String
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  enrolledAt DateTime @default(now())
+
+  @@unique([studentId, classId])
+  @@index([studentId])
+  @@index([classId])
+}
+
+// ============================================
+// FINANCEIRO (Existente)
+// ============================================
+
+// Tuition Plan Model
+model TuitionPlan {
+  id           String       @id @default(cuid())
+  name         String
+  gradeLevel   String
+  amount       Float
+  billingCycle BillingCycle
+  description  String?
+  isActive     Boolean      @default(true)
+
+  // Relations
+  tuitions Tuition[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([gradeLevel])
+}
+
+// Tuition/Invoice Model
+model Tuition {
+  id            String  @id @default(cuid())
+  invoiceNumber String  @unique
+  studentId     String
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  planId String
+  plan   TuitionPlan @relation(fields: [planId], references: [id])
+
+  amount        Float
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        PaymentStatus @default(PENDING)
+  paymentMethod String?
+  transactionId String?
+
+  discountId     String?
+  discount       Discount? @relation(fields: [discountId], references: [id])
+  discountAmount Float     @default(0)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceNumber])
+}
+
+// Discount Model
+model Discount {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  name        String
+  type        DiscountType
+  value       Float // percentage (0-100) or fixed amount
+  maxUses     Int? // null = unlimited
+  usedCount   Int          @default(0)
+  validFrom   DateTime
+  validUntil  DateTime
+  isActive    Boolean      @default(true)
+  description String?
+
+  // Relations
+  tuitions Tuition[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+}
+
+// Billing Model (Contas a Receber)
+model Billing {
+  id            String         @id @default(cuid())
+  invoiceNumber String         @unique
+  parentId      String
+  parent        Parent         @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  type          BillingType
+  description   String
+  amount        Float
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        PaymentStatus  @default(PENDING)
+  isRecurring   Boolean        @default(false)
+  recurrence    RecurrenceType @default(NONE)
+  nextBillingDate DateTime?
+  paymentMethod String?
+  transactionId String?
+  notes         String?
+
+  // 🆕 Novos relacionamentos - Módulo 3
+  reminders      PaymentReminder[]
+  renegotiations PaymentRenegotiation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceNumber])
+}
+
+// Payroll Model (Folha de Pagamento)
+model Payroll {
+  id             String        @id @default(cuid())
+  paymentId      String        @unique
+  employeeId     String
+  employee       Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  baseSalary     Float
+  bonus          Float         @default(0)
+  deductions     Float         @default(0)
+  totalAmount    Float
+  referenceMonth Int
+  referenceYear  Int
+  status         PayrollStatus @default(SCHEDULED)
+  scheduledDate  DateTime
+  paidDate       DateTime?
+  paymentMethod  String?
+  transactionId  String?
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, referenceMonth, referenceYear])
+  @@index([employeeId])
+  @@index([status])
+  @@index([scheduledDate])
+}
+
+// Expense Model
+model Expense {
+  id            String   @id @default(cuid())
+  category      String
+  description   String
+  amount        Float
+  date          DateTime
+  paymentMethod String?
+  receiptUrl    String?
+  approvedBy    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([category])
+}
+
+// ============================================
+// ACADÊMICO (Existente)
+// ============================================
+
+// Grade Model (mantido para compatibilidade)
+model Grade {
+  id        String  @id @default(cuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+
+  term         String
+  academicYear String
+  score        Float
+  maxScore     Float   @default(100)
+  grade        String // A, B, C, etc.
+  remarks      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, subjectId, term, academicYear])
+  @@index([studentId])
+  @@index([subjectId])
+  @@index([term])
+}
+
+// Attendance Model (mantido para compatibilidade)
+model Attendance {
+  id        String  @id @default(cuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  date    DateTime
+  status  AttendanceStatus
+  remarks String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, date])
+  @@index([studentId])
+  @@index([date])
+}
+
+// Academic Report Model
+model AcademicReport {
+  id        String  @id @default(cuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  term              String
+  academicYear      String
+  overallGrade      String
+  gpa               Float
+  attendance        Float // percentage
+  teacherComments   String?
+  principalComments String?
+  reportUrl         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, term, academicYear])
+  @@index([studentId])
+}
+
+// ============================================
+// COMUNICAÇÃO (Existente)
+// ============================================
+
+// Announcement Model
+model Announcement {
+  id            String    @id @default(cuid())
+  title         String
+  content       String
+  targetRole    String? // null = all, or specific role
+  targetGrade   String? // null = all grades
+  priority      String    @default("normal") // low, normal, high
+  expiresAt     DateTime?
+  attachmentUrl String?
+  createdBy     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([targetRole])
+}
+
+// Notification Model
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  message   String
+  type      String // payment, grade, announcement, etc.
+  isRead    Boolean @default(false)
+  actionUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// Settings Model (System Configuration)
+model Settings {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  label String
+  type  String @default("text") // text, number, boolean, json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}
+
+// ============================================
+// 🆕 MÓDULO 1: MATRÍCULA DIGITAL
+// ============================================
+
+model EnrollmentRequest {
+  id            String                   @id @default(cuid())
+  requestNumber String                   @unique
+  status        EnrollmentRequestStatus  @default(PENDING)
+
+  // Dados do Aluno
+  studentFirstName String
+  studentLastName  String
+  dateOfBirth      DateTime
+  gender           Gender
+  gradeLevel       String
+  section          String?
+
+  // Dados do Responsável Financeiro
+  financialGuardianFirstName String
+  financialGuardianLastName  String
+  financialGuardianCPF       String
+  financialGuardianPhone     String
+  financialGuardianEmail     String
+
+  // Dados do Responsável Pedagógico
+  pedagogicalGuardianFirstName String?
+  pedagogicalGuardianLastName  String?
+  pedagogicalGuardianCPF       String?
+  pedagogicalGuardianPhone     String?
+  pedagogicalGuardianEmail     String?
+  isSameGuardian               Boolean @default(false)
+
+  // Endereço
+  address String
+  city    String
+  state   String
+  zipCode String
+
+  // Documentos anexos
+  birthCertificateUrl String?
+  cpfUrl              String?
+  proofOfAddressUrl   String?
+  previousSchoolUrl   String?
+
+  // Campos administrativos
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  notes           String?
+
+  // Relacionamento com aluno criado
+  approvedStudentId String?  @unique
+  approvedStudent   Student? @relation(fields: [approvedStudentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([requestNumber])
+  @@index([createdAt])
+}
+
+model GuardianRelationship {
+  id           String       @id @default(cuid())
+  studentId    String
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  parentId     String
+  parent       Parent       @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  guardianType GuardianType
+  isPrimary    Boolean      @default(false)
+  canPickup    Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, parentId, guardianType])
+  @@index([studentId])
+  @@index([parentId])
+}
+
+// ============================================
+// 🆕 MÓDULO 2: GESTÃO ACADÊMICA
+// ============================================
+
+model AssessmentType {
+  id          String  @id @default(cuid())
+  name        String
+  code        String  @unique
+  weight      Float   @default(1.0)
+  maxScore    Float   @default(10.0)
+  description String?
+
+  assessments Assessment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+}
+
+model Assessment {
+  id               String         @id @default(cuid())
+  studentId        String
+  student          Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId        String
+  subject          Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  classId          String
+  class            Class          @relation(fields: [classId], references: [id], onDelete: Cascade)
+  teacherId        String?
+  teacher          Teacher?       @relation(fields: [teacherId], references: [id])
+  assessmentTypeId String
+  assessmentType   AssessmentType @relation(fields: [assessmentTypeId], references: [id])
+
+  term           String
+  academicYear   String
+  score          Float
+  maxScore       Float    @default(10.0)
+  grade          String?
+  remarks        String?
+  assessmentDate DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, subjectId, assessmentTypeId, term, academicYear])
+  @@index([studentId])
+  @@index([subjectId])
+  @@index([classId])
+  @@index([teacherId])
+  @@index([term, academicYear])
+}
+
+model AttendanceRecord {
+  id        String           @id @default(cuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId   String
+  class     Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId String?
+  subject   Subject?         @relation(fields: [subjectId], references: [id])
+  teacherId String?
+  teacher   Teacher?         @relation(fields: [teacherId], references: [id])
+  date      DateTime
+  status    AttendanceStatus
+  remarks   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, classId, date])
+  @@index([studentId])
+  @@index([classId])
+  @@index([subjectId])
+  @@index([date])
+}
+
+// ============================================
+// 🆕 MÓDULO 3: FINANCEIRO AVANÇADO
+// ============================================
+
+model PaymentReminder {
+  id             String         @id @default(cuid())
+  billingId      String
+  billing        Billing        @relation(fields: [billingId], references: [id], onDelete: Cascade)
+  reminderType   ReminderType
+  status         ReminderStatus @default(SENT)
+  recipientName  String
+  recipientEmail String?
+  recipientPhone String?
+  subject        String?
+  message        String
+  templateUsed   String?
+  sentAt         DateTime       @default(now())
+  deliveredAt    DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  errorMessage   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([billingId])
+  @@index([status])
+  @@index([sentAt])
+}
+
+model PaymentRenegotiation {
+  id                 String   @id @default(cuid())
+  billingId          String
+  billing            Billing  @relation(fields: [billingId], references: [id], onDelete: Cascade)
+  originalAmount     Float
+  renegotiatedAmount Float
+  discount           Float    @default(0)
+  installments       Int      @default(1)
+  newDueDate         DateTime
+  renegotiatedBy     String
+  parentApprovedAt   DateTime?
+  reason             String?
+  notes              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([billingId])
+  @@index([createdAt])
+}
+
+model FinancialContact {
+  id              String  @id @default(cuid())
+  parentId        String
+  parent          Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  contactType     String
+  name            String
+  email           String?
+  phoneNumber     String
+  whatsappNumber  String?
+  preferredMethod String  @default("EMAIL")
+  isActive        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([parentId])
+  @@index([contactType])
+}
+
+// ============================================
+// 🆕 MÓDULO 4: PORTAL DE COMUNICAÇÃO
+// ============================================
+
+model Occurrence {
+  id             String             @id @default(cuid())
+  studentId      String
+  student        Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type           OccurrenceType
+  severity       OccurrenceSeverity
+  title          String
+  description    String
+  reportedBy     String
+  reportedByName String
+  date           DateTime           @default(now())
+  actionTaken    String?
+  parentNotified Boolean            @default(false)
+  parentViewedAt DateTime?
+  parentComments String?
+  attachmentUrl  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([type])
+  @@index([severity])
+  @@index([date])
+}
+
+model CommunicationThread {
+  id            String    @id @default(cuid())
+  subject       String
+  senderId      String
+  senderName    String
+  senderRole    String
+  recipientId   String
+  recipientName String
+  recipientRole String
+  lastMessageAt DateTime  @default(now())
+  isArchived    Boolean   @default(false)
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id            String              @id @default(cuid())
+  threadId      String
+  thread        CommunicationThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderId      String
+  senderName    String
+  content       String
+  isRead        Boolean             @default(false)
+  readAt        DateTime?
+  attachmentUrl String?
+
+  createdAt DateTime @default(now())
+
+  @@index([threadId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// ============================================
+// 🆕 MÓDULO 5: GERADOR DE DOCUMENTOS
+// ============================================
+
+model DocumentTemplate {
+  id                 String     @id @default(cuid())
+  name               String
+  type               DocumentType
+  description        String?
+  htmlTemplate       String
+  availableVariables String
+  isActive           Boolean  @default(true)
+
+  generatedDocuments GeneratedDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+}
+
+model GeneratedDocument {
+  id            String           @id @default(cuid())
+  templateId    String
+  template      DocumentTemplate @relation(fields: [templateId], references: [id])
+  studentId     String
+  student       Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type          DocumentType
+  generatedHtml String
+  pdfUrl        String?
+  generatedBy   String
+  generatedAt   DateTime         @default(now())
+  metadata      String?
+
+  createdAt DateTime @default(now())
+
+  @@index([studentId])
+  @@index([type])
+  @@index([generatedAt])
+}
+
+// ============================================
+// NEXTAUTH MODELS
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

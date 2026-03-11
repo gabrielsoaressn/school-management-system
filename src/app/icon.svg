@@ -1,0 +1,24 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Pena elegante -->
+  <path
+    d="M75 15C75 15 65 20 55 30C45 40 35 55 30 65C25 75 22 85 20 90C20 90 18 92 20 94C22 96 24 94 24 94C29 92 39 89 49 84C59 79 74 69 84 59C94 49 99 39 99 39L75 15Z"
+    fill="#000000"
+  />
+  <path
+    d="M20 94C20 94 15 88 12 82C9 76 7 68 8 62C9 56 12 52 12 52"
+    stroke="#000000"
+    stroke-width="2"
+    stroke-linecap="round"
+    opacity="0.6"
+  />
+  <!-- Detalhes da pena -->
+  <path
+    d="M75 15L55 35M65 25L45 45M55 35L35 55M45 45L30 60"
+    stroke="#FFFFFF"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    opacity="0.3"
+  />
+  <!-- Ponto de tinta -->
+  <circle cx="20" cy="94" r="3" fill="#000000" />
+</svg>

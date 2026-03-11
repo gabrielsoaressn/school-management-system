@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ============================================
+       DESIGN SYSTEM - GESTÃO ESCOLAR
+       Paleta Profissional: Azul Corporativo + Neutros
+       ============================================ */
+
+    /* Background Colors */
+    --background: 220 13% 97%;        /* #f8fafc - Off-white sutil */
+    --foreground: 222 47% 11%;        /* #0f172a - Quase preto */
+
+    /* Card & Surfaces */
+    --card: 0 0% 100%;                /* #ffffff - Branco puro */
+    --card-foreground: 222 47% 11%;   /* #0f172a - Texto em cards */
+
+    /* Popover & Dropdown */
+    --popover: 0 0% 100%;             /* #ffffff - Branco */
+    --popover-foreground: 222 47% 11%; /* #0f172a - Texto */
+
+    /* Primary Color (Azul Corporativo) */
+    --primary: 221 83% 40%;           /* #1e40af - Azul marinho moderno */
+    --primary-foreground: 0 0% 100%;  /* #ffffff - Texto branco */
+
+    /* Secondary (Neutro suave) */
+    --secondary: 210 40% 96%;         /* #f1f5f9 - Cinza azulado claro */
+    --secondary-foreground: 222 47% 11%; /* #0f172a - Texto escuro */
+
+    /* Muted (Elementos discretos) */
+    --muted: 210 40% 96%;             /* #f1f5f9 - Cinza claro */
+    --muted-foreground: 215 16% 47%;  /* #64748b - Cinza médio */
+
+    /* Accent (Destaque secundário) */
+    --accent: 217 91% 60%;            /* #3b82f6 - Azul brilhante */
+    --accent-foreground: 0 0% 100%;   /* #ffffff - Texto branco */
+
+    /* Destructive (Erro/Exclusão) */
+    --destructive: 0 84% 60%;         /* #ef4444 - Vermelho suave */
+    --destructive-foreground: 0 0% 100%; /* #ffffff - Texto branco */
+
+    /* Success (Confirmação positiva) */
+    --success: 142 71% 45%;           /* #10b981 - Verde esmeralda */
+    --success-foreground: 0 0% 100%;  /* #ffffff - Texto branco */
+
+    /* Warning (Alerta) */
+    --warning: 38 92% 50%;            /* #f59e0b - Âmbar */
+    --warning-foreground: 0 0% 100%;  /* #ffffff - Texto branco */
+
+    /* Info (Informação) */
+    --info: 217 91% 60%;              /* #3b82f6 - Azul claro */
+    --info-foreground: 0 0% 100%;     /* #ffffff - Texto branco */
+
+    /* Borders & Inputs */
+    --border: 214 32% 91%;            /* #e2e8f0 - Cinza muito claro */
+    --input: 214 32% 91%;             /* #e2e8f0 - Borda de inputs */
+    --ring: 221 83% 40%;              /* #1e40af - Focus ring (azul) */
+
+    /* Border Radius */
+    --radius: 0.5rem;                 /* 8px - Bordas sutis e modernas */
+  }
+
+  .dark {
+    /* Dark Mode (Opcional - mantido para compatibilidade) */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 15%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 215 28% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 28% 17%;
+    --muted-foreground: 217 10% 64%;
+    --accent: 221 83% 40%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Tipografia - Hierarquia Clara */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-foreground;
+    letter-spacing: -0.02em;
+  }
+
+  h1 { @apply text-3xl lg:text-4xl; }
+  h2 { @apply text-2xl lg:text-3xl; }
+  h3 { @apply text-xl lg:text-2xl; }
+  h4 { @apply text-lg; }
+  h5 { @apply text-base; }
+  h6 { @apply text-sm; }
+
+  /* Texto auxiliar */
+  .text-muted {
+    @apply text-muted-foreground;
+  }
+
+  /* Links */
+  a {
+    @apply text-primary hover:underline transition-colors;
+  }
+
+  /* Scroll suave */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar (opcional - webkit apenas) */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground;
+  }
+}
+
+@layer utilities {
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.2s ease-out;
+  }
+}
