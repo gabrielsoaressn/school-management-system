@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 // GET - Get single employee
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -15,7 +16,7 @@ export async function GET(
     }
 
     const employee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         user: {
           select: {
@@ -53,9 +54,10 @@ export async function GET(
 // PUT - Update employee
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -83,7 +85,7 @@ export async function PUT(
 
     // Check if employee exists
     const existingEmployee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { user: true },
     });
 
@@ -112,7 +114,7 @@ export async function PUT(
     const result = await prisma.$transaction(async (tx) => {
       // Update employee
       const updatedEmployee = await tx.employee.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           firstName,
           lastName,
@@ -158,9 +160,10 @@ export async function PUT(
 // DELETE - Delete employee
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -169,7 +172,7 @@ export async function DELETE(
 
     // Check if employee exists
     const employee = await prisma.employee.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         user: true,
         payrolls: true,

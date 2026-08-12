@@ -7,11 +7,12 @@ import bcrypt from 'bcryptjs';
 // GET - Obter detalhes de uma solicitação específica
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const enrollmentRequest = await prisma.enrollmentRequest.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         approvedStudent: {
           include: {
@@ -50,9 +51,10 @@ export async function GET(
 // PUT - Aprovar ou Rejeitar solicitação
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
@@ -66,7 +68,7 @@ export async function PUT(
     const { action, rejectionReason, notes } = body;
 
     const enrollmentRequest = await prisma.enrollmentRequest.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!enrollmentRequest) {
@@ -209,7 +211,7 @@ export async function PUT(
 
         // 8. Atualizar solicitação
         await tx.enrollmentRequest.update({
-          where: { id: params.id },
+          where: { id: id },
           data: {
             status: 'APPROVED',
             reviewedBy: session.user.id,
@@ -231,7 +233,7 @@ export async function PUT(
     } else if (action === 'reject') {
       // Rejeitar solicitação
       await prisma.enrollmentRequest.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           status: 'REJECTED',
           reviewedBy: session.user.id,
@@ -266,9 +268,10 @@ export async function PUT(
 // DELETE - Cancelar solicitação
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
@@ -279,7 +282,7 @@ export async function DELETE(
     }
 
     await prisma.enrollmentRequest.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         status: 'CANCELLED',
       },

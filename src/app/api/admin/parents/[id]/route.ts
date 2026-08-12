@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 // GET - Get single parent
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -15,7 +16,7 @@ export async function GET(
     }
 
     const parent = await prisma.parent.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         user: {
           select: {
@@ -61,9 +62,10 @@ export async function GET(
 // PUT - Update parent
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -84,7 +86,7 @@ export async function PUT(
 
     // Check if parent exists
     const existingParent = await prisma.parent.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: { user: true },
     });
 
@@ -113,7 +115,7 @@ export async function PUT(
     const result = await prisma.$transaction(async (tx) => {
       // Update parent
       const updatedParent = await tx.parent.update({
-        where: { id: params.id },
+        where: { id: id },
         data: {
           firstName,
           lastName,
@@ -152,9 +154,10 @@ export async function PUT(
 // DELETE - Delete parent
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -163,7 +166,7 @@ export async function DELETE(
 
     // Check if parent exists and has students
     const parent = await prisma.parent.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         students: true,
         user: true,

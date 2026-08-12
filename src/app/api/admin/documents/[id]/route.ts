@@ -6,9 +6,10 @@ import { authOptions } from '@/lib/auth';
 // GET - Buscar documento específico
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
@@ -19,7 +20,7 @@ export async function GET(
     }
 
     const document = await prisma.generatedDocument.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         template: true,
         student: {

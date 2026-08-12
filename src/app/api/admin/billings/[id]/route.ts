@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 // GET - Get single billing
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -15,7 +16,7 @@ export async function GET(
     }
 
     const billing = await prisma.billing.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         parent: {
           include: {
@@ -56,9 +57,10 @@ export async function GET(
 // PUT - Update billing
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -82,7 +84,7 @@ export async function PUT(
 
     // Check if billing exists
     const existingBilling = await prisma.billing.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!existingBilling) {
@@ -116,7 +118,7 @@ export async function PUT(
 
     // Update billing
     const updatedBilling = await prisma.billing.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         type,
         description,
@@ -157,9 +159,10 @@ export async function PUT(
 // DELETE - Delete billing
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -168,7 +171,7 @@ export async function DELETE(
 
     // Check if billing exists
     const billing = await prisma.billing.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!billing) {
@@ -191,7 +194,7 @@ export async function DELETE(
 
     // Delete billing
     await prisma.billing.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return NextResponse.json({

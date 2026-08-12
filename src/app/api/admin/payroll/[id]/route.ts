@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 // GET - Get single payroll record
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -15,7 +16,7 @@ export async function GET(
     }
 
     const payroll = await prisma.payroll.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         employee: {
           include: {
@@ -49,9 +50,10 @@ export async function GET(
 // PUT - Update payroll record
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -73,7 +75,7 @@ export async function PUT(
 
     // Check if payroll exists
     const existingPayroll = await prisma.payroll.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!existingPayroll) {
@@ -94,7 +96,7 @@ export async function PUT(
 
     // Update payroll
     const updatedPayroll = await prisma.payroll.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         baseSalary: baseSalary ? parseFloat(baseSalary) : undefined,
         bonus: bonus !== undefined ? parseFloat(bonus) : undefined,
@@ -134,9 +136,10 @@ export async function PUT(
 // DELETE - Delete payroll record
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
@@ -145,7 +148,7 @@ export async function DELETE(
 
     // Check if payroll exists
     const payroll = await prisma.payroll.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!payroll) {
@@ -168,7 +171,7 @@ export async function DELETE(
 
     // Delete payroll
     await prisma.payroll.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return NextResponse.json({
