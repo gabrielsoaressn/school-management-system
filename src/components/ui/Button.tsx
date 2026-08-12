@@ -22,7 +22,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  *
  * Regra UX: Apenas 1 botão primary por tela!
  */
-export default function Button({
+export function Button({
   children,
   variant = "primary",
   size = "md",
@@ -97,3 +97,5 @@ export default function Button({
     </button>
   );
 }
+
+export default Button;

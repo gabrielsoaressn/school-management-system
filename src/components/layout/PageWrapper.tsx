@@ -10,7 +10,7 @@ interface PageWrapperProps {
  * PageWrapper - Container padronizado para conteúdo de páginas
  * Fornece spacing consistente e responsividade
  */
-export default function PageWrapper({
+export function PageWrapper({
   children,
   maxWidth = "2xl",
   className = "",
@@ -32,3 +32,5 @@ export default function PageWrapper({
     </div>
   );
 }
+
+export default PageWrapper;

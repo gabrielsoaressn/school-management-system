@@ -39,10 +39,10 @@ type Billing = {
 };
 
 const STATUS_CONFIG = {
-  PENDING: { label: 'Aberto', color: 'blue' as const },
-  OVERDUE: { label: 'Vencido', color: 'red' as const },
-  PAID: { label: 'Pago', color: 'green' as const },
-  RENEGOTIATED: { label: 'Renegociado', color: 'yellow' as const },
+  PENDING: { label: 'Aberto', variant: 'info' as const },
+  OVERDUE: { label: 'Vencido', variant: 'destructive' as const },
+  PAID: { label: 'Pago', variant: 'success' as const },
+  RENEGOTIATED: { label: 'Renegociado', variant: 'warning' as const },
 };
 
 export default function CollectionPage() {
@@ -380,12 +380,12 @@ Escola Davilla`;
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Badge
-                            color={
+                            variant={
                               severity === 'high'
-                                ? 'red'
+                                ? 'destructive'
                                 : severity === 'medium'
-                                ? 'yellow'
-                                : 'gray'
+                                ? 'warning'
+                                : 'default'
                             }
                           >
                             <Clock className="w-3 h-3 mr-1" />

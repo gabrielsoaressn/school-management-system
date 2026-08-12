@@ -16,7 +16,7 @@ const menuItems: MenuItem[] = [
   { label: "Adicionar Responsável", href: "/admin/financial/parents/new", icon: "👨‍👩‍👧" },
 ];
 
-export default function FloatingAddButton() {
+export function FloatingAddButton() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -66,3 +66,5 @@ export default function FloatingAddButton() {
     </div>
   );
 }
+
+export default FloatingAddButton;

@@ -16,7 +16,7 @@ interface SettingsFormProps {
   settings: Setting[];
 }
 
-export default function SettingsForm({ settings }: SettingsFormProps) {
+export function SettingsForm({ settings }: SettingsFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<Record<string, string>>(
     settings.reduce((acc, setting) => {
@@ -130,3 +130,5 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
     </form>
   );
 }
+
+export default SettingsForm;

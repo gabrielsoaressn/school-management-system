@@ -20,7 +20,7 @@ interface PaginationProps {
  *   onPageChange={(page) => setPage(page)}
  * />
  */
-export default function Pagination({
+export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
@@ -79,3 +79,5 @@ export default function Pagination({
     </div>
   );
 }
+
+export default Pagination;

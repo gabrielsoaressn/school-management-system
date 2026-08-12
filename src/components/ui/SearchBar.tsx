@@ -3,23 +3,31 @@
 import { Search, X } from "lucide-react";
 import { InputHTMLAttributes, useState } from "react";
 
-interface SearchBarProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
-  onSearch: (value: string) => void;
+interface SearchBarProps
+  extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
+  /** Controlled value. When provided, the caller owns the state. */
+  value?: string;
+  /** Fires on every keystroke (controlled mode). */
+  onChange?: (value: string) => void;
+  /** Fires after `debounce` ms of inactivity, and on Enter. */
+  onSearch?: (value: string) => void;
   onClear?: () => void;
   placeholder?: string;
   debounce?: number;
 }
 
 /**
- * SearchBar - Barra de busca moderna com ícone e botão de limpar
+ * SearchBar - Barra de busca com ícone e botão de limpar.
  *
- * Exemplo:
- * <SearchBar
- *   onSearch={(value) => console.log(value)}
- *   placeholder="Buscar alunos..."
- * />
+ * Uncontrolled (debounced search):
+ *   <SearchBar onSearch={(v) => setQuery(v)} placeholder="Buscar alunos..." />
+ *
+ * Controlled (caller owns the value):
+ *   <SearchBar value={query} onChange={setQuery} onSearch={() => fetchList()} />
  */
-export default function SearchBar({
+export function SearchBar({
+  value: controlledValue,
+  onChange,
   onSearch,
   onClear,
   placeholder = "Buscar...",
@@ -27,19 +35,26 @@ export default function SearchBar({
   className = "",
   ...props
 }: SearchBarProps) {
-  const [value, setValue] = useState("");
+  const [internalValue, setInternalValue] = useState("");
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+
+  const isControlled = controlledValue !== undefined;
+  const value = isControlled ? controlledValue : internalValue;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    setValue(newValue);
 
-    // Clear previous timeout
+    if (!isControlled) {
+      setInternalValue(newValue);
+    }
+    onChange?.(newValue);
+
+    if (!onSearch) return;
+
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
 
-    // Set new timeout for debounce
     const newTimeoutId = setTimeout(() => {
       onSearch(newValue);
     }, debounce);
@@ -47,12 +62,21 @@ export default function SearchBar({
     setTimeoutId(newTimeoutId);
   };
 
-  const handleClear = () => {
-    setValue("");
-    onSearch("");
-    if (onClear) {
-      onClear();
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    if (timeoutId) {
+      clearTimeout(timeoutId);
     }
+    onSearch?.(value);
+  };
+
+  const handleClear = () => {
+    if (!isControlled) {
+      setInternalValue("");
+    }
+    onChange?.("");
+    onSearch?.("");
+    onClear?.();
   };
 
   return (
@@ -62,6 +86,7 @@ export default function SearchBar({
         type="text"
         value={value}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={`
           w-full
@@ -88,3 +113,5 @@ export default function SearchBar({
     </div>
   );
 }
+
+export default SearchBar;

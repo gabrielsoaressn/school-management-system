@@ -24,9 +24,9 @@ type Announcement = {
 };
 
 const PRIORITY_CONFIG = {
-  low: { label: 'Baixa', color: 'gray' as const },
-  normal: { label: 'Normal', color: 'blue' as const },
-  high: { label: 'Alta', color: 'red' as const },
+  low: { label: 'Baixa', variant: 'default' as const },
+  normal: { label: 'Normal', variant: 'info' as const },
+  high: { label: 'Alta', variant: 'destructive' as const },
 };
 
 const GRADE_LEVELS = [
@@ -151,7 +151,7 @@ export default function AnnouncementsPage() {
                     <h3 className="text-lg font-semibold text-gray-900">
                       {announcement.title}
                     </h3>
-                    <Badge color={priorityConfig.color}>{priorityConfig.label}</Badge>
+                    <Badge variant={priorityConfig.variant}>{priorityConfig.label}</Badge>
                   </div>
 
                   <p className="text-gray-700 mb-4">{announcement.content}</p>

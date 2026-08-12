@@ -40,27 +40,27 @@ type EnrollmentRequest = {
 const STATUS_CONFIG = {
   PENDING: {
     label: 'Pendente',
-    color: 'yellow' as const,
+    variant: 'warning' as const,
     icon: Clock,
   },
   UNDER_REVIEW: {
     label: 'Em Análise',
-    color: 'blue' as const,
+    variant: 'info' as const,
     icon: Eye,
   },
   APPROVED: {
     label: 'Aprovada',
-    color: 'green' as const,
+    variant: 'success' as const,
     icon: CheckCircle,
   },
   REJECTED: {
     label: 'Rejeitada',
-    color: 'red' as const,
+    variant: 'destructive' as const,
     icon: XCircle,
   },
   CANCELLED: {
     label: 'Cancelada',
-    color: 'gray' as const,
+    variant: 'default' as const,
     icon: AlertCircle,
   },
 };
@@ -307,7 +307,7 @@ export default function EnrollmentRequestsPage() {
                           <span className="text-sm text-gray-900">{request.gradeLevel}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge color={statusConfig.color}>
+                          <Badge variant={statusConfig.variant}>
                             <StatusIcon className="w-3 h-3 mr-1" />
                             {statusConfig.label}
                           </Badge>
@@ -364,7 +364,7 @@ export default function EnrollmentRequestsPage() {
             <div className="p-6 space-y-6">
               {/* Status Badge */}
               <div className="flex items-center gap-2">
-                <Badge color={STATUS_CONFIG[selectedRequest.status as keyof typeof STATUS_CONFIG].color}>
+                <Badge variant={STATUS_CONFIG[selectedRequest.status as keyof typeof STATUS_CONFIG].variant}>
                   {STATUS_CONFIG[selectedRequest.status as keyof typeof STATUS_CONFIG].label}
                 </Badge>
                 {selectedRequest.approvedStudent && (

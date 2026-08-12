@@ -15,7 +15,7 @@ interface BadgeProps {
  * <Badge variant="warning">Pendente</Badge>
  * <Badge variant="destructive">Inativo</Badge>
  */
-export default function Badge({
+export function Badge({
   children,
   variant = "default",
   size = "md",
@@ -52,3 +52,5 @@ export default function Badge({
     </span>
   );
 }
+
+export default Badge;

@@ -27,11 +27,36 @@ type AttendanceRecord = {
   remarks?: string;
 };
 
+// Static class names per status: Tailwind cannot resolve interpolated ones.
 const STATUS_CONFIG = {
-  PRESENT: { label: 'Presente', color: 'green' as const, icon: Check },
-  ABSENT: { label: 'Falta', color: 'red' as const, icon: X },
-  LATE: { label: 'Atraso', color: 'yellow' as const, icon: Clock },
-  EXCUSED: { label: 'Justificada', color: 'blue' as const, icon: AlertCircle },
+  PRESENT: {
+    label: 'Presente',
+    variant: 'success' as const,
+    icon: Check,
+    selectedClass: 'border-success bg-success/10',
+    selectedIconClass: 'text-success',
+  },
+  ABSENT: {
+    label: 'Falta',
+    variant: 'destructive' as const,
+    icon: X,
+    selectedClass: 'border-destructive bg-destructive/10',
+    selectedIconClass: 'text-destructive',
+  },
+  LATE: {
+    label: 'Atraso',
+    variant: 'warning' as const,
+    icon: Clock,
+    selectedClass: 'border-warning bg-warning/10',
+    selectedIconClass: 'text-warning',
+  },
+  EXCUSED: {
+    label: 'Justificada',
+    variant: 'info' as const,
+    icon: AlertCircle,
+    selectedClass: 'border-info bg-info/10',
+    selectedIconClass: 'text-info',
+  },
 };
 
 export default function AttendancePage() {
@@ -227,7 +252,7 @@ export default function AttendancePage() {
           {Object.entries(STATUS_CONFIG).map(([key, config]) => {
             const Icon = config.icon;
             return (
-              <Badge key={key} color={config.color}>
+              <Badge key={key} variant={config.variant}>
                 <Icon className="w-3 h-3 mr-1" />
                 {config.label}
               </Badge>
@@ -286,16 +311,16 @@ export default function AttendancePage() {
                               }
                               className={`p-2 rounded-lg border-2 transition-all ${
                                 isSelected
-                                  ? `border-${config.color}-500 bg-${config.color}-50`
-                                  : 'border-gray-200 hover:border-gray-300'
+                                  ? config.selectedClass
+                                  : 'border-border hover:border-muted-foreground/40'
                               }`}
                               title={config.label}
                             >
                               <Icon
                                 className={`w-5 h-5 ${
                                   isSelected
-                                    ? `text-${config.color}-600`
-                                    : 'text-gray-400'
+                                    ? config.selectedIconClass
+                                    : 'text-muted-foreground'
                                 }`}
                               />
                             </button>

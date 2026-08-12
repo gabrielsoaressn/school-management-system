@@ -7,7 +7,7 @@ interface LogoProps {
   href?: string;
 }
 
-export default function Logo({
+export function Logo({
   className = "",
   showText = true,
   size = "md",
@@ -84,3 +84,5 @@ export default function Logo({
     </div>
   );
 }
+
+export default Logo;

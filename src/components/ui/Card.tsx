@@ -11,7 +11,7 @@ interface CardProps {
  * Card - Container moderno com sombra sutil
  * Segue o design system: fundo branco, borda sutil, sombra leve
  */
-export default function Card({
+export function Card({
   children,
   className = "",
   padding = "md",
@@ -44,3 +44,5 @@ export default function Card({
     </div>
   );
 }
+
+export default Card;
