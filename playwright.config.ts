@@ -13,6 +13,12 @@ import { defineConfig, devices } from "@playwright/test";
  * Requires: migrations applied and `npx prisma db seed` run (the specs log in
  * with seed accounts). Browsers: `npx playwright install chromium`.
  */
+/**
+ * An empty E2E_BASE_URL means "not set" here. `??` would accept it and every
+ * test would navigate to a blank origin.
+ */
+const externalBaseUrl = process.env.E2E_BASE_URL?.trim() || undefined;
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
@@ -21,13 +27,13 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI ? "github" : "list",
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+    baseURL: externalBaseUrl ?? "http://localhost:3000",
     trace: "retain-on-failure",
     locale: "pt-BR",
     timezoneId: "America/Sao_Paulo",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  webServer: process.env.E2E_BASE_URL
+  webServer: externalBaseUrl
     ? undefined
     : {
         command: "npm run start",

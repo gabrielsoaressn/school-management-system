@@ -68,11 +68,11 @@ Stripe foi removido do projeto (Fase 5.9) — a decisão é usar um PSP brasilei
 
 ## Engenharia
 
-- **Smoke E2E incompleto.** `e2e/portals.spec.ts` cobre os quatro portais e a
-  separação de acesso; 2 dos 10 casos passam. Os outros 8 falham por **seletor**,
-  não por regressão do app: foram escritos a partir do código, não do DOM
-  renderizado. Ajustar rodando `npx playwright test --ui` e corrigindo os
-  `getByLabel`/`getByText` um a um. Não está no CI justamente por isso.
+- **Smoke E2E raso de propósito.** `e2e/portals.spec.ts` roda no CI com 11 casos
+  verdes: um fluxo por portal, mais a separação de acesso. Cobre carregamento,
+  sessão e redirecionamento — não cobre escrita (lançar nota, salvar chamada,
+  registrar pagamento), que é o próximo passo natural e exige limpar o que o
+  teste grava.
 - **~17 telas cliente com `setState` dentro de `useEffect`** e função de fetch
   declarada depois do efeito. Nove regras do preset novo do React apontam isso;
   estão como _warning_ em `eslint.config.mjs`, não silenciadas. A correção é

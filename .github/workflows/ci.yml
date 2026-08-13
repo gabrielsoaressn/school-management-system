@@ -61,3 +61,65 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: verify
+
+    # The smoke tests log in with seed accounts and read real rows, so they need
+    # a migrated and seeded database — same reason the unit tests do.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: davilla
+          POSTGRES_PASSWORD: davilla
+          POSTGRES_DB: school_management_e2e
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://davilla:davilla@localhost:5432/school_management_e2e?schema=public
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ci-secret-not-used-outside-ci
+      CRON_SECRET: ci-cron-secret
+      NOTIFICATION_DRIVER: console
+      STORAGE_DRIVER: local
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed
+        run: npx prisma db seed
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke tests
+        # Playwright starts `npm run start` itself (see playwright.config.ts).
+        run: npx playwright test
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
