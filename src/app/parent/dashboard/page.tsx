@@ -7,6 +7,7 @@ import { formatCurrency, sum } from "@/lib/money";
 import { Prisma } from "@prisma/client";
 import { computeAmountDue, loadLateChargeSettings } from "@/lib/billing-rules";
 import { subtract } from "@/lib/money";
+import Link from "next/link";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pendente",
@@ -137,6 +138,12 @@ export default async function ParentDashboard() {
                       Turma: {student.enrollments[0].class.name}
                     </p>
                   )}
+                  <Link
+                    href={`/parent/students/${student.id}/report`}
+                    className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
+                  >
+                    Ver boletim →
+                  </Link>
                 </div>
               ))}
               {studentsCount === 0 && (

@@ -161,3 +161,46 @@
     animation: slideUp 0.2s ease-out;
   }
 }
+
+/* ============================================
+   IMPRESSÃO
+   O boletim e os documentos são entregues em papel ou PDF. Esconde a moldura
+   do app e força cores legíveis em impressora monocromática.
+   ============================================ */
+@media print {
+  aside,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  /* Cards viram blocos delimitados, sem sombra */
+  [class*="shadow"] {
+    box-shadow: none !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #999 !important;
+  }
+
+  /* Evita cortar uma disciplina no meio da página */
+  tr,
+  h2,
+  h3 {
+    break-inside: avoid;
+  }
+}

@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { created, fail, forbidden, notFound, paginated, serverError, validationFailed } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
 import { recordAudit } from "@/lib/audit";
+import { send } from "@/lib/notifications";
 
 const reminderSchema = z.object({
   billingId: z.string(),
@@ -78,19 +79,40 @@ export const POST = withAuth(async (request, { user }) => {
         )
       );
 
-      // Simular entrega (em produção, aqui seria a integração real)
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Envio real pela camada de notificação. O status gravado é o que de fato
+      // aconteceu: o código anterior esperava 500ms e marcava tudo como
+      // DELIVERED, então a régua sempre parecia ter funcionado.
+      await Promise.all(
+        reminders.map(async (reminder) => {
+          const destination =
+            reminder.recipientEmail ?? reminder.recipientPhone ?? '';
 
-      // Atualizar status para DELIVERED
-      await prisma.paymentReminder.updateMany({
-        where: {
-          id: { in: reminders.map((r) => r.id) },
-        },
-        data: {
-          status: 'DELIVERED',
-          deliveredAt: new Date(),
-        },
-      });
+          if (!destination) {
+            await prisma.paymentReminder.update({
+              where: { id: reminder.id },
+              data: {
+                status: 'FAILED',
+                errorMessage: 'Responsável sem e-mail/telefone cadastrado',
+              },
+            });
+            return;
+          }
+
+          const result = await send({
+            channel: reminder.reminderType === 'EMAIL' ? 'EMAIL' : 'WHATSAPP',
+            to: destination,
+            subject: reminder.subject ?? undefined,
+            body: reminder.message,
+          });
+
+          await prisma.paymentReminder.update({
+            where: { id: reminder.id },
+            data: result.delivered
+              ? { status: 'DELIVERED', deliveredAt: new Date() }
+              : { status: 'FAILED', errorMessage: result.error ?? 'Falha no envio' },
+          });
+        })
+      );
 
       await recordAudit({
         action: "billing.remind",
@@ -146,15 +168,23 @@ export const POST = withAuth(async (request, { user }) => {
         },
       });
 
-      // Simular entrega
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const destination =
+        reminder.recipientEmail ?? reminder.recipientPhone ?? '';
 
-      await prisma.paymentReminder.update({
+      const result = destination
+        ? await send({
+            channel: reminder.reminderType === 'EMAIL' ? 'EMAIL' : 'WHATSAPP',
+            to: destination,
+            subject: reminder.subject ?? undefined,
+            body: reminder.message,
+          })
+        : { delivered: false, driver: 'none', error: 'Responsável sem e-mail/telefone cadastrado' };
+
+      const updated = await prisma.paymentReminder.update({
         where: { id: reminder.id },
-        data: {
-          status: 'DELIVERED',
-          deliveredAt: new Date(),
-        },
+        data: result.delivered
+          ? { status: 'DELIVERED', deliveredAt: new Date() }
+          : { status: 'FAILED', errorMessage: result.error ?? 'Falha no envio' },
       });
 
       await recordAudit({
@@ -166,7 +196,11 @@ export const POST = withAuth(async (request, { user }) => {
         after: { reminderType: reminder.reminderType },
       });
 
-      return created(reminder, { message: 'Lembrete enviado com sucesso!' });
+      return created(updated, {
+        message: result.delivered
+          ? 'Lembrete enviado com sucesso!'
+          : `Lembrete registrado, mas não entregue: ${result.error}`,
+      });
     }
   } catch (error) {
     if (error instanceof z.ZodError) {

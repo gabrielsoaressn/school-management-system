@@ -1,54 +1,92 @@
+import { consoleDriver } from "./drivers/console";
+import { createSmtpDriver } from "./drivers/smtp";
+import { whatsappDriver } from "./drivers/whatsapp";
+import type { NotificationDriver, OutboundMessage } from "./types";
+
+export type { NotificationChannel, OutboundMessage } from "./types";
+
 /**
  * Outbound messaging.
  *
- * One entry point, one driver chosen by NOTIFICATION_DRIVER. Today only the
- * console driver exists, so nothing leaves the machine and the reset link is
- * readable in the server log during development. Phase 5.4 adds the real email
- * driver (and the WhatsApp stub) behind this same interface — call sites do not
- * change when it lands.
+ * One entry point, drivers chosen per channel by environment variable, so the
+ * call sites never know how a message leaves the building.
+ *
+ *   NOTIFICATION_DRIVER=console | smtp   (default: console)
+ *   WHATSAPP_DRIVER=stub                 (only option today)
+ *
+ * Everything the app "sent" used to be a console.log or a fake 500ms delay
+ * inside the route that pretended to send it.
  */
 
-export type NotificationChannel = "EMAIL" | "WHATSAPP" | "SMS";
+let emailDriver: NotificationDriver | null = null;
 
-export interface OutboundMessage {
-  channel: NotificationChannel;
-  to: string;
-  subject?: string;
-  body: string;
-}
+function resolveEmailDriver(): NotificationDriver {
+  if (emailDriver) return emailDriver;
 
-export interface NotificationDriver {
-  name: string;
-  send(message: OutboundMessage): Promise<void>;
-}
-
-const consoleDriver: NotificationDriver = {
-  name: "console",
-  async send(message) {
-    console.info(
-      `[notification:console] ${message.channel} -> ${message.to}\n` +
-        (message.subject ? `assunto: ${message.subject}\n` : "") +
-        message.body
-    );
-  },
-};
-
-function resolveDriver(): NotificationDriver {
   const configured = process.env.NOTIFICATION_DRIVER ?? "console";
 
   switch (configured) {
+    case "smtp": {
+      const driver = createSmtpDriver();
+
+      if (!driver) {
+        console.warn(
+          "[notification] NOTIFICATION_DRIVER=smtp mas SMTP_HOST/SMTP_USER não configurados; usando console"
+        );
+        emailDriver = consoleDriver;
+        break;
+      }
+
+      emailDriver = driver;
+      break;
+    }
     case "console":
-      return consoleDriver;
+      emailDriver = consoleDriver;
+      break;
     default:
       console.warn(
-        `[notification] driver "${configured}" não implementado; usando console`
+        `[notification] driver "${configured}" desconhecido; usando console`
       );
+      emailDriver = consoleDriver;
+  }
+
+  return emailDriver;
+}
+
+function driverFor(channel: OutboundMessage["channel"]): NotificationDriver {
+  switch (channel) {
+    case "EMAIL":
+      return resolveEmailDriver();
+    case "WHATSAPP":
+    case "SMS":
+      return whatsappDriver;
+    default:
       return consoleDriver;
   }
 }
 
-export async function send(message: OutboundMessage): Promise<void> {
-  await resolveDriver().send(message);
+export interface SendResult {
+  delivered: boolean;
+  driver: string;
+  error?: string;
+}
+
+/**
+ * Sends a message. Never throws: a failed send is reported so the caller can
+ * record it (PaymentReminder keeps a status per attempt) without losing the
+ * operation that triggered it.
+ */
+export async function send(message: OutboundMessage): Promise<SendResult> {
+  const driver = driverFor(message.channel);
+
+  try {
+    await driver.send(message);
+    return { delivered: true, driver: driver.name };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "erro desconhecido";
+    console.error(`[notification:${driver.name}] falha ao enviar`, reason);
+    return { delivered: false, driver: driver.name, error: reason };
+  }
 }
 
 function appUrl(): string {
@@ -58,7 +96,7 @@ function appUrl(): string {
 export async function sendPasswordResetEmail(to: string, token: string) {
   const link = `${appUrl()}/reset-password/${token}`;
 
-  await send({
+  return send({
     channel: "EMAIL",
     to,
     subject: "Redefinição de senha - D'Ávilla",
@@ -74,7 +112,7 @@ export async function sendTemporaryPasswordEmail(
   to: string,
   temporaryPassword: string
 ) {
-  await send({
+  return send({
     channel: "EMAIL",
     to,
     subject: "Acesso ao portal D'Ávilla",
