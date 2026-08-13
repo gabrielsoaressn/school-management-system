@@ -50,20 +50,37 @@ export const POST = withAuth(async (request, { user }) => {
       },
     });
 
-    // Notifica o responsável vinculado ao aluno
+    // Notifica o responsável e registra que ele foi notificado — o código
+    // anterior criava a notificação e mantinha parentNotified em false, então a
+    // tela nunca saberia dizer se o responsável foi avisado.
+    let notified = occurrence;
+
     if (occurrence.student.parent) {
-      await prisma.notification.create({
-        data: {
-          userId: occurrence.student.parent.userId,
-          title: `Nova Ocorrência: ${occurrence.title}`,
-          message: occurrence.description,
-          type: 'occurrence',
-          actionUrl: `/parent/occurrences/${occurrence.id}`,
-        },
-      });
+      const [, updated] = await prisma.$transaction([
+        prisma.notification.create({
+          data: {
+            userId: occurrence.student.parent.userId,
+            title: `Nova ocorrência: ${occurrence.title}`,
+            message: occurrence.description,
+            type: 'occurrence',
+            actionUrl: '/parent/dashboard',
+          },
+        }),
+        prisma.occurrence.update({
+          where: { id: occurrence.id },
+          data: { parentNotified: true },
+          include: { student: { include: { parent: true } } },
+        }),
+      ]);
+
+      notified = updated;
     }
 
-    return created(occurrence, { message: 'Ocorrência registrada com sucesso!' });
+    return created(notified, {
+      message: occurrence.student.parent
+        ? 'Ocorrência registrada e responsável notificado'
+        : 'Ocorrência registrada (aluno sem responsável vinculado)',
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return validationFailed(error);
