@@ -232,10 +232,8 @@ export default function AttendancePage() {
       <Card className="mb-6 p-6">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex-1">
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              Data da Chamada
-            </label>
             <Input
+              label="Data da Chamada"
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
