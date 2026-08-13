@@ -1,11 +1,20 @@
 import { prisma } from "@/lib/prisma";
 import { created, fail, ok, serverError } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import {
+  findAcademicYearByNumber,
+  findCurrentAcademicYear,
+} from "@/lib/academic-year";
 
 export const GET = withAuth(
   async (_request) => {
     try {
+      // Scoped to the current year: a listing of every class ever run is not what
+      // any screen wants.
+      const currentYear = await findCurrentAcademicYear();
+
       const classes = await prisma.class.findMany({
+        where: currentYear ? { academicYearId: currentYear.id } : undefined,
         include: {
           _count: {
             select: {
@@ -43,29 +52,48 @@ export const POST = withAuth(
         return fail("Campos obrigatórios faltando", 400);
       }
 
-      // Check if class with same gradeLevel+section already exists for this academic year
-      const existingClass = await prisma.class.findFirst({
+      // The year is a row now, not a string on the class. This route still wrote
+      // `academicYear: "2026"` after phase 4 and TypeScript could not catch it,
+      // because the request body is `any` — so creating a class from the form had
+      // been failing at runtime.
+      const year = Number(academicYear);
+
+      if (!Number.isInteger(year)) {
+        return fail("Ano letivo inválido", 400);
+      }
+
+      const schoolYear = await findAcademicYearByNumber(year);
+
+      if (!schoolYear) {
+        return fail(
+          `O ano letivo ${year} não está cadastrado. Crie o ano letivo antes da turma.`,
+          400
+        );
+      }
+
+      const existingClass = await prisma.class.findUnique({
         where: {
-          gradeLevel,
-          section,
-          academicYear: academicYear.toString(),
+          gradeLevel_section_academicYearId: {
+            gradeLevel,
+            section,
+            academicYearId: schoolYear.id,
+          },
         },
       });
 
       if (existingClass) {
         return fail(
-          "Já existe uma turma com este ano/série e seção para este ano letivo",
+          `Já existe uma turma de ${gradeLevel} - ${section} em ${year}`,
           400
         );
       }
 
-      // Create class
       const newClass = await prisma.class.create({
         data: {
           name,
           gradeLevel,
           section,
-          academicYear: academicYear.toString(),
+          academicYearId: schoolYear.id,
           capacity: capacity ? parseInt(capacity) : null,
           schedule: schedule || null,
           roomNumber: roomNumber || null,
