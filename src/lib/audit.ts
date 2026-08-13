@@ -19,6 +19,7 @@ export type AuditAction =
   | "billing.update"
   | "billing.delete"
   | "billing.renegotiate"
+  | "billing.payment"
   | "billing.remind"
   | "payroll.create"
   | "payroll.update"
@@ -39,7 +40,8 @@ export type AuditAction =
   | "settings.update"
   | "password.change"
   | "cpf_list.access"
-  | "data_subject_request.create";
+  | "data_subject_request.create"
+  | "cron.daily";
 
 interface AuditInput {
   action: AuditAction;

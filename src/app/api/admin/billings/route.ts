@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { nextInvoiceNumber } from "@/lib/identifiers";
+import { computeNextBillingDate } from "@/lib/billing-rules";
+import { parseDate } from "@/lib/datetime";
+import { toCents } from "@/lib/money";
 
 // GET - List all billings
 export const GET = withAuth(async (request, { user }) => {
@@ -106,28 +110,15 @@ export const POST = withAuth(async (request, { user }) => {
     }
 
     // Generate unique invoice number
-    const billingCount = await prisma.billing.count();
-    const invoiceNumber = `INV${new Date().getFullYear()}${String(billingCount + 1).padStart(6, "0")}`;
+    const invoiceNumber = await nextInvoiceNumber();
 
-    // Calculate next billing date if recurring
-    let nextBillingDate = null;
-    if (isRecurring && recurrence !== "NONE") {
-      const dueDateObj = new Date(dueDate);
-      switch (recurrence) {
-        case "MONTHLY":
-          nextBillingDate = new Date(dueDateObj);
-          nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-          break;
-        case "QUARTERLY":
-          nextBillingDate = new Date(dueDateObj);
-          nextBillingDate.setMonth(nextBillingDate.getMonth() + 3);
-          break;
-        case "ANNUALLY":
-          nextBillingDate = new Date(dueDateObj);
-          nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
-          break;
-      }
-    }
+    // Same helper the daily job uses, so the series pointer is computed one way
+    // only — and in the school's timezone, with end-of-month clamping.
+    const parsedDueDate = parseDate(dueDate);
+    const nextBillingDate =
+      isRecurring && recurrence !== "NONE"
+        ? computeNextBillingDate(parsedDueDate, recurrence)
+        : null;
 
     // Create billing
     const billing = await prisma.billing.create({
@@ -136,8 +127,8 @@ export const POST = withAuth(async (request, { user }) => {
         parentId,
         type,
         description,
-        amount: parseFloat(amount),
-        dueDate: new Date(dueDate),
+        amount: toCents(amount),
+        dueDate: parsedDueDate,
         status: "PENDING",
         isRecurring: isRecurring || false,
         recurrence: recurrence || "NONE",

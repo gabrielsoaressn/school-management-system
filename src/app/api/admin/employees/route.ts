@@ -5,6 +5,7 @@ import { userRoleForEmployeeType } from "@/lib/employee-types";
 import { redactEmployeeList } from "@/lib/redact";
 import { hashPassword, validatePassword } from "@/lib/password";
 import { recordCpfListAccess } from "@/lib/audit";
+import { nextEmployeeId } from "@/lib/identifiers";
 
 // GET - List all employees
 export const GET = withAuth(async (request, { user }) => {
@@ -152,8 +153,7 @@ export const POST = withAuth(async (request, { user }) => {
     const hashedPassword = await hashPassword(password);
 
     // Generate unique employee ID
-    const employeeCount = await prisma.employee.count();
-    const employeeId = `EMP${String(employeeCount + 1).padStart(6, "0")}`;
+    const employeeId = await nextEmployeeId();
 
     // Create user and employee in a transaction
     const result = await prisma.$transaction(async (tx) => {

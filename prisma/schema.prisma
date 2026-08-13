@@ -35,10 +35,20 @@ enum Gender {
 enum PaymentStatus {
   DRAFT
   PENDING
+  /// Some payments received, still short of the full amount.
+  PARTIALLY_PAID
   PAID
   OVERDUE
-  RENEGOTIATED // 🆕 Para renegociações
+  RENEGOTIATED
   CANCELLED
+}
+
+enum PaymentMethod {
+  PIX
+  BOLETO
+  CARD
+  CASH
+  TRANSFER
 }
 
 enum AttendanceStatus {
@@ -509,6 +519,8 @@ model Billing {
   // 🆕 Novos relacionamentos - Módulo 3
   reminders      PaymentReminder[]
   renegotiations PaymentRenegotiation[]
+  /// Receipts against this charge. `status` is derived from their sum.
+  payments       Payment[]
 
   /// Soft delete: personal and financial records are never hard deleted.
   deletedAt DateTime?
@@ -1160,4 +1172,26 @@ model DataSubjectRequest {
   @@index([status])
   @@index([protocol])
   @@index([createdAt])
+}
+
+/// A payment received against a charge. Partial payments are the norm in a
+/// school, so Billing.status is derived from the sum of these rows rather than
+/// being set by hand.
+model Payment {
+  id         String        @id @default(cuid())
+  billingId  String
+  billing    Billing       @relation(fields: [billingId], references: [id], onDelete: Cascade)
+  amount     Decimal       @db.Decimal(10, 2)
+  paidAt     DateTime      @db.Date
+  method     PaymentMethod
+  /// Staff member who registered a manual payment.
+  receivedBy String?
+  /// Identifier from the payment provider; unique so a replayed webhook is a
+  /// no-op instead of a duplicate receipt.
+  externalId String?       @unique
+  notes      String?
+  createdAt  DateTime      @default(now())
+
+  @@index([billingId])
+  @@index([paidAt])
 }

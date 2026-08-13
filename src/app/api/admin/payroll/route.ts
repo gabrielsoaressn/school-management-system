@@ -140,8 +140,9 @@ export const POST = withAuth(async (request, { user }) => {
     const totalAmount = parseFloat(baseSalary) + bonusAmount - deductionsAmount;
 
     // Generate unique payment ID
-    const payrollCount = await prisma.payroll.count();
-    const paymentId = `PAY${new Date().getFullYear()}${String(payrollCount + 1).padStart(6, "0")}`;
+    // Payroll ids stay derived from the reference period, which is unique per
+    // employee/month by constraint, so a sequence would add nothing here.
+    const paymentId = `PAY-${referenceYear}${String(referenceMonth).padStart(2, "0")}-${employeeId.slice(-6)}`;
 
     // Create payroll
     const payroll = await prisma.payroll.create({

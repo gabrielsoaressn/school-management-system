@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { nextInvoiceNumber } from "@/lib/identifiers";
 
 // POST - Process recurring billings (create new billings from recurring ones)
 export const POST = withAuth(async (request, { user }) => {
@@ -34,8 +35,7 @@ export const POST = withAuth(async (request, { user }) => {
       recurringBillings.map(async (billing) => {
         try {
           // Generate new invoice number
-          const billingCount = await prisma.billing.count();
-          const invoiceNumber = `INV${new Date().getFullYear()}${String(billingCount + 1).padStart(6, "0")}`;
+          const invoiceNumber = await nextInvoiceNumber();
 
           // Calculate next billing dates
           const currentDueDate = billing.nextBillingDate!;

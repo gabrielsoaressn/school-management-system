@@ -3,6 +3,9 @@ import { getSettingAsNumber, getSettingAsBoolean } from "@/lib/settings";
 import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
 import { hashPassword, validatePassword } from "@/lib/password";
+import { nextInvoiceNumber, nextStudentId } from "@/lib/identifiers";
+import { buildTuitionCharge, tuitionChargeNote } from "@/lib/tuition";
+import type { DiscountType } from "@prisma/client";
 
 // GET - List all students
 export const GET = withAuth(async (request, { user }) => {
@@ -173,8 +176,7 @@ export const POST = withAuth(async (request, { user }) => {
     const hashedParentPassword = parentPassword ? await hashPassword(parentPassword) : null;
 
     // Generate unique student ID
-    const studentCount = await prisma.student.count();
-    const studentId = `EST${String(studentCount + 1).padStart(4, '0')}`;
+    const studentId = await nextStudentId();
 
     // Create user, student, parent (if needed), enrollment, and billing in a transaction
     const result = await prisma.$transaction(async (tx) => {
@@ -252,42 +254,30 @@ export const POST = withAuth(async (request, { user }) => {
         // Calculate billing amount
         let billingAmount = tuitionAmount || defaultTuition;
 
-        // Apply discount if requested
-        if (applyDiscount && discountValue) {
-          if (discountType === "PERCENTAGE") {
-            billingAmount = billingAmount * (1 - discountValue / 100);
-          } else {
-            billingAmount = billingAmount - discountValue;
-          }
-        }
+        const discount =
+          applyDiscount && discountValue
+            ? { type: discountType as DiscountType, value: discountValue }
+            : null;
 
-        // Generate invoice number
-        const billingCount = await tx.billing.count();
-        const invoiceNumber = `INV${String(billingCount + 1).padStart(6, '0')}`;
-
-        // Calculate due date
-        const now = new Date();
-        const dueDate = new Date(now.getFullYear(), now.getMonth(), billingDueDay);
-
-        // If due day has passed this month, set for next month
-        if (dueDate < now) {
-          dueDate.setMonth(dueDate.getMonth() + 1);
-        }
+        const charge = buildTuitionCharge({
+          baseAmount: billingAmount,
+          dueDay: billingDueDay,
+          discount,
+        });
 
         billing = await tx.billing.create({
           data: {
-            invoiceNumber,
+            invoiceNumber: await nextInvoiceNumber(tx),
             parentId: finalParentId,
             type: "TUITION",
             description: `Mensalidade ${gradeLevel} - ${firstName} ${lastName}`,
-            amount: billingAmount,
-            dueDate,
+            amount: charge.amount,
+            dueDate: charge.dueDate,
             status: "DRAFT",
             isRecurring: true,
             recurrence: "MONTHLY",
-            notes: applyDiscount
-              ? `Desconto aplicado: ${discountType === "PERCENTAGE" ? `${discountValue}%` : `R$ ${discountValue}`} | Aguardando aprovação do administrador`
-              : `Aguardando aprovação do administrador`,
+            nextBillingDate: charge.nextBillingDate,
+            notes: tuitionChargeNote(charge, discount),
           },
         });
       }

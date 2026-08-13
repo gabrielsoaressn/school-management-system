@@ -3,6 +3,7 @@ import { created, fail, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
 import { generateTemporaryPassword, hashPassword } from "@/lib/password";
 import { sendTemporaryPasswordEmail } from "@/lib/notifications";
+import { nextEmployeeId } from "@/lib/identifiers";
 
 export const POST = withAuth(async (request, { user }) => {
   try {
@@ -29,8 +30,7 @@ export const POST = withAuth(async (request, { user }) => {
     const hashedPassword = await hashPassword(temporaryPassword);
 
     // Generate unique employee ID
-    const employeeCount = await prisma.employee.count();
-    const employeeIdNumber = `EMP${String(employeeCount + 1).padStart(5, "0")}`;
+    const employeeIdNumber = await nextEmployeeId();
 
     // Create user, employee, and teacher in a transaction
     const result = await prisma.$transaction(async (tx) => {

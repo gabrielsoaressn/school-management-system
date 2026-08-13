@@ -41,7 +41,9 @@ function schoolParts(date: Date) {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-    hour12: false,
+    // h23, not hour12:false: the latter formats midnight as hour 24 in some ICU
+    // builds, which silently pushed every derived date one day forward.
+    hourCycle: "h23",
   }).formatToParts(date);
 
   const get = (type: string) =>
@@ -51,7 +53,7 @@ function schoolParts(date: Date) {
     year: get("year"),
     month: get("month"),
     day: get("day"),
-    hour: get("hour"),
+    hour: get("hour") % 24,
     minute: get("minute"),
     second: get("second"),
   };
