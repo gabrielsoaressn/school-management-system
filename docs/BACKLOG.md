@@ -75,7 +75,7 @@ Stripe foi removido do projeto (Fase 5.9) — a decisão é usar um PSP brasilei
   `getByLabel`/`getByText` um a um. Não está no CI justamente por isso.
 - **~17 telas cliente com `setState` dentro de `useEffect`** e função de fetch
   declarada depois do efeito. Nove regras do preset novo do React apontam isso;
-  estão como *warning* em `eslint.config.mjs`, não silenciadas. A correção é
+  estão como _warning_ em `eslint.config.mjs`, não silenciadas. A correção é
   reestruturar cada tela em torno de estado derivado ou de um hook de dados —
   vale fazer por tela, com verificação, não em lote.
 - **`no-explicit-any`**: ~76 avisos, a maioria em `where: any` de filtros do

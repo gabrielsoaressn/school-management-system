@@ -52,7 +52,10 @@ test.describe("portal do professor", () => {
     await expect(page).toHaveURL(/\/teacher\/dashboard/);
     await expect(page.getByText("Minhas Turmas")).toBeVisible();
 
-    await page.getByRole("button", { name: /Chamada/ }).first().click();
+    await page
+      .getByRole("button", { name: /Chamada/ })
+      .first()
+      .click();
     await expect(page.getByText("Data da Chamada")).toBeVisible();
   });
 });
@@ -64,7 +67,10 @@ test.describe("portal do responsável", () => {
     await expect(page).toHaveURL(/\/parent\/dashboard/);
     await expect(page.getByText("Cobranças em Aberto")).toBeVisible();
 
-    await page.getByRole("link", { name: /Ver boletim/ }).first().click();
+    await page
+      .getByRole("link", { name: /Ver boletim/ })
+      .first()
+      .click();
     await expect(page.getByText("Desempenho por disciplina")).toBeVisible();
   });
 });
@@ -86,7 +92,9 @@ test.describe("páginas públicas", () => {
     await page.goto("/matricula");
 
     await expect(page.getByText("Dados do Aluno")).toBeVisible();
-    await expect(page.getByRole("link", { name: /privacidade/i })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /privacidade/i })).toHaveCount(
+      0
+    );
   });
 
   test("o aviso de privacidade publica finalidades e bases legais", async ({
