@@ -1,101 +1,30 @@
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { forbidden, notFound, ok, serverError } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { ok, serverError } from "@/lib/api-response";
+import { findTeachableClasses } from "@/lib/teaching";
 
-// GET - Buscar turmas do professor
-export const GET = withAuth(async (request, { user }) => {
-  try {
+/**
+ * GET /api/teacher/classes
+ *
+ * Classes the caller may work with in the current academic year. A teacher gets
+ * the ones they are assigned to in ClassSubjectTeacher; coordination, secretarial
+ * staff and admins get all of them.
+ *
+ * This used to return every class in the school to every teacher: the branch for
+ * teachers loaded their subjects, discarded the result and then ran the same
+ * unfiltered query as the admin branch.
+ */
+export const GET = withAuth(
+  async (request, { user }) => {
+    try {
+      const classes = await findTeachableClasses(user);
 
-    let classes;
-
-    if (user.role === 'ADMIN') {
-      // Admin vê todas as turmas
-      classes = await prisma.class.findMany({
-        include: {
-          enrollments: {
-            include: {
-              student: {
-                select: {
-                  id: true,
-                  studentId: true,
-                  firstName: true,
-                  lastName: true,
-                  gradeLevel: true,
-                  section: true,
-                },
-              },
-            },
-          },
-          _count: {
-            select: {
-              enrollments: true,
-            },
-          },
-        },
-        orderBy: [
-          { academicYear: 'desc' },
-          { gradeLevel: 'asc' },
-          { section: 'asc' },
-        ],
-      });
-    } else {
-      // Professor vê apenas suas turmas (baseado em subjects)
-      const employee = await prisma.employee.findUnique({
-        where: { userId: user.id },
-        include: {
-          teacher: {
-            include: {
-              subjects: {
-                include: {
-                  subject: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      if (!employee?.teacher) {
-        return notFound('Professor não encontrado');
-      }
-
-      // Buscar turmas onde existem alunos (via enrollments)
-      // TODO: Futuramente podemos adicionar uma relação direta Teacher -> Class
-      classes = await prisma.class.findMany({
-        include: {
-          enrollments: {
-            include: {
-              student: {
-                select: {
-                  id: true,
-                  studentId: true,
-                  firstName: true,
-                  lastName: true,
-                  gradeLevel: true,
-                  section: true,
-                },
-              },
-            },
-          },
-          _count: {
-            select: {
-              enrollments: true,
-            },
-          },
-        },
-        orderBy: [
-          { academicYear: 'desc' },
-          { gradeLevel: 'asc' },
-          { section: 'asc' },
-        ],
-      });
+      return ok(classes);
+    } catch (error) {
+      return serverError(error, "Erro ao buscar turmas");
     }
-
-    return ok(classes);
-
-  } catch (error) {
-    return serverError(error, 'Erro ao buscar turmas');
+  },
+  {
+    roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"],
+    permission: "class:read",
   }
-}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "class:read" });
+);

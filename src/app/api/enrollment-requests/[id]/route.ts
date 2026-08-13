@@ -6,6 +6,9 @@ import { withAuth } from "@/lib/api-auth";
 import { generateTemporaryPassword, hashPassword } from "@/lib/password";
 import { sendTemporaryPasswordEmail } from "@/lib/notifications";
 import { recordAudit } from "@/lib/audit";
+import { ClassNotFoundError, enrollStudent, findClassForPlacement } from "@/lib/enrollment";
+import { requireCurrentAcademicYear } from "@/lib/academic-year";
+import { nextStudentId } from "@/lib/identifiers";
 
 // GET - Obter detalhes de uma solicitação específica
 export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
@@ -91,21 +94,9 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
           },
         });
 
-        // 3. Gerar studentId único
-        const lastStudent = await tx.student.findFirst({
-          orderBy: { studentId: 'desc' },
-          select: { studentId: true },
-        });
-
-        let nextStudentNumber = 1;
-        if (lastStudent?.studentId) {
-          const match = lastStudent.studentId.match(/STD(\d+)/);
-          if (match) {
-            nextStudentNumber = parseInt(match[1]) + 1;
-          }
-        }
-
-        const studentId = `STD${String(nextStudentNumber).padStart(5, '0')}`;
+        // 3. Matrícula do aluno, da mesma sequência usada em todo o sistema
+        // (este caminho gerava um "STD00001" próprio, escaneando o maior valor).
+        const studentId = await nextStudentId(tx);
 
         // 4. Criar usuário para o aluno
         const studentUser = await tx.user.create({
@@ -129,11 +120,30 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
             gender: enrollmentRequest.gender,
             address: enrollmentRequest.address,
             phoneNumber: enrollmentRequest.financialGuardianPhone,
-            gradeLevel: enrollmentRequest.gradeLevel,
-            section: enrollmentRequest.section || 'A',
             parentId: parent.id,
           },
         });
+
+        // Placement: the request's grade must have a class in the current year.
+        const academicYear = await requireCurrentAcademicYear();
+        const targetClass = await findClassForPlacement(
+          {
+            gradeLevel: enrollmentRequest.gradeLevel,
+            section: enrollmentRequest.section || 'A',
+            academicYearId: academicYear.id,
+          },
+          tx
+        );
+
+        if (!targetClass) {
+          throw new ClassNotFoundError(
+            enrollmentRequest.gradeLevel,
+            enrollmentRequest.section || 'A',
+            academicYear.year
+          );
+        }
+
+        await enrollStudent({ studentId: student.id, classId: targetClass.id }, tx);
 
         // 6. Criar relacionamento guardian (financeiro)
         await tx.guardianRelationship.create({

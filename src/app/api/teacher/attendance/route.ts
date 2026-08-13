@@ -1,180 +1,203 @@
-import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { z } from 'zod';
-import { created, forbidden, ok, serverError, validationFailed } from "@/lib/api-response";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/api-auth";
+import {
+  created,
+  fail,
+  forbidden,
+  ok,
+  serverError,
+  validationFailed,
+} from "@/lib/api-response";
+import { requireCurrentAcademicYear } from "@/lib/academic-year";
+import { checkTeachingAssignment } from "@/lib/teaching";
+import { parseDate } from "@/lib/datetime";
 
-const attendanceRecordSchema = z.object({
+const statusSchema = z.enum(["PRESENT", "ABSENT", "LATE", "EXCUSED"]);
+
+const entrySchema = z.object({
   studentId: z.string(),
-  classId: z.string(),
-  subjectId: z.string().optional(),
-  date: z.string().transform(str => new Date(str)),
-  status: z.enum(['PRESENT', 'ABSENT', 'LATE', 'EXCUSED']),
+  status: statusSchema,
   remarks: z.string().optional(),
 });
 
 const bulkAttendanceSchema = z.object({
   classId: z.string(),
   subjectId: z.string().optional(),
-  date: z.string().transform(str => new Date(str)),
-  records: z.array(z.object({
-    studentId: z.string(),
-    status: z.enum(['PRESENT', 'ABSENT', 'LATE', 'EXCUSED']),
-    remarks: z.string().optional(),
-  })),
+  date: z.string(),
+  records: z.array(entrySchema).min(1),
 });
 
-// POST - Registrar frequência (individual ou em lote)
-export const POST = withAuth(async (request, { user }) => {
-  try {
+const singleAttendanceSchema = entrySchema.extend({
+  classId: z.string(),
+  subjectId: z.string().optional(),
+  date: z.string(),
+});
 
-    const body = await request.json();
+/**
+ * POST /api/teacher/attendance — the class register, one entry or the whole class.
+ *
+ * Authorized by the teaching assignment rather than the role, and scoped to the
+ * current academic year. The date is parsed in the school's timezone: a register
+ * entry is a calendar day, not an instant.
+ */
+export const POST = withAuth(
+  async (request, { user }) => {
+    try {
+      const body = await request.json();
 
-    // Verificar se é registro em lote
-    if (body.records && Array.isArray(body.records)) {
-      const validatedData = bulkAttendanceSchema.parse(body);
+      const parsed = Array.isArray(body?.records)
+        ? (() => {
+            const bulk = bulkAttendanceSchema.parse(body);
+            const { records, ...rest } = bulk;
+            return { ...rest, entries: records };
+          })()
+        : (() => {
+            const single = singleAttendanceSchema.parse(body);
+            const { studentId, status, remarks, ...rest } = single;
+            return { ...rest, entries: [{ studentId, status, remarks }] };
+          })();
 
-      // Buscar o teacher ID
-      let teacherId = null;
-      if (user.role === 'TEACHER') {
-        const employee = await prisma.employee.findUnique({
-          where: { userId: user.id },
-          include: { teacher: true },
-        });
-        teacherId = employee?.teacher?.id;
+      const entries = parsed.entries;
+
+      const assignment = await checkTeachingAssignment(user, {
+        classId: parsed.classId,
+        subjectId: parsed.subjectId ?? null,
+      });
+
+      if (!assignment.allowed) {
+        return forbidden(assignment.reason);
       }
 
-      // Criar registros em lote
-      const createdRecords = await prisma.$transaction(
-        validatedData.records.map(record =>
+      const academicYear = await requireCurrentAcademicYear();
+      const date = parseDate(parsed.date);
+
+      if (date > new Date()) {
+        return fail("Não é possível lançar chamada em data futura");
+      }
+
+      const enrolled = await prisma.enrollment.findMany({
+        where: {
+          classId: parsed.classId,
+          academicYearId: academicYear.id,
+          status: "ACTIVE",
+          studentId: { in: entries.map((entry) => entry.studentId) },
+        },
+        select: { studentId: true },
+      });
+
+      const enrolledIds = new Set(enrolled.map((row) => row.studentId));
+      const strangers = entries.filter(
+        (entry) => !enrolledIds.has(entry.studentId)
+      );
+
+      if (strangers.length > 0) {
+        return fail(
+          `${strangers.length} aluno(s) não estão matriculados nesta turma neste ano letivo`
+        );
+      }
+
+      const saved = await prisma.$transaction(
+        entries.map((entry) =>
           prisma.attendanceRecord.upsert({
             where: {
               studentId_classId_date: {
-                studentId: record.studentId,
-                classId: validatedData.classId,
-                date: validatedData.date,
+                studentId: entry.studentId,
+                classId: parsed.classId,
+                date,
               },
             },
             update: {
-              status: record.status,
-              remarks: record.remarks,
-              subjectId: validatedData.subjectId,
-              teacherId,
+              status: entry.status,
+              remarks: entry.remarks,
+              subjectId: parsed.subjectId ?? null,
+              teacherId: assignment.teacherId,
             },
             create: {
-              studentId: record.studentId,
-              classId: validatedData.classId,
-              subjectId: validatedData.subjectId,
-              teacherId,
-              date: validatedData.date,
-              status: record.status,
-              remarks: record.remarks,
+              studentId: entry.studentId,
+              classId: parsed.classId,
+              subjectId: parsed.subjectId ?? null,
+              academicYearId: academicYear.id,
+              teacherId: assignment.teacherId,
+              date,
+              status: entry.status,
+              remarks: entry.remarks,
             },
           })
         )
       );
 
-      return created(createdRecords, { message: `${createdRecords.length} registros de frequência salvos com sucesso!` });
+      return created(saved, {
+        message:
+          saved.length === 1
+            ? "Frequência registrada com sucesso!"
+            : `${saved.length} registros de frequência salvos com sucesso!`,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return validationFailed(error);
+      }
+      return serverError(error, "Erro ao registrar frequência");
+    }
+  },
+  {
+    roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"],
+    permission: "attendance:write",
+  }
+);
 
-    } else {
-      // Registro individual
-      const validatedData = attendanceRecordSchema.parse(body);
+/** GET /api/teacher/attendance — scoped to the caller's classes. */
+export const GET = withAuth(
+  async (request, { user }) => {
+    try {
+      const { searchParams } = new URL(request.url);
+      const classId = searchParams.get("classId");
+      const studentId = searchParams.get("studentId");
+      const date = searchParams.get("date");
+      const startDate = searchParams.get("startDate");
+      const endDate = searchParams.get("endDate");
 
-      let teacherId = null;
-      if (user.role === 'TEACHER') {
-        const employee = await prisma.employee.findUnique({
-          where: { userId: user.id },
-          include: { teacher: true },
-        });
-        teacherId = employee?.teacher?.id;
+      if (classId) {
+        const assignment = await checkTeachingAssignment(user, { classId });
+
+        if (!assignment.allowed) {
+          return forbidden(assignment.reason);
+        }
       }
 
-      const record = await prisma.attendanceRecord.upsert({
+      const records = await prisma.attendanceRecord.findMany({
         where: {
-          studentId_classId_date: {
-            studentId: validatedData.studentId,
-            classId: validatedData.classId,
-            date: validatedData.date,
+          ...(classId ? { classId } : {}),
+          ...(studentId ? { studentId } : {}),
+          ...(date ? { date: parseDate(date) } : {}),
+          ...(startDate && endDate
+            ? { date: { gte: parseDate(startDate), lte: parseDate(endDate) } }
+            : {}),
+        },
+        include: {
+          student: {
+            select: {
+              id: true,
+              studentId: true,
+              firstName: true,
+              lastName: true,
+            },
           },
+          class: {
+            select: { id: true, name: true, gradeLevel: true, section: true },
+          },
+          subject: { select: { id: true, name: true, code: true } },
         },
-        update: {
-          status: validatedData.status,
-          remarks: validatedData.remarks,
-        },
-        create: {
-          ...validatedData,
-          teacherId,
-        },
+        orderBy: [{ date: "desc" }, { student: { firstName: "asc" } }],
       });
 
-      return created(record, { message: 'Frequência registrada com sucesso!' });
+      return ok(records);
+    } catch (error) {
+      return serverError(error, "Erro ao buscar registros");
     }
-
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return validationFailed(error);
-    }
-    return serverError(error, 'Erro ao registrar frequência');
+  },
+  {
+    roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"],
+    permission: "attendance:read",
   }
-}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "attendance:write" });
-
-// GET - Buscar registros de frequência
-export const GET = withAuth(async (request, { user }) => {
-  try {
-
-    const { searchParams } = new URL(request.url);
-    const classId = searchParams.get('classId');
-    const studentId = searchParams.get('studentId');
-    const date = searchParams.get('date');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-
-    const where: any = {};
-
-    if (classId) where.classId = classId;
-    if (studentId) where.studentId = studentId;
-    if (date) where.date = new Date(date);
-    if (startDate && endDate) {
-      where.date = {
-        gte: new Date(startDate),
-        lte: new Date(endDate),
-      };
-    }
-
-    const records = await prisma.attendanceRecord.findMany({
-      where,
-      include: {
-        student: {
-          select: {
-            id: true,
-            studentId: true,
-            firstName: true,
-            lastName: true,
-          },
-        },
-        class: {
-          select: {
-            id: true,
-            name: true,
-            gradeLevel: true,
-            section: true,
-          },
-        },
-        subject: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
-      },
-      orderBy: [{ date: 'desc' }, { student: { firstName: 'asc' } }],
-    });
-
-    return ok(records);
-
-  } catch (error) {
-    return serverError(error, 'Erro ao buscar registros');
-  }
-}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "attendance:read" });
+);

@@ -38,7 +38,6 @@ type ScoreEntry = {
   remarks: string;
 };
 
-const CURRENT_YEAR = new Date().getFullYear().toString();
 const TERMS = ['1º Bimestre', '2º Bimestre', '3º Bimestre', '4º Bimestre'];
 
 export default function GradesPage() {
@@ -125,7 +124,7 @@ export default function GradesPage() {
   const fetchExistingGrades = async () => {
     try {
       const response = await fetch(
-        `/api/teacher/assessments?classId=${classId}&subjectId=${selectedSubject}&term=${selectedTerm}&academicYear=${CURRENT_YEAR}`
+        `/api/teacher/assessments?classId=${classId}&subjectId=${selectedSubject}&term=${selectedTerm}`
       );
       const data = await response.json();
 
@@ -213,7 +212,6 @@ export default function GradesPage() {
           classId,
           assessmentTypeId: selectedAssessmentType,
           term: selectedTerm,
-          academicYear: CURRENT_YEAR,
           maxScore,
           scores: filledScores.map((s) => ({
             studentId: s.studentId,

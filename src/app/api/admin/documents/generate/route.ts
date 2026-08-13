@@ -32,9 +32,9 @@ export const POST = withAuth(async (request, { user }) => {
         user: true,
         parent: true,
         enrollments: {
-          include: {
-            class: true,
-          },
+          where: { status: "ACTIVE", academicYear: { isCurrent: true } },
+          include: { class: true, academicYear: true },
+          take: 1,
         },
       },
     });
@@ -56,13 +56,19 @@ export const POST = withAuth(async (request, { user }) => {
       template = await createDefaultTemplate(validatedData.documentType);
     }
 
+    const currentEnrollment = student.enrollments[0] ?? null;
+
     // Gerar HTML do documento
     const htmlContent = generateHTMLFromTemplate(template.htmlTemplate, {
       studentName: `${student.firstName} ${student.lastName}`,
       studentId: student.studentId,
       dateOfBirth: new Date(student.dateOfBirth).toLocaleDateString('pt-BR'),
-      gradeLevel: student.gradeLevel,
-      section: student.section,
+      // Placement comes from the current enrolment: a declaration must state
+      // the grade the student is in *this* year.
+      gradeLevel: currentEnrollment?.gradeLevel ?? 'Não matriculado',
+      section: currentEnrollment?.section ?? '-',
+      academicYear: String(currentEnrollment?.academicYear.year ?? '-'),
+      className: currentEnrollment?.class.name ?? '-',
       enrollmentDate: new Date(student.enrollmentDate).toLocaleDateString('pt-BR'),
       parentName: student.parent
         ? `${student.parent.firstName} ${student.parent.lastName}`

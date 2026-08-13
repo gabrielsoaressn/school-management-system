@@ -102,6 +102,8 @@ async function main() {
   await prisma.tuition.deleteMany();
   await prisma.academicReport.deleteMany();
   await prisma.enrollment.deleteMany();
+  // Curriculum before classes, classes before the academic year they belong to.
+  await prisma.classSubjectTeacher.deleteMany();
   await prisma.class.deleteMany();
   await prisma.teacherSubject.deleteMany();
   await prisma.teacher.deleteMany();
@@ -119,6 +121,7 @@ async function main() {
   await prisma.session.deleteMany();
   await prisma.account.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.academicYear.deleteMany();
   await prisma.settings.deleteMany();
 
   const hashedPassword = await bcrypt.hash('password123', 10);
@@ -285,8 +288,11 @@ async function main() {
 
   // 3. Criar professores
   console.log('👨‍🏫 Criando professores...');
+  // subjectId -> professores habilitados, para montar a grade curricular.
+  const teacherSubjectMap = new Map<string, string[]>();
   const teachers = [];
-  for (let i = 1; i <= 15; i++) {
+  const teacherCount = 15;
+  for (let i = 1; i <= teacherCount; i++) {
     const gender = i % 2 === 0 ? Gender.FEMALE : Gender.MALE;
     const firstName = randomItem(firstNames[gender === Gender.MALE ? 'male' : 'female']);
     const lastName = randomItem(lastNames);
@@ -328,10 +334,13 @@ async function main() {
 
     teachers.push(teacher);
 
-    // Atribuir matérias aos professores (2-3 matérias por professor)
-    const teacherSubjects = createdSubjects
-      .filter(() => Math.random() > 0.7)
-      .slice(0, 3);
+    // Distribui as disciplinas em rodízio entre os professores, de modo que
+    // toda disciplina tenha ao menos um professor habilitado. A versão anterior
+    // sorteava (`Math.random() > 0.7`) e deixava a maior parte da grade sem
+    // professor, o que esvaziava o portal do professor.
+    const teacherSubjects = createdSubjects.filter(
+      (_, index) => index % teacherCount === i - 1
+    );
 
     for (const subject of teacherSubjects) {
       await prisma.teacherSubject.create({
@@ -340,6 +349,11 @@ async function main() {
           subjectId: subject.id,
         },
       });
+
+      // Índice usado depois para montar a grade curricular das turmas.
+      const eligible = teacherSubjectMap.get(subject.id) ?? [];
+      eligible.push(teacher.id);
+      teacherSubjectMap.set(subject.id, eligible);
     }
   }
 
@@ -399,16 +413,29 @@ async function main() {
         gender,
         address: `Rua ${randomItem(lastNames)}, ${Math.floor(Math.random() * 900 + 100)}`,
         phoneNumber: `(11) 9${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
-        gradeLevel,
-        section,
         parentId: parent.id,
       },
     });
 
-    students.push(student);
+    // The grade level lives on the enrolment now; carry it alongside the row
+    // while the seed builds the rest of the data.
+    students.push({ ...student, gradeLevel, section });
   }
 
-  // 5. Criar turmas (consolidadas - uma por série/seção)
+  // 5. Ano letivo corrente
+  console.log('📆 Criando ano letivo...');
+  const year = new Date().getFullYear();
+  const academicYear = await prisma.academicYear.create({
+    data: {
+      year,
+      startDate: schoolDate(year, 2, 1),
+      endDate: schoolDate(year, 12, 20),
+      isCurrent: true,
+      status: 'ACTIVE',
+    },
+  });
+
+  // 6. Turmas: uma por série/seção, dentro do ano letivo
   console.log('🏫 Criando turmas...');
   const classes = [];
   for (const gradeLevel of gradeLevels) {
@@ -418,7 +445,7 @@ async function main() {
           name: `${gradeLevel} - Turma ${section}`,
           gradeLevel,
           section,
-          academicYear: '2026',
+          academicYearId: academicYear.id,
           roomNumber: `${Math.floor(Math.random() * 3) + 1}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`,
           schedule: 'Segunda a Sexta, 7h-12h',
           capacity: 30,
@@ -429,10 +456,35 @@ async function main() {
     }
   }
 
-  // 6. Matricular alunos nas turmas
+  // 7. Grade curricular: quem leciona o quê em cada turma. É isto que autoriza
+  // um professor a lançar nota e chamada.
+  console.log('📘 Montando grade curricular...');
+  let assignmentCount = 0;
+  for (const classData of classes) {
+    const gradeSubjects = createdSubjects.filter(
+      (subject) => subject.gradeLevel === classData.gradeLevel
+    );
+
+    for (const subject of gradeSubjects) {
+      const eligible = teacherSubjectMap.get(subject.id) ?? [];
+
+      await prisma.classSubjectTeacher.create({
+        data: {
+          classId: classData.id,
+          subjectId: subject.id,
+          teacherId: eligible.length > 0 ? randomItem(eligible) : null,
+          academicYearId: academicYear.id,
+          weeklyPeriods: 2,
+        },
+      });
+      assignmentCount++;
+    }
+  }
+  console.log(`   ${assignmentCount} vínculos turma/disciplina/professor`);
+
+  // 8. Matricular alunos nas turmas
   console.log('📝 Matriculando alunos...');
   for (const student of students) {
-    // Find the class for this student's grade and section
     const studentClass = classes.find(
       c => c.gradeLevel === student.gradeLevel && c.section === student.section
     );
@@ -442,6 +494,10 @@ async function main() {
         data: {
           studentId: student.id,
           classId: studentClass.id,
+          academicYearId: academicYear.id,
+          gradeLevel: studentClass.gradeLevel,
+          section: studentClass.section,
+          status: 'ACTIVE',
         },
       });
     }
@@ -803,11 +859,11 @@ async function main() {
             teacherId: teacherSubject?.teacherId,
             assessmentTypeId: assessmentType.id,
             term: '1º Bimestre',
-            academicYear: '2026',
+            academicYearId: academicYear.id,
             score: parseFloat(score.toFixed(2)),
             maxScore: assessmentType.maxScore,
             grade: score >= 7 ? 'A' : score >= 6 ? 'B' : score >= 5 ? 'C' : 'D',
-            assessmentDate: randomDate(new Date('2026-02-01'), new Date()),
+            assessmentDate: randomDate(academicYear.startDate, new Date()),
           },
         });
       }
@@ -852,6 +908,7 @@ async function main() {
             studentId: student.id,
             classId: enrollment.classId,
             subjectId: studentSubject.id,
+            academicYearId: academicYear.id,
             date: new Date(currentDate),
             status,
           },

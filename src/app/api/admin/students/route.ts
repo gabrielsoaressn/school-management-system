@@ -6,6 +6,8 @@ import { hashPassword, validatePassword } from "@/lib/password";
 import { nextInvoiceNumber, nextStudentId } from "@/lib/identifiers";
 import { buildTuitionCharge, tuitionChargeNote } from "@/lib/tuition";
 import type { DiscountType } from "@prisma/client";
+import { currentEnrollmentFilter, enrollStudent, findClassForPlacement } from "@/lib/enrollment";
+import { requireCurrentAcademicYear } from "@/lib/academic-year";
 
 // GET - List all students
 export const GET = withAuth(async (request, { user }) => {
@@ -29,8 +31,9 @@ export const GET = withAuth(async (request, { user }) => {
       ];
     }
 
+    // Students of a grade = students whose current enrolment is in that grade.
     if (gradeLevel && gradeLevel !== "ALL") {
-      where.gradeLevel = gradeLevel;
+      Object.assign(where, currentEnrollmentFilter(gradeLevel));
     }
 
     const [students, total] = await Promise.all([
@@ -52,14 +55,16 @@ export const GET = withAuth(async (request, { user }) => {
             },
           },
           enrollments: {
-            include: {
-              class: {
-                select: {
-                  name: true,
-                  academicYear: true,
-                },
-              },
+            where: { status: "ACTIVE", academicYear: { isCurrent: true } },
+            select: {
+              id: true,
+              gradeLevel: true,
+              section: true,
+              status: true,
+              class: { select: { id: true, name: true } },
+              academicYear: { select: { year: true } },
             },
+            take: 1,
           },
         },
         orderBy: {
@@ -140,16 +145,20 @@ export const POST = withAuth(async (request, { user }) => {
       }
     }
 
-    // Find the class by gradeLevel and section
-    const targetClass = await prisma.class.findFirst({
-      where: {
-        gradeLevel: gradeLevel,
-        section: section,
-      },
+    // The class must exist in the current academic year.
+    const academicYear = await requireCurrentAcademicYear();
+
+    const targetClass = await findClassForPlacement({
+      gradeLevel,
+      section,
+      academicYearId: academicYear.id,
     });
 
     if (!targetClass) {
-      return fail(`Não foi encontrada uma turma ativa para ${gradeLevel} - Seção ${section}`, 400);
+      return fail(
+        `Não foi encontrada turma de ${gradeLevel} - Seção ${section} no ano letivo ${academicYear.year}`,
+        400
+      );
     }
 
     // Get system settings
@@ -231,21 +240,17 @@ export const POST = withAuth(async (request, { user }) => {
           lastName,
           dateOfBirth: new Date(dateOfBirth),
           gender,
-          gradeLevel,
-          section,
           address: address || "",
           phoneNumber: phoneNumber || null,
           parentId: finalParentId,
         },
       });
 
-      // Create enrollment
-      const enrollment = await tx.enrollment.create({
-        data: {
-          studentId: student.id,
-          classId: targetClass.id,
-        },
-      });
+      // The enrolment is what places the student in a grade, for this year.
+      const enrollment = await enrollStudent(
+        { studentId: student.id, classId: targetClass.id },
+        tx
+      );
 
       let billing = null;
 

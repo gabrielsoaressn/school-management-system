@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { created, forbidden, paginated, serverError, validationFailed } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { currentEnrollmentFilter } from "@/lib/enrollment";
 
 const announcementSchema = z.object({
   title: z.string().min(3, 'Título deve ter no mínimo 3 caracteres'),
@@ -44,8 +45,9 @@ export const POST = withAuth(async (request, { user }) => {
     // Se houver targetGrade, filtrar apenas alunos daquela série
     let filteredUsers = targetUsers;
     if (validatedData.targetGrade) {
+      // The grade is a property of the enrolment now, not of the student.
       const studentsInGrade = await prisma.student.findMany({
-        where: { gradeLevel: validatedData.targetGrade },
+        where: currentEnrollmentFilter(validatedData.targetGrade),
         select: { userId: true },
       });
       const studentUserIds = studentsInGrade.map((s) => s.userId);
@@ -109,16 +111,19 @@ export const GET = withAuth(async (request, { user }) => {
 
     // Filtrar por série (se for aluno)
     if (user.role === 'STUDENT' && !targetGrade) {
-      const student = await prisma.student.findUnique({
-        where: { userId: user.id },
+      const enrollment = await prisma.enrollment.findFirst({
+        where: {
+          student: { userId: user.id },
+          status: "ACTIVE",
+          academicYear: { isCurrent: true },
+        },
+        select: { gradeLevel: true },
       });
 
-      if (student) {
-        where.OR = [
-          { targetGrade: null },
-          { targetGrade: student.gradeLevel },
-        ];
-      }
+      where.OR = [
+        { targetGrade: null },
+        ...(enrollment ? [{ targetGrade: enrollment.gradeLevel }] : []),
+      ];
     } else if (targetGrade) {
       where.targetGrade = targetGrade;
     }

@@ -97,6 +97,26 @@ enum RecurrenceType {
   ANNUALLY
 }
 
+enum AcademicYearStatus {
+  /// Being set up: classes and staffing defined, enrolments not open yet.
+  PLANNING
+  /// In progress. Exactly one year is ACTIVE and isCurrent at a time.
+  ACTIVE
+  /// Finished. Kept for history; nothing new is written against it.
+  CLOSED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  /// Finished the year and was promoted.
+  COMPLETED
+  /// Finished the year and was held back.
+  RETAINED
+  /// Left the school during the year.
+  TRANSFERRED
+  CANCELLED
+}
+
 enum PayrollStatus {
   SCHEDULED
   COMPLETED
@@ -205,8 +225,6 @@ model Student {
   gender         Gender
   address        String
   phoneNumber    String?
-  gradeLevel     String
-  section        String
   enrollmentDate DateTime @default(now())
   profilePhoto   String?
 
@@ -236,7 +254,6 @@ model Student {
 
   @@index([studentId])
   @@index([parentId])
-  @@index([gradeLevel, section])
   @@index([deletedAt])
 }
 
@@ -333,6 +350,7 @@ model Teacher {
   // 🆕 Novos relacionamentos - Módulo 2
   assessments       Assessment[]
   attendanceRecords AttendanceRecord[]
+  classAssignments  ClassSubjectTeacher[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -356,6 +374,7 @@ model Subject {
   // 🆕 Novos relacionamentos - Módulo 2
   assessments       Assessment[]
   attendanceRecords AttendanceRecord[]
+  classAssignments  ClassSubjectTeacher[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -379,44 +398,121 @@ model TeacherSubject {
   @@index([subjectId])
 }
 
-// Class Model
-model Class {
-  id           String  @id @default(cuid())
-  name         String
-  gradeLevel   String
-  section      String
-  academicYear String
-  roomNumber   String?
-  schedule     String?
-  capacity     Int?
+/// The school year. Everything academic — a class, an enrolment, a grade, a
+/// register entry — belongs to exactly one of these, so "3º Ano" is always a
+/// statement about a particular year.
+model AcademicYear {
+  id        String             @id @default(cuid())
+  year      Int                @unique
+  startDate DateTime           @db.Date
+  endDate   DateTime           @db.Date
+  /// Exactly one row is true; enforced by a partial unique index.
+  isCurrent Boolean            @default(false)
+  status    AcademicYearStatus @default(PLANNING)
 
-  // Relations existentes
-  enrollments Enrollment[]
-
-  // 🆕 Novos relacionamentos - Módulo 2
+  classes           Class[]
+  enrollments       Enrollment[]
+  assignments       ClassSubjectTeacher[]
   assessments       Assessment[]
   attendanceRecords AttendanceRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([gradeLevel, section, academicYear])
+  @@index([isCurrent])
+  @@index([status])
+}
+
+// Class Model
+/// A classroom in a given year: "6º Ano A / 2026". Not subject-specific — the
+/// curriculum lives in ClassSubjectTeacher.
+model Class {
+  id             String       @id @default(cuid())
+  name           String
+  gradeLevel     String
+  section        String
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  roomNumber     String?
+  schedule       String?
+  capacity       Int?
+
+  enrollments Enrollment[]
+  assignments ClassSubjectTeacher[]
+
+  assessments       Assessment[]
+  attendanceRecords AttendanceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([gradeLevel, section, academicYearId])
+  @@index([academicYearId])
   @@index([gradeLevel, section])
 }
 
+/// Who teaches which subject in which class, for a given year. This is the
+/// curriculum of a class, and the only thing that authorizes a teacher to enter
+/// grades or attendance for it.
+model ClassSubjectTeacher {
+  id             String       @id @default(cuid())
+  classId        String
+  class          Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId      String
+  subject        Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId      String?
+  teacher        Teacher?     @relation(fields: [teacherId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  /// Weekly periods, for timetable and workload reports.
+  weeklyPeriods Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classId, subjectId])
+  @@index([classId])
+  @@index([subjectId])
+  @@index([teacherId])
+  @@index([academicYearId])
+}
+
 // Enrollment Model (Student-Class relationship)
+/// A student's placement for one school year. This — not Student — is where the
+/// grade level lives: a student is in 3º Ano *in 2026*, and in 4º Ano in 2027.
+///
+/// `gradeLevel` and `section` are copied from the class on creation and kept in
+/// step by src/lib/enrollment.ts, which is the only place that writes them. The
+/// copy is deliberate: a report card, a transcript and the promotion routine all
+/// ask "which grade was this student in, that year?", and that must survive the
+/// class being renamed or the student moving section.
 model Enrollment {
-  id        String  @id @default(cuid())
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  classId   String
-  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  id             String           @id @default(cuid())
+  studentId      String
+  student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId        String
+  class          Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  academicYearId String
+  academicYear   AcademicYear     @relation(fields: [academicYearId], references: [id])
+  gradeLevel     String
+  section        String
+  status         EnrollmentStatus @default(ACTIVE)
 
-  enrolledAt DateTime @default(now())
+  enrolledAt DateTime  @default(now())
+  /// Set when the year closes or the student leaves.
+  endedAt    DateTime?
 
-  @@unique([studentId, classId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// One placement per student per year.
+  @@unique([studentId, academicYearId])
   @@index([studentId])
   @@index([classId])
+  @@index([academicYearId])
+  @@index([gradeLevel, section])
+  @@index([status])
 }
 
 // ============================================
@@ -830,46 +926,53 @@ model Assessment {
   assessmentTypeId String
   assessmentType   AssessmentType @relation(fields: [assessmentTypeId], references: [id])
 
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
   term           String
-  academicYear   String
   score          Float
-  maxScore       Float    @default(10.0)
+  maxScore       Float        @default(10.0)
   grade          String?
   remarks        String?
-  assessmentDate DateTime @default(now())
+  assessmentDate DateTime     @default(now())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentId, subjectId, assessmentTypeId, term, academicYear])
+  @@unique([studentId, subjectId, assessmentTypeId, term, academicYearId])
   @@index([studentId])
   @@index([subjectId])
   @@index([classId])
   @@index([teacherId])
-  @@index([term, academicYear])
+  @@index([academicYearId, term])
 }
 
 model AttendanceRecord {
-  id        String           @id @default(cuid())
-  studentId String
-  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  classId   String
-  class     Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subjectId String?
-  subject   Subject?         @relation(fields: [subjectId], references: [id])
-  teacherId String?
-  teacher   Teacher?         @relation(fields: [teacherId], references: [id])
-  date      DateTime
-  status    AttendanceStatus
-  remarks   String?
+  id             String           @id @default(cuid())
+  studentId      String
+  student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId        String
+  class          Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId      String?
+  subject        Subject?         @relation(fields: [subjectId], references: [id])
+  teacherId      String?
+  teacher        Teacher?         @relation(fields: [teacherId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear     @relation(fields: [academicYearId], references: [id])
+  date           DateTime         @db.Date
+  status         AttendanceStatus
+  remarks        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// One register entry per student per class per day. Deliberately not keyed on
+  /// subjectId: it is nullable, and Postgres treats NULLs as distinct, which
+  /// would let the same day be recorded twice.
   @@unique([studentId, classId, date])
   @@index([studentId])
   @@index([classId])
   @@index([subjectId])
+  @@index([academicYearId])
   @@index([date])
 }
 
