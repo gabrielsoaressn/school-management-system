@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // GET - Get single parent
 export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
@@ -137,9 +138,24 @@ export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (reque
       return fail("Não é possível excluir um responsável com alunos vinculados", 400);
     }
 
-    // Delete parent (user will be deleted by cascade)
-    await prisma.user.delete({
-      where: { id: parent.userId },
+    // Soft delete, and the login goes inactive.
+    const deletedAt = new Date();
+    await prisma.$transaction([
+      prisma.parent.update({ where: { id }, data: { deletedAt } }),
+      prisma.user.update({
+        where: { id: parent.userId },
+        data: { isActive: false },
+      }),
+    ]);
+
+    await recordAudit({
+      action: "parent.delete",
+      entity: "Parent",
+      entityId: id,
+      actor: user,
+      request,
+      before: parent,
+      after: { deletedAt },
     });
 
     return ok(null, { message: "Responsável excluído com sucesso" });

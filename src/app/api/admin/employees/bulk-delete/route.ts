@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // POST - Bulk delete employees
 export const POST = withAuth(async (request, { user }) => {
@@ -54,34 +55,31 @@ export const POST = withAuth(async (request, { user }) => {
     const employeeIds = employees.map((e) => e.id);
     const userIds = employees.map((e) => e.userId);
 
-    // Delete in transaction
-    await prisma.$transaction(async (tx) => {
-      // Delete teacher profiles first (if any)
-      await tx.teacher.deleteMany({
-        where: {
-          employeeId: {
-            in: employeeIds,
-          },
-        },
-      });
+    // Soft delete: payroll history points at these rows and must survive.
+    const deletedAt = new Date();
 
-      // Delete employees
-      await tx.employee.deleteMany({
-        where: {
-          id: {
-            in: employeeIds,
-          },
-        },
-      });
+    await prisma.$transaction([
+      prisma.employee.updateMany({
+        where: { id: { in: employeeIds } },
+        data: { deletedAt },
+      }),
+      prisma.user.updateMany({
+        where: { id: { in: userIds } },
+        data: { isActive: false },
+      }),
+    ]);
 
-      // Delete users
-      await tx.user.deleteMany({
-        where: {
-          id: {
-            in: userIds,
-          },
-        },
-      });
+    await recordAudit({
+      action: "employee.delete",
+      entity: "Employee",
+      actor: user,
+      request,
+      after: {
+        ids: employeeIds,
+        deletedAt,
+        deleteAll: !!deleteAll,
+        names: employees.map((e) => `${e.firstName} ${e.lastName}`),
+      },
     });
 
     return ok(null, { message: `${employees.length} funcionário(s) excluído(s) com sucesso` });

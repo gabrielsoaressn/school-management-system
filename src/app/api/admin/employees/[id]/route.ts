@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
 import { redactEmployeeFinancials } from "@/lib/redact";
+import { recordAudit } from "@/lib/audit";
 
 // GET - Get single employee
 export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
@@ -147,9 +148,23 @@ export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (reque
       return fail("Não é possível excluir um funcionário com registros de pagamento. Considere desativá-lo.", 400);
     }
 
-    // Delete employee (user will be deleted by cascade)
-    await prisma.user.delete({
-      where: { id: employee.userId },
+    const deletedAt = new Date();
+    await prisma.$transaction([
+      prisma.employee.update({ where: { id }, data: { deletedAt } }),
+      prisma.user.update({
+        where: { id: employee.userId },
+        data: { isActive: false },
+      }),
+    ]);
+
+    await recordAudit({
+      action: "employee.delete",
+      entity: "Employee",
+      entityId: id,
+      actor: user,
+      request,
+      before: employee,
+      after: { deletedAt },
     });
 
     return ok(null, { message: "Funcionário excluído com sucesso" });

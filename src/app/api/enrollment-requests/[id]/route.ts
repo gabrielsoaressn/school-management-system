@@ -5,6 +5,7 @@ import { fail, forbidden, notFound, ok, serverError } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
 import { generateTemporaryPassword, hashPassword } from "@/lib/password";
 import { sendTemporaryPasswordEmail } from "@/lib/notifications";
+import { recordAudit } from "@/lib/audit";
 
 // GET - Obter detalhes de uma solicitação específica
 export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
@@ -203,6 +204,15 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
         return { student, parent };
       });
 
+      await recordAudit({
+        action: "enrollment.approve",
+        entity: "EnrollmentRequest",
+        entityId: id,
+        actor: user,
+        request,
+        after: { studentId: result.student.id, parentId: result.parent.id },
+      });
+
       return ok(result, { message: 'Matrícula aprovada com sucesso!' });
 
     } else if (action === 'reject') {
@@ -216,6 +226,15 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
           rejectionReason,
           notes,
         },
+      });
+
+      await recordAudit({
+        action: "enrollment.reject",
+        entity: "EnrollmentRequest",
+        entityId: id,
+        actor: user,
+        request,
+        after: { rejectionReason },
       });
 
       return ok(null, { message: 'Solicitação rejeitada' });
@@ -239,6 +258,14 @@ export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (reque
       data: {
         status: 'CANCELLED',
       },
+    });
+
+    await recordAudit({
+      action: "enrollment.cancel",
+      entity: "EnrollmentRequest",
+      entityId: id,
+      actor: user,
+      request,
     });
 
     return ok(null, { message: 'Solicitação cancelada' });

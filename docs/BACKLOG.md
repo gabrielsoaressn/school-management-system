@@ -14,10 +14,6 @@ Cada item registra o contexto necessário para ser retomado sem redescobrir o pr
 
 ## Corretude conhecida, não bloqueante
 
-- **`PUT /api/admin/settings`** (`src/app/api/admin/settings/route.ts:43`) usa `prisma.settings.update`
-  em loop. Se o payload trouxer uma chave que não existe na tabela, a rota estoura com P2025 e
-  falha em silêncio parcial (algumas chaves já atualizadas, outras não). Deve ser `upsert` dentro
-  de uma transação.
 - **`Assessment` unique incompleta** (`prisma/schema.prisma:798`):
   `[studentId, subjectId, assessmentTypeId, term, academicYear]` não inclui `classId`. Impede que
   o mesmo aluno tenha a mesma matéria em duas turmas no mesmo período (caso de reforço ou turma
@@ -40,6 +36,23 @@ Stripe foi removido do projeto (Fase 5.9) — a decisão é usar um PSP brasilei
 3. Idempotência por `externalId` (webhook do PSP reentrega).
 4. Baixa manual continua possível para dinheiro e transferência.
 5. Conciliação de divergência (valor pago ≠ valor devido) precisa de tela no financeiro.
+
+## Soft delete e retenção
+
+- **`Payroll` não tem `deletedAt`.** A fase 2.8 aplicou soft delete a Student, Parent, Employee,
+  Billing e EnrollmentRequest, conforme especificado. Payroll é financeiro e provavelmente deveria
+  seguir a mesma regra; hoje `DELETE /api/admin/payroll/[id]` remove a linha de fato.
+- **Não há tela de lixeira nem restauração.** Registros com `deletedAt` só voltam por SQL. A
+  extensão do Prisma em `src/lib/prisma.ts` já permite ler os apagados quando a query passa
+  `deletedAt` explicitamente — a tela pode ser construída sobre isso.
+- **Retenção do `AuditLog` e do `DataSubjectRequest`** não tem rotina de expurgo. O aviso de
+  privacidade promete 5 anos para a trilha de auditoria; falta o job que aplica isso.
+- **`GRADE_LEVELS` do formulário público** (`1º Ano EF` … `3º Ano EM`) não casa com as séries do
+  restante do sistema (`1º Ano` … `9º Ano`). Uma matrícula aprovada gera aluno com série que não
+  corresponde a nenhuma turma. Resolver na fase 4 junto com `constants.ts`.
+- **`requestNumber` tem dois formatos**: o seed grava `ENR-2026-0001` e a API gera `MAT-2026-0001`.
+  A geração ainda deriva do último registro criado, então prefixos diferentes zeram o contador.
+  Endereçado na fase 3.4.
 
 ## Produto / UX
 

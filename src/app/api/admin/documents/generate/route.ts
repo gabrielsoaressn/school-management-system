@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { created, forbidden, notFound, serverError, validationFailed } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 const generateDocumentSchema = z.object({
   studentId: z.string(),
@@ -85,6 +86,18 @@ export const POST = withAuth(async (request, { user }) => {
         generatedHtml: htmlContent,
         generatedBy: user.id,
         metadata: JSON.stringify(validatedData.additionalData || {}),
+      },
+    });
+
+    await recordAudit({
+      action: "document.generate",
+      entity: "GeneratedDocument",
+      entityId: generatedDocument.id,
+      actor: user,
+      request,
+      after: {
+        type: generatedDocument.type,
+        studentId: generatedDocument.studentId,
       },
     });
 

@@ -9,6 +9,8 @@ import { Card } from '@/components/ui/Card';
 import { CheckCircle, ChevronLeft, ChevronRight, FileText, User, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { HONEYPOT_FIELD } from '@/lib/rate-limit';
+import Link from 'next/link';
+import { CONSENT_TEXT, CONSENT_VERSION } from '@/lib/privacy';
 
 type FormData = {
   // Aluno
@@ -95,6 +97,7 @@ export default function MatriculaPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Honeypot: hidden from users, tempting to bots. Filled in => request dropped.
   const [honeypot, setHoneypot] = useState('');
+  const [consentGiven, setConsentGiven] = useState(false);
   const [requestNumber, setRequestNumber] = useState<string | null>(null);
 
   const updateFormData = (field: keyof FormData, value: any) => {
@@ -153,6 +156,11 @@ export default function MatriculaPage() {
   };
 
   const handleSubmit = async () => {
+    if (!consentGiven) {
+      toast.error('É necessário concordar com o uso dos dados para enviar');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/enrollment-requests', {
@@ -161,6 +169,8 @@ export default function MatriculaPage() {
         body: JSON.stringify({
           ...formData,
           [HONEYPOT_FIELD]: honeypot,
+          consentGiven,
+          consentVersion: CONSENT_VERSION,
           financialGuardianCPF: formData.financialGuardianCPF.replace(/\D/g, ''),
           pedagogicalGuardianCPF: formData.isSameGuardian ? '' : formData.pedagogicalGuardianCPF.replace(/\D/g, ''),
           zipCode: formData.zipCode.replace(/\D/g, ''),
@@ -510,10 +520,31 @@ export default function MatriculaPage() {
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  Ao enviar esta solicitação, você concorda que os dados fornecidos são verdadeiros e autoriza a escola a utilizá-los para fins de matrícula.
-                </p>
+              <div className="rounded-lg border border-border bg-muted/40 p-4">
+                <h3 className="mb-2 font-semibold text-foreground">
+                  Uso dos seus dados
+                </h3>
+                <p className="text-sm text-muted-foreground">{CONSENT_TEXT}</p>
+
+                <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={consentGiven}
+                    onChange={(e) => setConsentGiven(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-2 focus:ring-ring"
+                  />
+                  <span>
+                    Li e concordo com o tratamento dos dados nas condições
+                    acima, e confirmo que as informações são verdadeiras.{" "}
+                    <Link
+                      href="/privacidade"
+                      target="_blank"
+                      className="text-primary hover:underline"
+                    >
+                      Ver o aviso de privacidade completo
+                    </Link>
+                  </span>
+                </label>
               </div>
             </div>
           )}
@@ -552,7 +583,7 @@ export default function MatriculaPage() {
             ) : (
               <Button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !consentGiven}
                 className="bg-green-600 hover:bg-green-700"
               >
                 {isSubmitting ? 'Enviando...' : 'Enviar Solicitação'}

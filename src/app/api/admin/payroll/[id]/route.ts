@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // GET - Get single payroll record
 export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
@@ -92,6 +93,16 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
           },
         },
       },
+    });
+
+    await recordAudit({
+      action: "payroll.update",
+      entity: "Payroll",
+      entityId: id,
+      actor: user,
+      request,
+      before: existingPayroll,
+      after: updatedPayroll,
     });
 
     return ok(updatedPayroll, { message: "Pagamento atualizado com sucesso" });

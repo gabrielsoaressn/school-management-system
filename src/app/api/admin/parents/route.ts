@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
 import { hashPassword, validatePassword } from "@/lib/password";
+import { recordCpfListAccess } from "@/lib/audit";
 
 // GET - List all parents
 export const GET = withAuth(async (request, { user }) => {
@@ -52,6 +53,14 @@ export const GET = withAuth(async (request, { user }) => {
       }),
       prisma.parent.count({ where }),
     ]);
+
+    // LGPD: reading a list with CPF is itself an access worth recording.
+    await recordCpfListAccess({
+      entity: "Parent",
+      actor: user,
+      request,
+      filters: { search, page, limit },
+    });
 
     return paginated(parents, { total: total, page: page, limit: limit });
   } catch (error: any) {

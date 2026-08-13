@@ -35,6 +35,12 @@ const enrollmentRequestSchema = z.object({
   state: z.string().min(2, 'Estado é obrigatório'),
   zipCode: z.string().min(8, 'CEP inválido'),
 
+  // Consentimento LGPD: obrigatório, registrado com data e versão do texto
+  consentGiven: z.literal(true, {
+    errorMap: () => ({ message: 'É necessário concordar com o uso dos dados' }),
+  }),
+  consentVersion: z.string().min(1),
+
   // Documentos (URLs temporárias de upload)
   birthCertificateUrl: z.string().optional(),
   cpfUrl: z.string().optional(),
@@ -85,11 +91,15 @@ export const POST = withoutAuth(async (request) => {
     const requestNumber = `MAT-${year}-${String(nextNumber).padStart(4, '0')}`;
 
     // Criar solicitação
+    const { consentGiven, consentVersion, ...requestData } = validatedData;
+
     const enrollmentRequest = await prisma.enrollmentRequest.create({
       data: {
         requestNumber,
         status: 'PENDING',
-        ...validatedData,
+        ...requestData,
+        consentGivenAt: new Date(),
+        consentVersion,
       },
     });
 

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 export const POST = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
   try {
@@ -27,6 +28,16 @@ export const POST = withAuth<{ params: Promise<{ id: string }> }>(async (request
         status: "PENDING",
         notes: billing.notes?.replace("Aguardando aprovação do administrador", "Aprovado pelo administrador"),
       },
+    });
+
+    await recordAudit({
+      action: "billing.approve",
+      entity: "Billing",
+      entityId: id,
+      actor: user,
+      request,
+      before: { status: billing.status, amount: billing.amount },
+      after: { status: "PENDING" },
     });
 
     return ok(null, { message: "Cobrança aprovada com sucesso" });

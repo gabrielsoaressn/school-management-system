@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // POST - Bulk delete students
 export const POST = withAuth(async (request, { user }) => {
@@ -53,70 +54,33 @@ export const POST = withAuth(async (request, { user }) => {
     const studentIds = students.map((s) => s.id);
     const userIds = students.map((s) => s.userId);
 
-    // Delete in transaction
-    await prisma.$transaction(async (tx) => {
-      // Delete enrollments
-      await tx.enrollment.deleteMany({
-        where: {
-          studentId: {
-            in: studentIds,
-          },
-        },
-      });
+    // Soft delete: the academic and financial history of a student is a legal
+    // record. Marking the student hides them everywhere in the app; grades,
+    // attendance, invoices and reports stay attached for retention and audit.
+    const deletedAt = new Date();
 
-      // Delete grades
-      await tx.grade.deleteMany({
-        where: {
-          studentId: {
-            in: studentIds,
-          },
-        },
-      });
+    await prisma.$transaction([
+      prisma.student.updateMany({
+        where: { id: { in: studentIds } },
+        data: { deletedAt },
+      }),
+      prisma.user.updateMany({
+        where: { id: { in: userIds } },
+        data: { isActive: false },
+      }),
+    ]);
 
-      // Delete attendance
-      await tx.attendance.deleteMany({
-        where: {
-          studentId: {
-            in: studentIds,
-          },
-        },
-      });
-
-      // Delete tuitions
-      await tx.tuition.deleteMany({
-        where: {
-          studentId: {
-            in: studentIds,
-          },
-        },
-      });
-
-      // Delete academic reports
-      await tx.academicReport.deleteMany({
-        where: {
-          studentId: {
-            in: studentIds,
-          },
-        },
-      });
-
-      // Delete students
-      await tx.student.deleteMany({
-        where: {
-          id: {
-            in: studentIds,
-          },
-        },
-      });
-
-      // Delete users
-      await tx.user.deleteMany({
-        where: {
-          id: {
-            in: userIds,
-          },
-        },
-      });
+    await recordAudit({
+      action: "student.delete",
+      entity: "Student",
+      actor: user,
+      request,
+      after: {
+        ids: studentIds,
+        deletedAt,
+        deleteAll: !!deleteAll,
+        names: students.map((s) => `${s.firstName} ${s.lastName}`),
+      },
     });
 
     return ok(null, { message: `${students.length} aluno(s) excluído(s) com sucesso` });

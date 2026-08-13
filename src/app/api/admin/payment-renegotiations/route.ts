@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { created, fail, forbidden, notFound, paginated, serverError, validationFailed } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 const renegotiationSchema = z.object({
   billingId: z.string(),
@@ -65,6 +66,15 @@ export const POST = withAuth(async (request, { user }) => {
       });
 
       return renegotiation;
+    });
+
+    await recordAudit({
+      action: "billing.renegotiate",
+      entity: "Billing",
+      entityId: validatedData.billingId,
+      actor: user,
+      request,
+      after: result,
     });
 
     return created(result, { message: 'Renegociação criada com sucesso!' });

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 export const POST = withAuth(async (request, { user }) => {
   try {
@@ -18,6 +19,14 @@ export const POST = withAuth(async (request, { user }) => {
     await prisma.billing.updateMany({
       where: { status: "DRAFT" },
       data: { status: "PENDING" },
+    });
+
+    await recordAudit({
+      action: "billing.approve_all",
+      entity: "Billing",
+      actor: user,
+      request,
+      after: { approvedCount: count },
     });
 
     return ok(null, { message: `${count} cobrança(s) aprovada(s) com sucesso` });

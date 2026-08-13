@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // GET - List all payroll records
 export const GET = withAuth(async (request, { user }) => {
@@ -166,6 +167,15 @@ export const POST = withAuth(async (request, { user }) => {
           },
         },
       },
+    });
+
+    await recordAudit({
+      action: "payroll.create",
+      entity: "Payroll",
+      entityId: payroll.id,
+      actor: user,
+      request,
+      after: payroll,
     });
 
     return created(payroll, { message: "Pagamento programado com sucesso" });

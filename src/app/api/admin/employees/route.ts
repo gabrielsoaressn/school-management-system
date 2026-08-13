@@ -4,6 +4,7 @@ import { withAuth } from "@/lib/api-auth";
 import { userRoleForEmployeeType } from "@/lib/employee-types";
 import { redactEmployeeList } from "@/lib/redact";
 import { hashPassword, validatePassword } from "@/lib/password";
+import { recordCpfListAccess } from "@/lib/audit";
 
 // GET - List all employees
 export const GET = withAuth(async (request, { user }) => {
@@ -58,6 +59,14 @@ export const GET = withAuth(async (request, { user }) => {
       }),
       prisma.employee.count({ where }),
     ]);
+
+    // LGPD: reading a list with CPF is itself an access worth recording.
+    await recordCpfListAccess({
+      entity: "Employee",
+      actor: user,
+      request,
+      filters: { search, page, limit },
+    });
 
     return paginated(redactEmployeeList(employees, user), {
       total: total,

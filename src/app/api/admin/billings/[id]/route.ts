@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // GET - Get single billing
 export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
@@ -142,9 +143,17 @@ export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (reque
       return fail("Não é possível excluir uma cobrança que já foi paga. Considere cancelá-la.", 400);
     }
 
-    // Delete billing
-    await prisma.billing.delete({
-      where: { id: id },
+    const deletedAt = new Date();
+    await prisma.billing.update({ where: { id }, data: { deletedAt } });
+
+    await recordAudit({
+      action: "billing.delete",
+      entity: "Billing",
+      entityId: id,
+      actor: user,
+      request,
+      before: billing,
+      after: { deletedAt },
     });
 
     return ok(null, { message: "Cobrança excluída com sucesso" });

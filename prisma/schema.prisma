@@ -106,9 +106,9 @@ enum EnrollmentRequestStatus {
 }
 
 enum GuardianType {
-  FINANCIAL    // Responsável Financeiro
-  PEDAGOGICAL  // Responsável Pedagógico
-  BOTH         // Ambos
+  FINANCIAL // Responsável Financeiro
+  PEDAGOGICAL // Responsável Pedagógico
+  BOTH // Ambos
 }
 
 enum ReminderType {
@@ -126,11 +126,11 @@ enum ReminderStatus {
 }
 
 enum OccurrenceType {
-  BEHAVIORAL  // Comportamento
-  ACADEMIC    // Acadêmico
-  HEALTH      // Saúde
-  ATTENDANCE  // Frequência
-  POSITIVE    // Elogio/Reconhecimento
+  BEHAVIORAL // Comportamento
+  ACADEMIC // Acadêmico
+  HEALTH // Saúde
+  ATTENDANCE // Frequência
+  POSITIVE // Elogio/Reconhecimento
   OTHER
 }
 
@@ -143,11 +143,11 @@ enum OccurrenceSeverity {
 
 enum DocumentType {
   ENROLLMENT_DECLARATION // Declaração de Matrícula
-  SERVICE_CONTRACT       // Contrato de Prestação de Serviços
-  ACADEMIC_TRANSCRIPT    // Histórico Escolar
-  CONDUCT_CERTIFICATE    // Atestado de Conduta
+  SERVICE_CONTRACT // Contrato de Prestação de Serviços
+  ACADEMIC_TRANSCRIPT // Histórico Escolar
+  CONDUCT_CERTIFICATE // Atestado de Conduta
   ENROLLMENT_CERTIFICATE // Certificado de Matrícula
-  CUSTOM                 // Personalizado
+  CUSTOM // Personalizado
 }
 
 // ============================================
@@ -218,12 +218,16 @@ model Student {
   occurrences           Occurrence[]
   generatedDocuments    GeneratedDocument[]
 
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([studentId])
   @@index([parentId])
   @@index([gradeLevel, section])
+  @@index([deletedAt])
 }
 
 // Parent Model
@@ -251,10 +255,14 @@ model Parent {
   guardianRelationships GuardianRelationship[]
   financialContacts     FinancialContact[]
 
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([cpf])
+  @@index([deletedAt])
 }
 
 // Employee Model
@@ -286,12 +294,16 @@ model Employee {
   teacher  Teacher?
   payrolls Payroll[]
 
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([employeeId])
   @@index([employeeType])
   @@index([cpf])
+  @@index([deletedAt])
 }
 
 // Teacher Model (extends Employee)
@@ -477,26 +489,29 @@ model Discount {
 
 // Billing Model (Contas a Receber)
 model Billing {
-  id            String         @id @default(cuid())
-  invoiceNumber String         @unique
-  parentId      String
-  parent        Parent         @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  type          BillingType
-  description   String
-  amount        Float
-  dueDate       DateTime
-  paidDate      DateTime?
-  status        PaymentStatus  @default(PENDING)
-  isRecurring   Boolean        @default(false)
-  recurrence    RecurrenceType @default(NONE)
+  id              String         @id @default(cuid())
+  invoiceNumber   String         @unique
+  parentId        String
+  parent          Parent         @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  type            BillingType
+  description     String
+  amount          Float
+  dueDate         DateTime
+  paidDate        DateTime?
+  status          PaymentStatus  @default(PENDING)
+  isRecurring     Boolean        @default(false)
+  recurrence      RecurrenceType @default(NONE)
   nextBillingDate DateTime?
-  paymentMethod String?
-  transactionId String?
-  notes         String?
+  paymentMethod   String?
+  transactionId   String?
+  notes           String?
 
   // 🆕 Novos relacionamentos - Módulo 3
   reminders      PaymentReminder[]
   renegotiations PaymentRenegotiation[]
+
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -505,6 +520,7 @@ model Billing {
   @@index([status])
   @@index([dueDate])
   @@index([invoiceNumber])
+  @@index([deletedAt])
 }
 
 // Payroll Model (Folha de Pagamento)
@@ -686,9 +702,9 @@ model Settings {
 // ============================================
 
 model EnrollmentRequest {
-  id            String                   @id @default(cuid())
-  requestNumber String                   @unique
-  status        EnrollmentRequestStatus  @default(PENDING)
+  id            String                  @id @default(cuid())
+  requestNumber String                  @unique
+  status        EnrollmentRequestStatus @default(PENDING)
 
   // Dados do Aluno
   studentFirstName String
@@ -725,6 +741,10 @@ model EnrollmentRequest {
   proofOfAddressUrl   String?
   previousSchoolUrl   String?
 
+  // Consentimento LGPD (art. 7º, I e V): registrado com data e versão do texto
+  consentGivenAt DateTime?
+  consentVersion String?
+
   // Campos administrativos
   reviewedBy      String?
   reviewedAt      DateTime?
@@ -735,12 +755,16 @@ model EnrollmentRequest {
   approvedStudentId String?  @unique
   approvedStudent   Student? @relation(fields: [approvedStudentId], references: [id])
 
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([requestNumber])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 model GuardianRelationship {
@@ -868,13 +892,13 @@ model PaymentReminder {
 }
 
 model PaymentRenegotiation {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   billingId          String
-  billing            Billing  @relation(fields: [billingId], references: [id], onDelete: Cascade)
+  billing            Billing   @relation(fields: [billingId], references: [id], onDelete: Cascade)
   originalAmount     Float
   renegotiatedAmount Float
-  discount           Float    @default(0)
-  installments       Int      @default(1)
+  discount           Float     @default(0)
+  installments       Int       @default(1)
   newDueDate         DateTime
   renegotiatedBy     String
   parentApprovedAt   DateTime?
@@ -938,7 +962,7 @@ model Occurrence {
 }
 
 model CommunicationThread {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   subject       String
   senderId      String
   senderName    String
@@ -946,8 +970,8 @@ model CommunicationThread {
   recipientId   String
   recipientName String
   recipientRole String
-  lastMessageAt DateTime  @default(now())
-  isArchived    Boolean   @default(false)
+  lastMessageAt DateTime @default(now())
+  isArchived    Boolean  @default(false)
 
   messages Message[]
 
@@ -982,13 +1006,13 @@ model Message {
 // ============================================
 
 model DocumentTemplate {
-  id                 String     @id @default(cuid())
+  id                 String       @id @default(cuid())
   name               String
   type               DocumentType
   description        String?
   htmlTemplate       String
   availableVariables String
-  isActive           Boolean  @default(true)
+  isActive           Boolean      @default(true)
 
   generatedDocuments GeneratedDocument[]
 
@@ -1074,4 +1098,66 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ============================================
+// LGPD: AUDITORIA E DIREITOS DO TITULAR
+// ============================================
+
+/// Append-only trail of privileged operations. Never updated, never deleted by
+/// the application: retention is an operational decision (docs/OPERATIONS.md).
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  actorRole  String?
+  action     String
+  entity     String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+enum DataSubjectRequestType {
+  ACCESS
+  DELETION
+  CORRECTION
+  PORTABILITY
+}
+
+enum DataSubjectRequestStatus {
+  RECEIVED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+/// LGPD art. 18 requests (access, deletion, correction, portability) filed by
+/// the data subject or their guardian.
+model DataSubjectRequest {
+  id             String                   @id @default(cuid())
+  protocol       String                   @unique
+  type           DataSubjectRequestType
+  status         DataSubjectRequestStatus @default(RECEIVED)
+  requesterName  String
+  requesterEmail String
+  requesterCpf   String?
+  studentName    String?
+  description    String
+  response       String?
+  handledBy      String?
+  handledAt      DateTime?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  @@index([status])
+  @@index([protocol])
+  @@index([createdAt])
 }

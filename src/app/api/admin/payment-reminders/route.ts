@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { created, fail, forbidden, notFound, paginated, serverError, validationFailed } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 const reminderSchema = z.object({
   billingId: z.string(),
@@ -91,6 +92,18 @@ export const POST = withAuth(async (request, { user }) => {
         },
       });
 
+      await recordAudit({
+        action: "billing.remind",
+        entity: "Billing",
+        actor: user,
+        request,
+        after: {
+          billingIds: validatedData.billingIds,
+          reminderType: validatedData.reminderType,
+          count: reminders.length,
+        },
+      });
+
       return created(reminders, { message: `${reminders.length} lembretes enviados com sucesso!` });
     } else {
       // Envio individual
@@ -142,6 +155,15 @@ export const POST = withAuth(async (request, { user }) => {
           status: 'DELIVERED',
           deliveredAt: new Date(),
         },
+      });
+
+      await recordAudit({
+        action: "billing.remind",
+        entity: "Billing",
+        entityId: reminder.billingId,
+        actor: user,
+        request,
+        after: { reminderType: reminder.reminderType },
       });
 
       return created(reminder, { message: 'Lembrete enviado com sucesso!' });

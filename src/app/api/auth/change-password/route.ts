@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/api-auth";
 import { fail, ok, serverError, validationFailed } from "@/lib/api-response";
 import { hashPassword, validatePassword, verifyPassword } from "@/lib/password";
+import { recordAudit } from "@/lib/audit";
 
 const schema = z.object({
   currentPassword: z.string().min(1, "Informe a senha atual"),
@@ -46,6 +47,14 @@ export const POST = withAuth(async (request, { user }) => {
         mustChangePassword: false,
         passwordChangedAt: new Date(),
       },
+    });
+
+    await recordAudit({
+      action: "password.change",
+      entity: "User",
+      entityId: account.id,
+      actor: user,
+      request,
     });
 
     return ok(null, { message: "Senha alterada com sucesso" });
