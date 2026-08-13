@@ -14,10 +14,11 @@ Cada item registra o contexto necessário para ser retomado sem redescobrir o pr
 
 ## Corretude conhecida, não bloqueante
 
-- **`Assessment` unique incompleta** (`prisma/schema.prisma:798`):
-  `[studentId, subjectId, assessmentTypeId, term, academicYear]` não inclui `classId`. Impede que
-  o mesmo aluno tenha a mesma matéria em duas turmas no mesmo período (caso de reforço ou turma
-  optativa). Reavaliar junto com a Fase 4.2, que introduz `ClassSubjectTeacher`.
+- **`Assessment` unique ainda não inclui `classId`**:
+  `[studentId, subjectId, assessmentTypeId, term, academicYearId]`. Impede que o mesmo aluno tenha
+  a mesma disciplina em duas turmas no mesmo período (reforço, optativa). Com
+  `ClassSubjectTeacher` no lugar, a decisão agora é: uma disciplina pertence a uma turma, então o
+  caso só aparece se a escola passar a oferecer turmas paralelas.
 - **`Discount.value` é polissêmico**: guarda percentual (0-100) ou valor fixo, discriminado por
   `DiscountType`. Morre na Fase 4.3 junto com `Tuition`; se o conceito de desconto voltar em
   `Billing`, modelar com dois campos ou um `Decimal` + enum explícito.
@@ -47,12 +48,23 @@ Stripe foi removido do projeto (Fase 5.9) — a decisão é usar um PSP brasilei
   `deletedAt` explicitamente — a tela pode ser construída sobre isso.
 - **Retenção do `AuditLog` e do `DataSubjectRequest`** não tem rotina de expurgo. O aviso de
   privacidade promete 5 anos para a trilha de auditoria; falta o job que aplica isso.
-- **`GRADE_LEVELS` do formulário público** (`1º Ano EF` … `3º Ano EM`) não casa com as séries do
-  restante do sistema (`1º Ano` … `9º Ano`). Uma matrícula aprovada gera aluno com série que não
-  corresponde a nenhuma turma. Resolver na fase 4 junto com `constants.ts`.
-- **`requestNumber` tem dois formatos**: o seed grava `ENR-2026-0001` e a API gera `MAT-2026-0001`.
-  A geração ainda deriva do último registro criado, então prefixos diferentes zeram o contador.
-  Endereçado na fase 3.4.
+
+## Pendências da fase 4
+
+- **Rematrícula não tem tela.** `previewReEnrollment`/`runReEnrollment` estão expostos em
+  `GET/POST /api/admin/re-enrollment` e funcionam, mas a secretaria precisa de uma tela para
+  revisar a lista, marcar retidos e confirmar. Hoje só por API.
+- **Ano letivo não tem tela.** Criar ano, virar o ano corrente (`setCurrentAcademicYear`) e fechar
+  o anterior são funções de `src/lib/academic-year.ts` sem interface. Um sistema sem ano corrente
+  recusa toda escrita acadêmica com mensagem clara, mas não há como resolver pela interface.
+- **`AcademicReport`** continua sem tela e agora também sem vínculo com `AcademicYear` (usa
+  `academicYear String`). Endereçar junto com o boletim (fase 5.3).
+- **Desconto não é estrutural em `Billing`.** O desconto concedido na matrícula é registrado no
+  texto da nota, não em campo próprio — herdado do modelo `Discount` que era legado e saiu na 4.3.
+  Se a escola precisar de relatório de descontos concedidos, virar campo.
+- **Turmas paralelas de um mesmo aluno** não são possíveis: `Enrollment` é único por
+  `[studentId, academicYearId]`. Correto para o ensino fundamental regular; reforço e
+  contraturno exigiriam outro modelo.
 
 ## Produto / UX
 

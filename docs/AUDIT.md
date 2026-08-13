@@ -310,3 +310,39 @@ Atualizado em 2026-08-13. As fases 4, 5 e 6 do plano **não** foram executadas.
   parcial deixa `PARTIALLY_PAID`; `externalId` repetido não duplica recibo; `cron/daily`
   marca 20 vencidas na primeira execução e 0 na segunda; série mensal avança de 10/07 para
   10/09 gerando exatamente uma parcela.
+
+---
+
+# Estado após a fase 4
+
+Atualizado em 2026-08-13. As fases 5 e 6 do plano **não** foram executadas.
+
+## O que a fase 4 mudou no domínio
+
+| Antes | Depois |
+|---|---|
+| `Class.academicYear` como string `"2026"` | `AcademicYear` como entidade, com um único ano corrente garantido por índice único parcial |
+| `Student.gradeLevel` — a série do aluno era um campo sobrescrito | `Enrollment.gradeLevel` — a série é sempre relativa a um ano letivo, e o histórico sobrevive |
+| Nenhum vínculo turma↔disciplina↔professor | `ClassSubjectTeacher` é a grade curricular e a autoridade de quem pode lançar nota |
+| `Tuition` (cobra o aluno) e `Billing` (cobra o responsável) | apenas `Billing`, com 300 mensalidades migradas e 245 recibos criados |
+| `Grade`/`Attendance` sem turma, professor ou ano | apenas `Assessment`/`AttendanceRecord`, com 500 notas e 6.900 presenças migradas |
+| Nenhuma forma de promover alunos de ano | `previewReEnrollment`/`runReEnrollment`, com clonagem de turmas e emissão do novo ciclo |
+
+## Critérios de aceite da fase 4
+
+| Critério | Situação |
+|---|---|
+| Portal do responsável mostra exatamente as cobranças que o financeiro emitiu | ✅ (fase 3, confirmado: R$ 1.535,45 nas duas telas) |
+| Portal do aluno mostra exatamente o que o professor lançou | ✅ nota 9,5 lançada por professor1 aparece no portal do aluno com disciplina e turma corretas |
+| Professor não consegue lançar nota de disciplina em que não está lotado, nem via API | ✅ recusado para disciplina alheia, turma alheia e leitura de turma alheia |
+| `grep -r "Tuition\|prisma.grade" src/` não retorna nada | ✅ |
+
+## Migrações de dados
+
+Em `prisma/migrations-data/`, idempotentes e com `--dry-run`. Excluídas do `tsconfig.json` porque
+referenciam models que a própria migração removeu — ficam como registro de como os dados foram
+movidos.
+
+Conferência: `Tuition` somava R$ 617.988,00 em 300 registros; os `Billing` migrados somam
+exatamente o mesmo. Linhas sem responsável ou sem matrícula no ano são **reportadas**, não
+adivinhadas.
