@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { CheckCircle, ChevronLeft, ChevronRight, FileText, User, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { HONEYPOT_FIELD } from '@/lib/rate-limit';
 
 type FormData = {
   // Aluno
@@ -92,6 +93,8 @@ export default function MatriculaPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Honeypot: hidden from users, tempting to bots. Filled in => request dropped.
+  const [honeypot, setHoneypot] = useState('');
   const [requestNumber, setRequestNumber] = useState<string | null>(null);
 
   const updateFormData = (field: keyof FormData, value: any) => {
@@ -157,6 +160,7 @@ export default function MatriculaPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          [HONEYPOT_FIELD]: honeypot,
           financialGuardianCPF: formData.financialGuardianCPF.replace(/\D/g, ''),
           pedagogicalGuardianCPF: formData.isSameGuardian ? '' : formData.pedagogicalGuardianCPF.replace(/\D/g, ''),
           zipCode: formData.zipCode.replace(/\D/g, ''),
@@ -527,6 +531,19 @@ export default function MatriculaPage() {
               </Button>
             )}
             <div className="flex-1" />
+            <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
+              <label htmlFor={HONEYPOT_FIELD}>Não preencha este campo</label>
+              <input
+                id={HONEYPOT_FIELD}
+                name={HONEYPOT_FIELD}
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
             {currentStep < 5 ? (
               <Button onClick={nextStep}>
                 Próximo

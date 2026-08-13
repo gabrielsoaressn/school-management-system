@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { created, paginated, serverError, validationFailed } from "@/lib/api-response";
+import { created, fail, paginated, serverError, validationFailed } from "@/lib/api-response";
 import { withAuth, withoutAuth } from "@/lib/api-auth";
+import { clientIp, looksLikeBot, rateLimit } from "@/lib/rate-limit";
 
 const enrollmentRequestSchema = z.object({
   // Dados do Aluno
@@ -41,10 +42,29 @@ const enrollmentRequestSchema = z.object({
   previousSchoolUrl: z.string().optional(),
 });
 
-// POST - Criar nova solicitação de matrícula
+// POST - Criar nova solicitação de matrícula (rota pública)
 export const POST = withoutAuth(async (request) => {
   try {
+    // Public endpoint: throttle per address before touching the database.
+    const limit = rateLimit(`enrollment:${clientIp(request)}`, {
+      limit: 5,
+      windowMs: 60 * 60 * 1000,
+    });
+
+    if (!limit.allowed) {
+      return fail(
+        'Muitas solicitações enviadas. Tente novamente mais tarde.',
+        429
+      );
+    }
+
     const body = await request.json();
+
+    if (looksLikeBot(body)) {
+      // Hidden field filled: drop it as invalid without describing the check.
+      return fail('Dados inválidos');
+    }
+
     const validatedData = enrollmentRequestSchema.parse(body);
 
     // Gerar número único de solicitação
