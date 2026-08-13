@@ -20,6 +20,7 @@ import {
   Handshake,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatCurrency } from "@/lib/money";
 
 type Billing = {
   id: string;
@@ -246,7 +247,7 @@ Escola Davilla`;
             <div>
               <p className="text-sm text-gray-600">Valor em Atraso</p>
               <p className="text-2xl font-bold text-red-600">
-                R$ {overdueAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                {formatCurrency(overdueAmount)}
               </p>
             </div>
             <TrendingDown className="w-8 h-8 text-red-400" />

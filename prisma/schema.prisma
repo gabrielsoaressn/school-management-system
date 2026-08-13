@@ -281,7 +281,7 @@ model Employee {
   employeeType EmployeeType
   position     String
   department   String?
-  salary       Float
+  salary       Decimal      @db.Decimal(10, 2)
   hireDate     DateTime     @default(now())
   profilePhoto String?
   cpf          String?      @unique
@@ -418,7 +418,7 @@ model TuitionPlan {
   id           String       @id @default(cuid())
   name         String
   gradeLevel   String
-  amount       Float
+  amount       Decimal      @db.Decimal(10, 2)
   billingCycle BillingCycle
   description  String?
   isActive     Boolean      @default(true)
@@ -442,7 +442,7 @@ model Tuition {
   planId String
   plan   TuitionPlan @relation(fields: [planId], references: [id])
 
-  amount        Float
+  amount        Decimal       @db.Decimal(10, 2)
   dueDate       DateTime
   paidDate      DateTime?
   status        PaymentStatus @default(PENDING)
@@ -451,9 +451,8 @@ model Tuition {
 
   discountId     String?
   discount       Discount? @relation(fields: [discountId], references: [id])
-  discountAmount Float     @default(0)
-
-  notes String?
+  discountAmount Decimal   @default(0) @db.Decimal(10, 2)
+  notes          String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -470,7 +469,8 @@ model Discount {
   code        String       @unique
   name        String
   type        DiscountType
-  value       Float // percentage (0-100) or fixed amount
+  /// Percentage (0-100) or a fixed amount, depending on `type`.
+  value       Decimal      @db.Decimal(10, 2)
   maxUses     Int? // null = unlimited
   usedCount   Int          @default(0)
   validFrom   DateTime
@@ -495,7 +495,7 @@ model Billing {
   parent          Parent         @relation(fields: [parentId], references: [id], onDelete: Cascade)
   type            BillingType
   description     String
-  amount          Float
+  amount          Decimal        @db.Decimal(10, 2)
   dueDate         DateTime
   paidDate        DateTime?
   status          PaymentStatus  @default(PENDING)
@@ -529,10 +529,10 @@ model Payroll {
   paymentId      String        @unique
   employeeId     String
   employee       Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  baseSalary     Float
-  bonus          Float         @default(0)
-  deductions     Float         @default(0)
-  totalAmount    Float
+  baseSalary     Decimal       @db.Decimal(10, 2)
+  bonus          Decimal       @default(0) @db.Decimal(10, 2)
+  deductions     Decimal       @default(0) @db.Decimal(10, 2)
+  totalAmount    Decimal       @db.Decimal(10, 2)
   referenceMonth Int
   referenceYear  Int
   status         PayrollStatus @default(SCHEDULED)
@@ -556,7 +556,7 @@ model Expense {
   id            String   @id @default(cuid())
   category      String
   description   String
-  amount        Float
+  amount        Decimal  @db.Decimal(10, 2)
   date          DateTime
   paymentMethod String?
   receiptUrl    String?
@@ -895,9 +895,9 @@ model PaymentRenegotiation {
   id                 String    @id @default(cuid())
   billingId          String
   billing            Billing   @relation(fields: [billingId], references: [id], onDelete: Cascade)
-  originalAmount     Float
-  renegotiatedAmount Float
-  discount           Float     @default(0)
+  originalAmount     Decimal   @db.Decimal(10, 2)
+  renegotiatedAmount Decimal   @db.Decimal(10, 2)
+  discount           Decimal   @default(0) @db.Decimal(10, 2)
   installments       Int       @default(1)
   newDueDate         DateTime
   renegotiatedBy     String

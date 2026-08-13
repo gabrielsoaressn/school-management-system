@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
 import { recordAudit } from "@/lib/audit";
+import { toCents, toDecimal } from "@/lib/money";
 
 // GET - Get single payroll record
 export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
@@ -63,10 +64,10 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
     // Recalculate total if any salary component changed
     let totalAmount = existingPayroll.totalAmount;
     if (baseSalary !== undefined || bonus !== undefined || deductions !== undefined) {
-      const base = baseSalary !== undefined ? parseFloat(baseSalary) : existingPayroll.baseSalary;
-      const bonusAmt = bonus !== undefined ? parseFloat(bonus) : existingPayroll.bonus;
-      const deductAmt = deductions !== undefined ? parseFloat(deductions) : existingPayroll.deductions;
-      totalAmount = base + bonusAmt - deductAmt;
+      const base = toDecimal(baseSalary ?? existingPayroll.baseSalary);
+      const bonusAmt = toDecimal(bonus ?? existingPayroll.bonus);
+      const deductAmt = toDecimal(deductions ?? existingPayroll.deductions);
+      totalAmount = toCents(base.plus(bonusAmt).minus(deductAmt));
     }
 
     // Update payroll

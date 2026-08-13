@@ -6,9 +6,13 @@ import PageHeader from "@/components/layout/PageHeader";
 import PageWrapper from "@/components/layout/PageWrapper";
 import Card from "@/components/ui/Card";
 import { Users, GraduationCap, BookOpen, TrendingUp } from "lucide-react";
+import { formatCurrency } from "@/lib/money";
+import { currentSchoolMonth, endOfMonth, startOfMonth } from "@/lib/datetime";
 
 export default async function AdminDashboard() {
   const user = await requirePermission("admin:panel");
+
+  const thisMonth = currentSchoolMonth();
 
   // Fetch dashboard data
   const [studentsCount, teachersCount, classesCount, monthlyRevenue, pendingEnrollments] = await Promise.all([
@@ -18,8 +22,8 @@ export default async function AdminDashboard() {
     prisma.tuition.aggregate({
       where: {
         paidDate: {
-          gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          lte: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+          gte: startOfMonth(thisMonth.year, thisMonth.month),
+          lte: endOfMonth(thisMonth.year, thisMonth.month),
         },
         status: "PAID",
       },
@@ -91,7 +95,7 @@ export default async function AdminDashboard() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Receita</p>
                   <p className="text-3xl font-bold text-foreground">
-                    R$ {revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {formatCurrency(revenue)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Este Mês</p>
                 </div>

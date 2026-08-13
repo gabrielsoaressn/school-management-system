@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { formatCurrency } from "@/lib/money";
 
 interface Billing {
   id: string;
@@ -145,7 +146,7 @@ export default function BillingsTable() {
                     </td>
                     <td className="p-3 text-sm text-gray-600">{billing.type}</td>
                     <td className="p-3 font-semibold text-green-700">
-                      R$ {billing.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      {formatCurrency(billing.amount)}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
                       {new Date(billing.dueDate).toLocaleDateString("pt-BR")}

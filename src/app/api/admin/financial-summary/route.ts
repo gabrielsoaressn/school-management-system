@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { ok, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { subtract } from "@/lib/money";
+import { endOfMonth, startOfMonth } from "@/lib/datetime";
 
 // GET - Financial summary for dashboard
 export const GET = withAuth(async (request, { user }) => {
@@ -14,8 +16,8 @@ export const GET = withAuth(async (request, { user }) => {
     const referenceYear = parseInt(year);
 
     // Calculate date range for the month
-    const startDate = new Date(referenceYear, referenceMonth - 1, 1);
-    const endDate = new Date(referenceYear, referenceMonth, 0, 23, 59, 59);
+    const startDate = startOfMonth(referenceYear, referenceMonth);
+    const endDate = endOfMonth(referenceYear, referenceMonth);
 
     // Fetch all financial data in parallel
     const [
@@ -203,8 +205,8 @@ export const GET = withAuth(async (request, { user }) => {
 
       // Balance
       balance: {
-        expected: (totalBillings._sum.amount || 0) - (totalPayroll._sum.totalAmount || 0),
-        actual: (paidBillings._sum.amount || 0) - (completedPayroll._sum.totalAmount || 0),
+        expected: subtract(totalBillings._sum.amount, totalPayroll._sum.totalAmount),
+        actual: subtract(paidBillings._sum.amount, completedPayroll._sum.totalAmount),
       },
 
       // Counts

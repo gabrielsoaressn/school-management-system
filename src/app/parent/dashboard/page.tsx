@@ -2,6 +2,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
+import { formatDate } from "@/lib/datetime";
+import { formatCurrency, sum } from "@/lib/money";
 
 export default async function ParentDashboard() {
   const user = await getCurrentUser();
@@ -47,9 +49,9 @@ export default async function ParentDashboard() {
   });
 
   const pendingTuitions = tuitions.filter((t) => t.status === "PENDING").length;
-  const totalDue = tuitions
-    .filter((t) => t.status === "PENDING")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const totalDue = sum(
+    tuitions.filter((t) => t.status === "PENDING").map((t) => t.amount)
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,7 +86,7 @@ export default async function ParentDashboard() {
             <div className="bg-red-600 text-white rounded-sm p-6 border border-red-700">
               <h3 className="text-lg font-semibold mb-2">Total a Pagar</h3>
               <p className="text-3xl font-bold">
-                R$ {totalDue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                {formatCurrency(totalDue)}
               </p>
               <p className="text-sm text-red-100">Valor pendente</p>
             </div>
@@ -150,10 +152,10 @@ export default async function ParentDashboard() {
                         {tuition.invoiceNumber}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(tuition.dueDate).toLocaleDateString("pt-BR")}
+                        {formatDate(tuition.dueDate)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        R$ {tuition.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        {formatCurrency(tuition.amount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span

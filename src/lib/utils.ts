@@ -1,28 +1,14 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format } from "date-fns";
+
+// Money lives in src/lib/money.ts and dates in src/lib/datetime.ts. This file
+// used to export a formatCurrency in USD/en-US and a formatDate in "MMM dd,
+// yyyy"; both were dead code and both were wrong for a Brazilian school.
+export { formatCurrency } from "./money";
+export { formatDate, formatDateTime } from "./datetime";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-export function formatDate(date: Date | string | null): string {
-  if (!date) return "N/A";
-  const d = typeof date === "string" ? new Date(date) : date;
-  return format(d, "MMM dd, yyyy");
-}
-
-export function formatDateTime(date: Date | string | null): string {
-  if (!date) return "N/A";
-  const d = typeof date === "string" ? new Date(date) : date;
-  return format(d, "MMM dd, yyyy HH:mm");
-}
-
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
 }
 
 export function generateStudentId(): string {

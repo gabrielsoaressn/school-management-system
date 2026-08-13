@@ -7,6 +7,7 @@ import BackButton from "@/components/ui/BackButton";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import { formatCurrency, subtract } from "@/lib/money";
 import {
   DollarSign,
   TrendingUp,
@@ -17,20 +18,18 @@ import {
   UserCheck,
   GraduationCap,
 } from "lucide-react";
+import { currentSchoolMonth, endOfMonth, startOfMonth } from "@/lib/datetime";
 
 export default async function FinancialDashboard() {
   const user = await requirePermission("billing:read");
 
-  // Fetch financial summary
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-
+  // Reference month in the school's timezone, not the server's.
+  const { year: currentYear, month: currentMonth } = currentSchoolMonth();
   const referenceMonth = currentMonth;
   const referenceYear = currentYear;
 
-  // Calculate date range for the month
-  const startDate = new Date(referenceYear, referenceMonth - 1, 1);
-  const endDate = new Date(referenceYear, referenceMonth, 0, 23, 59, 59);
+  const startDate = startOfMonth(referenceYear, referenceMonth);
+  const endDate = endOfMonth(referenceYear, referenceMonth);
 
   // Fetch all financial data in parallel
   const [
@@ -185,8 +184,8 @@ export default async function FinancialDashboard() {
 
     // Balance
     balance: {
-      expected: (totalBillings._sum.amount || 0) - (totalPayroll._sum.totalAmount || 0),
-      actual: (paidBillings._sum.amount || 0) - (completedPayroll._sum.totalAmount || 0),
+      expected: subtract(totalBillings._sum.amount, totalPayroll._sum.totalAmount),
+      actual: subtract(paidBillings._sum.amount, completedPayroll._sum.totalAmount),
     },
 
     // Counts
@@ -232,7 +231,7 @@ export default async function FinancialDashboard() {
                       {draftBillings._count} cobrança(s) aguardando aprovação
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Total: R$ {(draftBillings._sum.amount || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      Total: {formatCurrency((draftBillings._sum.amount || 0))}
                     </p>
                   </div>
                 </div>
@@ -253,7 +252,7 @@ export default async function FinancialDashboard() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Total a Receber</p>
                   <p className="text-2xl font-bold text-foreground">
-                    R$ {summary.accountsReceivable.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {formatCurrency(summary.accountsReceivable.total)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {summary.accountsReceivable.totalCount} cobranças
@@ -269,7 +268,7 @@ export default async function FinancialDashboard() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Recebido</p>
                   <p className="text-2xl font-bold text-success">
-                    R$ {summary.accountsReceivable.paid.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {formatCurrency(summary.accountsReceivable.paid)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {summary.accountsReceivable.paidCount} pagamentos
@@ -285,7 +284,7 @@ export default async function FinancialDashboard() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Pendente</p>
                   <p className="text-2xl font-bold text-warning">
-                    R$ {summary.accountsReceivable.pending.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {formatCurrency(summary.accountsReceivable.pending)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {summary.accountsReceivable.pendingCount} cobranças
@@ -301,7 +300,7 @@ export default async function FinancialDashboard() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Atrasado</p>
                   <p className="text-2xl font-bold text-destructive">
-                    R$ {summary.accountsReceivable.overdue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {formatCurrency(summary.accountsReceivable.overdue)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {summary.accountsReceivable.overdueCount} cobranças
@@ -319,7 +318,7 @@ export default async function FinancialDashboard() {
               <Card padding="md" hover>
                 <p className="text-sm font-medium text-muted-foreground mb-1">Total</p>
                 <p className="text-2xl font-bold text-foreground">
-                  R$ {summary.accountsPayable.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {formatCurrency(summary.accountsPayable.total)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {summary.accountsPayable.totalCount} funcionários
@@ -329,7 +328,7 @@ export default async function FinancialDashboard() {
               <Card padding="md" className="bg-success/5 border-success/20">
                 <p className="text-sm font-medium text-muted-foreground mb-1">Pago</p>
                 <p className="text-2xl font-bold text-success">
-                  R$ {summary.accountsPayable.completed.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {formatCurrency(summary.accountsPayable.completed)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {summary.accountsPayable.completedCount} pagamentos
@@ -339,7 +338,7 @@ export default async function FinancialDashboard() {
               <Card padding="md" className="bg-warning/5 border-warning/20">
                 <p className="text-sm font-medium text-muted-foreground mb-1">Programado</p>
                 <p className="text-2xl font-bold text-warning">
-                  R$ {summary.accountsPayable.scheduled.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {formatCurrency(summary.accountsPayable.scheduled)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {summary.accountsPayable.scheduledCount} pagamentos
@@ -355,7 +354,7 @@ export default async function FinancialDashboard() {
               <div>
                 <p className="text-sm opacity-90 mb-2">Balanço Esperado</p>
                 <p className="text-4xl font-bold">
-                  R$ {summary.balance.expected.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {formatCurrency(summary.balance.expected)}
                 </p>
                 <p className="text-xs opacity-75 mt-2">
                   Total a Receber - Folha de Pagamento
@@ -364,7 +363,7 @@ export default async function FinancialDashboard() {
               <div>
                 <p className="text-sm opacity-90 mb-2">Balanço Real</p>
                 <p className="text-4xl font-bold">
-                  R$ {summary.balance.actual.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {formatCurrency(summary.balance.actual)}
                 </p>
                 <p className="text-xs opacity-75 mt-2">
                   Recebido - Pago

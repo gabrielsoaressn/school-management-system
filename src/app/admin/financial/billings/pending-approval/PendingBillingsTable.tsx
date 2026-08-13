@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { formatCurrency } from "@/lib/money";
 
 interface Billing {
   id: string;
@@ -173,7 +174,7 @@ export default function PendingBillingsTable() {
                 </td>
                 <td className="p-3 text-sm text-gray-600">{billing.description}</td>
                 <td className="p-3 font-semibold">
-                  R$ {billing.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {formatCurrency(billing.amount)}
                 </td>
                 <td className="p-3 text-sm">
                   {new Date(billing.dueDate).toLocaleDateString("pt-BR")}

@@ -2,6 +2,7 @@ import { requirePermission } from "@/lib/auth-guards";
 import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import PayrollForm from "./PayrollForm";
+import { toNumber } from "@/lib/money";
 
 export default async function NewPayrollPage() {
   const user = await requirePermission("payroll:write");
@@ -22,6 +23,13 @@ export default async function NewPayrollPage() {
     },
   });
 
+  // Decimal is a server-side type; the form is a client component, so money
+  // crosses the boundary as a number, for display only.
+  const employeesForForm = employees.map((employee) => ({
+    ...employee,
+    salary: toNumber(employee.salary),
+  }));
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="border-b border-gray-200 bg-white">
@@ -38,7 +46,7 @@ export default async function NewPayrollPage() {
             Programar um novo pagamento de funcionário
           </p>
 
-          <PayrollForm employees={employees} />
+          <PayrollForm employees={employeesForForm} />
         </div>
       </div>
     </div>

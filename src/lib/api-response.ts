@@ -47,22 +47,39 @@ interface OkOptions {
  */
 const NEVER_SERIALIZE = new Set(["password", "tokenHash"]);
 
-function stripSecrets<T>(value: T): T {
+/** Prisma.Decimal without importing the client into this module. */
+function isDecimal(value: object): boolean {
+  return (
+    "toNumber" in value &&
+    typeof (value as { toNumber: unknown }).toNumber === "function" &&
+    "isZero" in value
+  );
+}
+
+function serialize<T>(value: T): T {
   if (Array.isArray(value)) {
-    return value.map((item) => stripSecrets(item)) as unknown as T;
+    return value.map((item) => serialize(item)) as unknown as T;
   }
 
   if (value instanceof Date || value === null || typeof value !== "object") {
     return value;
   }
 
+  // Decimal would otherwise reach the client as a string and turn `a + b` into
+  // string concatenation. Money crosses the wire as a number, for display only.
+  if (isDecimal(value as object)) {
+    return (value as unknown as { toNumber(): number }).toNumber() as unknown as T;
+  }
+
   const clean: Record<string, unknown> = {};
   for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
     if (NEVER_SERIALIZE.has(key)) continue;
-    clean[key] = stripSecrets(nested);
+    clean[key] = serialize(nested);
   }
   return clean as T;
 }
+
+const stripSecrets = serialize;
 
 export function ok<T>(data: T, options: OkOptions = {}) {
   const { message, pagination, status = 200 } = options;

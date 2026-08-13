@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/money";
 
 interface Employee {
   id: string;
@@ -138,7 +139,7 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
             <p className="text-sm text-blue-900">
               <strong>ID:</strong> {selectedEmployee.employeeId} |
               <strong> Cargo:</strong> {selectedEmployee.position} |
-              <strong> Salário Base:</strong> R$ {selectedEmployee.salary.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              <strong> Salário Base:</strong> {formatCurrency(selectedEmployee.salary)}
             </p>
           </div>
         )}
@@ -227,7 +228,7 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
 
         <div className="bg-green-50 border border-green-200 rounded-sm p-4">
           <p className="text-lg font-semibold text-green-900">
-            Total a Pagar: R$ {calculateTotal().toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            Total a Pagar: {formatCurrency(calculateTotal())}
           </p>
         </div>
 

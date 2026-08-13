@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { formatCurrency } from "@/lib/money";
 
 interface Payroll {
   id: string;
@@ -184,10 +185,10 @@ export default function PayrollTable() {
                       {monthNames[payroll.referenceMonth - 1]}/{payroll.referenceYear}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      R$ {payroll.baseSalary.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      {formatCurrency(payroll.baseSalary)}
                     </td>
                     <td className="p-3 font-semibold text-green-700">
-                      R$ {payroll.totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      {formatCurrency(payroll.totalAmount)}
                     </td>
                     <td className="p-3">
                       <span

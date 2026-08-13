@@ -17,6 +17,7 @@ import {
   DocumentType,
 } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { schoolDate } from '../src/lib/datetime';
 
 const prisma = new PrismaClient();
 
@@ -50,6 +51,16 @@ function randomItem<T>(array: T[]): T {
 
 function randomDate(start: Date, end: Date): Date {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+}
+
+/**
+ * A due date `offset` months from the current month, on `day`, at midnight in
+ * Sao Paulo. Seed data anchored to fixed dates goes stale: the financial
+ * dashboards look at the current month and would show zero.
+ */
+function dueDateMonthsFromNow(offset: number, day = 10): Date {
+  const now = new Date();
+  return schoolDate(now.getFullYear(), now.getMonth() + 1 + offset, day);
 }
 
 function randomScore(): number {
@@ -867,21 +878,22 @@ async function main() {
   for (let i = 0; i < parentsWithBillings.length; i++) {
     const parent = parentsWithBillings[i];
 
-    // Criar 3 cobranças: 1 paga, 1 vencida, 1 pendente
+    // Relative to today, so the dashboards always have a current month to show:
+    // one paid last month, one overdue last month, one open this month.
     const billings = [
       {
         status: PaymentStatus.PAID,
-        dueDate: new Date('2026-01-10'),
-        paidDate: new Date('2026-01-08'),
+        dueDate: dueDateMonthsFromNow(-1),
+        paidDate: dueDateMonthsFromNow(-1, 8),
       },
       {
         status: PaymentStatus.OVERDUE,
-        dueDate: new Date('2026-01-10'),
+        dueDate: dueDateMonthsFromNow(-1),
         paidDate: null,
       },
       {
         status: PaymentStatus.PENDING,
-        dueDate: new Date('2026-03-10'),
+        dueDate: dueDateMonthsFromNow(0),
         paidDate: null,
       },
     ];
@@ -950,8 +962,8 @@ async function main() {
       data: {
         billingId: billing.id,
         originalAmount: billing.amount,
-        renegotiatedAmount: billing.amount * 0.9, // 10% desconto
-        discount: billing.amount * 0.1,
+        renegotiatedAmount: billing.amount.times(0.9).toDecimalPlaces(2), // 10% desconto
+        discount: billing.amount.times(0.1).toDecimalPlaces(2),
         installments: 3,
         newDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
         renegotiatedBy: adminUser.id,
