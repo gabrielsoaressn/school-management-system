@@ -254,3 +254,59 @@ lançamento de notas de qualquer uma.
 - `PUT /api/admin/settings` usa `update` e estoura se a chave não existir (deveria ser `upsert`).
 - `Assessment` tem unique em `[studentId, subjectId, assessmentTypeId, term, academicYear]` sem
   `classId` — impede duas turmas com a mesma matéria para o mesmo aluno no mesmo período.
+
+---
+
+# Estado após as fases 0 a 3
+
+Atualizado em 2026-08-13. As fases 4, 5 e 6 do plano **não** foram executadas.
+
+## Resolvido
+
+| Item da auditoria | Situação |
+|---|---|
+| §1 — 8 páginas não compilavam (76 erros) | resolvido; build limpo, 28 páginas abrem com sessão real |
+| §1.1 — `params` do Next 15 em 18 assinaturas | resolvido |
+| §2 — `PageHeader` com duas convenções | resolvido; componentes exportam named + default |
+| §3 — 14 campos monetários em `Float` | resolvido; `Decimal(10,2)` |
+| §4 — 8 handlers com falha de autorização | resolvido; todos os 60 passam por `withAuth` |
+| §5 — `formatCurrency` sem consumidor e em USD | resolvido; BRL em `src/lib/money.ts`, 19 formatações manuais substituídas |
+| §6 — `nextBillingDate` nunca preenchido | resolvido, com teste de regressão |
+| §7 — `/api/teacher/classes` devolve todas as turmas | **em aberto** — depende de `ClassSubjectTeacher` (fase 4.2) |
+| §9 — `PUT /api/admin/settings` sem `upsert` | resolvido |
+
+## Descobertas novas, resolvidas
+
+- **Escalonamento de privilégio**: todo funcionário criado pela interface virava `ADMIN`
+  ("Teachers are admins in the system"), e o seed dava `ADMIN` a zelador, limpeza e aos 15
+  professores. O banco tinha 23 admins; hoje tem 1.
+- **Hash de senha vazando**: as rotas de criação devolviam o `User` recém-criado inteiro,
+  incluindo o hash bcrypt. O envelope agora remove `password` e `tokenHash` de qualquer
+  payload.
+- **`SessionProvider` ausente**: `useSession()` era usado sem provider no layout, o que
+  derrubava o portal do professor em runtime independentemente dos imports.
+- **Classes Tailwind interpoladas** (`border-${cor}-500`) na chamada: nunca foram geradas
+  pelo JIT, então o estado selecionado era invisível.
+- **Disciplinas mockadas** na tela de notas (ids `'1'`..`'5'`): salvar nota quebraria por
+  chave estrangeira. Substituídas por `GET /api/teacher/subjects`.
+- **Meia-noite virando hora 24**: `hour12: false` em `Intl.DateTimeFormat` retorna `24` em
+  algumas builds do ICU, o que empurrava toda data derivada um dia para frente. Pego pelos
+  testes de `addMonths`.
+- **Juros arredondados por dia**: arredondar o valor diário antes de multiplicar inflava a
+  cobrança (R$ 5,00 em vez de R$ 4,95 em dez dias). Agora a taxa acumulada é aplicada uma
+  vez e arredondada no fim.
+
+## Verificação executada
+
+- `npm run build` limpo; `npx tsc --noEmit` com 0 erros; `npm test` com 30 testes passando
+  (`billing-rules`, `tuition`, `payments`).
+- Matriz de permissões exercitada com uma sessão por perfil: folha de pagamento é 403 para
+  secretaria, coordenação e professor, e 200 para financeiro; salário ausente do payload de
+  funcionários para secretaria.
+- Fluxo de senha ponta a ponta: token de reset usado uma vez, senha antiga rejeitada.
+- Soft delete: exclusão em lote de aluno tira da listagem (50 → 49) e preserva a linha, o
+  histórico e a trilha de auditoria.
+- Financeiro: cobrança vencida há 34 dias com multa e juros discriminados; pagamento
+  parcial deixa `PARTIALLY_PAID`; `externalId` repetido não duplica recibo; `cron/daily`
+  marca 20 vencidas na primeira execução e 0 na segunda; série mensal avança de 10/07 para
+  10/09 gerando exatamente uma parcela.
