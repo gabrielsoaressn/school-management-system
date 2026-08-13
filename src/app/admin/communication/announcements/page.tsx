@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Megaphone, Plus, Calendar, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { GRADE_LEVELS } from '@/lib/constants';
 
 type Announcement = {
   id: string;
@@ -29,17 +30,6 @@ const PRIORITY_CONFIG = {
   high: { label: 'Alta', variant: 'destructive' as const },
 };
 
-const GRADE_LEVELS = [
-  '1º Ano',
-  '2º Ano',
-  '3º Ano',
-  '4º Ano',
-  '5º Ano',
-  '6º Ano',
-  '7º Ano',
-  '8º Ano',
-  '9º Ano',
-];
 
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);

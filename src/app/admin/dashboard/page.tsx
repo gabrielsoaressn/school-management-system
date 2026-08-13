@@ -18,18 +18,17 @@ export default async function AdminDashboard() {
   const [studentsCount, teachersCount, classesCount, monthlyRevenue, pendingEnrollments] = await Promise.all([
     prisma.user.count({ where: { role: "STUDENT" } }),
     prisma.teacher.count(),
-    prisma.class.count(),
-    prisma.tuition.aggregate({
+    prisma.class.count({ where: { academicYear: { isCurrent: true } } }),
+    // Revenue is what was actually received this month, from the receipts —
+    // not from a status field, and no longer from the legacy Tuition model.
+    prisma.payment.aggregate({
       where: {
-        paidDate: {
+        paidAt: {
           gte: startOfMonth(thisMonth.year, thisMonth.month),
           lte: endOfMonth(thisMonth.year, thisMonth.month),
         },
-        status: "PAID",
       },
-      _sum: {
-        amount: true,
-      },
+      _sum: { amount: true },
     }),
     prisma.enrollmentRequest.count({ where: { status: "PENDING" } }),
   ]);

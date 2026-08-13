@@ -4,8 +4,7 @@ import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-r
 import { withAuth } from "@/lib/api-auth";
 import { hashPassword, validatePassword } from "@/lib/password";
 import { nextInvoiceNumber, nextStudentId } from "@/lib/identifiers";
-import { buildTuitionCharge, tuitionChargeNote } from "@/lib/tuition";
-import type { DiscountType } from "@prisma/client";
+import { buildTuitionCharge, tuitionChargeNote, type DiscountKind } from "@/lib/tuition";
 import { currentEnrollmentFilter, enrollStudent, findClassForPlacement } from "@/lib/enrollment";
 import { requireCurrentAcademicYear } from "@/lib/academic-year";
 
@@ -261,7 +260,7 @@ export const POST = withAuth(async (request, { user }) => {
 
         const discount =
           applyDiscount && discountValue
-            ? { type: discountType as DiscountType, value: discountValue }
+            ? { type: discountType as DiscountKind, value: discountValue }
             : null;
 
         const charge = buildTuitionCharge({

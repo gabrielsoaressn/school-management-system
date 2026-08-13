@@ -5,8 +5,6 @@ import {
   PaymentStatus,
   AttendanceStatus,
   EmployeeType,
-  DiscountType,
-  BillingCycle,
   // 🆕 Novos enums - Módulos Avançados
   EnrollmentRequestStatus,
   GuardianType,
@@ -97,9 +95,6 @@ async function main() {
   await prisma.enrollmentRequest.deleteMany();
 
   // Tabelas existentes
-  await prisma.grade.deleteMany();
-  await prisma.attendance.deleteMany();
-  await prisma.tuition.deleteMany();
   await prisma.academicReport.deleteMany();
   await prisma.enrollment.deleteMany();
   // Curriculum before classes, classes before the academic year they belong to.
@@ -113,8 +108,6 @@ async function main() {
   await prisma.payroll.deleteMany();
   await prisma.employee.deleteMany();
   await prisma.subject.deleteMany();
-  await prisma.tuitionPlan.deleteMany();
-  await prisma.discount.deleteMany();
   await prisma.expense.deleteMany();
   await prisma.announcement.deleteMany();
   await prisma.notification.deleteMany();
@@ -502,148 +495,6 @@ async function main() {
       });
     }
   }
-
-  // 7. Criar planos de mensalidade
-  console.log('💰 Criando planos de mensalidade...');
-  const tuitionPlans = [];
-  for (const gradeLevel of gradeLevels) {
-    const plan = await prisma.tuitionPlan.create({
-      data: {
-        name: `Plano ${gradeLevel}`,
-        gradeLevel,
-        amount: Math.floor(Math.random() * 1000) + 1500,
-        billingCycle: BillingCycle.MONTHLY,
-        description: `Mensalidade para alunos do ${gradeLevel}`,
-        isActive: true,
-      },
-    });
-    tuitionPlans.push(plan);
-  }
-
-  // 8. Criar cobranças (tuitions)
-  console.log('🧾 Criando cobranças...');
-  let invoiceCounter = 1;
-  for (const student of students) {
-    const plan = tuitionPlans.find(p => p.gradeLevel === student.gradeLevel);
-    if (!plan) continue;
-
-    // Criar cobranças dos últimos 6 meses
-    for (let month = 0; month < 6; month++) {
-      const dueDate = new Date();
-      dueDate.setMonth(dueDate.getMonth() - month);
-      dueDate.setDate(10);
-
-      const isPaid = Math.random() > 0.2; // 80% pagos
-
-      await prisma.tuition.create({
-        data: {
-          invoiceNumber: `INV${String(invoiceCounter++).padStart(6, '0')}`,
-          studentId: student.id,
-          planId: plan.id,
-          amount: plan.amount,
-          dueDate,
-          paidDate: isPaid ? new Date(dueDate.getTime() + Math.random() * 10 * 24 * 60 * 60 * 1000) : null,
-          status: isPaid ? PaymentStatus.PAID : (dueDate < new Date() ? PaymentStatus.OVERDUE : PaymentStatus.PENDING),
-          paymentMethod: isPaid ? randomItem(['Cartão de Crédito', 'PIX', 'Boleto', 'Débito']) : null,
-        },
-      });
-    }
-  }
-
-  // 9. Criar notas
-  console.log('📊 Criando notas...');
-  for (const student of students) {
-    // Get all subjects for this student's grade
-    const studentSubjects = createdSubjects.filter(
-      s => s.gradeLevel === student.gradeLevel
-    );
-
-    for (const subject of studentSubjects) {
-      // Find a teacher for this subject
-      const teacherSubjects = await prisma.teacherSubject.findMany({
-        where: { subjectId: subject.id },
-      });
-
-      const teacherSubject = teacherSubjects.length > 0
-        ? teacherSubjects[Math.floor(Math.random() * teacherSubjects.length)]
-        : null;
-
-      const score = randomScore();
-
-      await prisma.grade.create({
-        data: {
-          studentId: student.id,
-          subjectId: subject.id,
-          teacherId: teacherSubject?.teacherId || null,
-          term: '1º Bimestre',
-          academicYear: '2026',
-          score,
-          maxScore: 100,
-          grade: getGradeLetter(score),
-          remarks: score >= 70 ? 'Bom desempenho' : 'Precisa melhorar',
-        },
-      });
-    }
-  }
-
-  // 10. Criar frequência
-  console.log('📅 Criando registros de frequência...');
-  const startDate = new Date('2026-02-01');
-  const endDate = new Date();
-
-  for (const student of students) {
-    let currentDate = new Date(startDate);
-
-    while (currentDate <= endDate) {
-      // Pular fins de semana
-      if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-        const random = Math.random();
-        let status: AttendanceStatus;
-
-        if (random > 0.9) status = AttendanceStatus.ABSENT;
-        else if (random > 0.85) status = AttendanceStatus.LATE;
-        else status = AttendanceStatus.PRESENT;
-
-        await prisma.attendance.create({
-          data: {
-            studentId: student.id,
-            date: new Date(currentDate),
-            status,
-          },
-        });
-      }
-
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-  }
-
-  // 11. Criar descontos
-  console.log('🎟️ Criando descontos...');
-  await prisma.discount.create({
-    data: {
-      code: 'IRMAOS10',
-      name: 'Desconto Irmãos',
-      type: DiscountType.PERCENTAGE,
-      value: 10,
-      validFrom: new Date('2026-01-01'),
-      validUntil: new Date('2026-12-31'),
-      isActive: true,
-      description: 'Desconto de 10% para irmãos matriculados',
-    },
-  });
-
-  await prisma.discount.create({
-    data: {
-      code: 'ANUAL50',
-      name: 'Desconto Pagamento Anual',
-      type: DiscountType.FIXED_AMOUNT,
-      value: 500,
-      validFrom: new Date('2026-01-01'),
-      validUntil: new Date('2026-12-31'),
-      isActive: true,
-      description: 'R$ 500 de desconto para pagamento anual antecipado',
-    },
-  });
 
   // 12. Criar despesas
   console.log('💸 Criando despesas...');
@@ -1286,9 +1137,6 @@ async function main() {
   console.log(`  - ${await prisma.subject.count()} matérias`);
   console.log(`  - ${await prisma.class.count()} turmas`);
   console.log(`  - ${await prisma.enrollment.count()} matrículas`);
-  console.log(`  - ${await prisma.grade.count()} notas (antigas)`);
-  console.log(`  - ${await prisma.attendance.count()} registros de frequência (antigos)`);
-  console.log(`  - ${await prisma.tuition.count()} cobranças (tuitions)`);
   console.log(`  - ${await prisma.expense.count()} despesas`);
 
   console.log('\n🆕 Módulos Avançados:');

@@ -2,6 +2,18 @@ import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
+import { formatDate } from "@/lib/datetime";
+
+/** Four statuses, each with its own label: "Justificado" covered two of them. */
+const ATTENDANCE_LABELS: Record<
+  "PRESENT" | "ABSENT" | "LATE" | "EXCUSED",
+  { label: string; className: string }
+> = {
+  PRESENT: { label: "Presente", className: "bg-green-100 text-green-800" },
+  ABSENT: { label: "Falta", className: "bg-red-100 text-red-800" },
+  LATE: { label: "Atraso", className: "bg-yellow-100 text-yellow-800" },
+  EXCUSED: { label: "Falta justificada", className: "bg-blue-100 text-blue-800" },
+};
 
 export default async function StudentDashboard() {
   const user = await getCurrentUser();
@@ -14,54 +26,57 @@ export default async function StudentDashboard() {
     redirect("/login");
   }
 
-  // Fetch student data
+  // Assessments and attendance records — the same rows the teacher writes from
+  // the class register — scoped to the current academic year. This screen used
+  // to read the legacy Grade/Attendance pair, so it never showed what the
+  // teacher had entered.
   const student = await prisma.student.findUnique({
     where: { userId: user.id },
     include: {
       user: true,
       enrollments: {
+        where: { status: "ACTIVE", academicYear: { isCurrent: true } },
         include: {
-          class: {
-            include: {
-              _count: {
-                select: {
-                  enrollments: true,
-                },
-              },
-            },
-          },
+          class: { include: { _count: { select: { enrollments: true } } } },
+          academicYear: true,
         },
+        take: 1,
       },
-      grades: {
-        include: {
-          subject: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
+      assessments: {
+        where: { academicYear: { isCurrent: true } },
+        include: { subject: true, assessmentType: true },
+        orderBy: { assessmentDate: "desc" },
         take: 10,
       },
-      attendance: {
-        orderBy: {
-          date: "desc",
-        },
-        take: 10,
+      attendanceRecords: {
+        where: { academicYear: { isCurrent: true } },
+        orderBy: { date: "desc" },
+        take: 20,
       },
     },
   });
 
-  // Calculate attendance percentage
-  const totalAttendances = student?.attendance.length || 0;
-  const presentAttendances =
-    student?.attendance.filter((a) => a.status === "PRESENT").length || 0;
+  const attendanceRecords = student?.attendanceRecords ?? [];
+  const totalAttendances = attendanceRecords.length;
+  const presentAttendances = attendanceRecords.filter(
+    (record) => record.status === "PRESENT" || record.status === "LATE"
+  ).length;
   const attendancePercentage =
     totalAttendances > 0 ? (presentAttendances / totalAttendances) * 100 : 0;
 
-  // Calculate average score
-  const grades = student?.grades || [];
+  // Average as a percentage of each assessment's maximum, so a test out of 10
+  // and one out of 100 weigh the same.
+  const assessments = student?.assessments ?? [];
   const averageScore =
-    grades.length > 0
-      ? grades.reduce((sum, g) => sum + g.score, 0) / grades.length
+    assessments.length > 0
+      ? assessments.reduce(
+          (total, assessment) =>
+            total +
+            (assessment.maxScore > 0
+              ? (assessment.score / assessment.maxScore) * 10
+              : 0),
+          0
+        ) / assessments.length
       : 0;
 
   return (
@@ -104,7 +119,7 @@ export default async function StudentDashboard() {
                 {attendancePercentage.toFixed(1)}%
               </p>
               <p className="text-sm text-green-100">
-                {presentAttendances} de {totalAttendances} presenças
+                {presentAttendances} de {totalAttendances} aulas
               </p>
             </div>
 
@@ -113,7 +128,7 @@ export default async function StudentDashboard() {
               <h3 className="text-lg font-semibold mb-2">Média Geral</h3>
               <p className="text-3xl font-bold">{averageScore.toFixed(1)}</p>
               <p className="text-sm text-purple-100">
-                {grades.length} avaliações
+                {assessments.length} avaliações
               </p>
             </div>
           </div>
@@ -173,7 +188,10 @@ export default async function StudentDashboard() {
                       Nota
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tipo
+                      Avaliação
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Bimestre
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Data
@@ -181,36 +199,49 @@ export default async function StudentDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {grades.map((grade) => (
-                    <tr key={grade.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {grade.subject.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            grade.score >= 70
-                              ? "bg-green-100 text-green-800"
-                              : grade.score >= 50
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {grade.score.toFixed(1)} ({grade.grade})
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {grade.term}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(grade.createdAt).toLocaleDateString("pt-BR")}
-                      </td>
-                    </tr>
-                  ))}
-                  {grades.length === 0 && (
+                  {assessments.map((assessment) => {
+                    // Colour by percentage of the maximum, not by the raw score:
+                    // a 7 out of 10 and a 70 out of 100 are the same result.
+                    const percentage =
+                      assessment.maxScore > 0
+                        ? (assessment.score / assessment.maxScore) * 100
+                        : 0;
+
+                    return (
+                      <tr key={assessment.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {assessment.subject.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              percentage >= 70
+                                ? "bg-green-100 text-green-800"
+                                : percentage >= 50
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {assessment.score.toFixed(1)} / {assessment.maxScore.toFixed(0)}
+                            {assessment.grade ? ` (${assessment.grade})` : ""}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {assessment.assessmentType.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {assessment.term}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {formatDate(assessment.assessmentDate)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {assessments.length === 0 && (
                     <tr>
                       <td
-                        colSpan={4}
+                        colSpan={5}
                         className="px-6 py-8 text-center text-gray-500"
                       >
                         Nenhuma nota registrada
@@ -240,31 +271,23 @@ export default async function StudentDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {student?.attendance.map((attendance) => (
-                    <tr key={attendance.id}>
+                  {attendanceRecords.map((record) => (
+                    <tr key={record.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(attendance.date).toLocaleDateString("pt-BR")}
+                        {formatDate(record.date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            attendance.status === "PRESENT"
-                              ? "bg-green-100 text-green-800"
-                              : attendance.status === "ABSENT"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
+                            ATTENDANCE_LABELS[record.status].className
                           }`}
                         >
-                          {attendance.status === "PRESENT"
-                            ? "Presente"
-                            : attendance.status === "ABSENT"
-                            ? "Ausente"
-                            : "Justificado"}
+                          {ATTENDANCE_LABELS[record.status].label}
                         </span>
                       </td>
                     </tr>
                   ))}
-                  {(student?.attendance.length || 0) === 0 && (
+                  {attendanceRecords.length === 0 && (
                     <tr>
                       <td
                         colSpan={2}

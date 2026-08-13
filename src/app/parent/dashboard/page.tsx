@@ -80,7 +80,7 @@ export default async function ParentDashboard() {
   const openCharges = charges.filter(
     (charge) => !["PAID", "CANCELLED"].includes(charge.status)
   );
-  const pendingTuitions = openCharges.length;
+  const openChargeCount = openCharges.length;
   const totalDue = sum(openCharges.map((charge) => charge.outstanding));
 
   return (
@@ -105,10 +105,10 @@ export default async function ParentDashboard() {
               <p className="text-sm text-blue-100">Alunos cadastrados</p>
             </div>
 
-            {/* Pending Tuitions Card */}
+            {/* Cobranças em aberto */}
             <div className="bg-orange-600 text-white rounded-sm p-6 border border-orange-700">
               <h3 className="text-lg font-semibold mb-2">Cobranças em Aberto</h3>
-              <p className="text-3xl font-bold">{pendingTuitions}</p>
+              <p className="text-3xl font-bold">{openChargeCount}</p>
               <p className="text-sm text-orange-100">Aguardando pagamento</p>
             </div>
 
@@ -152,7 +152,7 @@ export default async function ParentDashboard() {
             </div>
           </div>
 
-          {/* Recent Tuitions */}
+          {/* Cobranças recentes */}
           <div className="mt-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Cobranças Recentes
@@ -176,40 +176,40 @@ export default async function ParentDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {charges.map((tuition) => (
-                    <tr key={tuition.id}>
+                  {charges.map((charge) => (
+                    <tr key={charge.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {tuition.invoiceNumber}
+                        {charge.invoiceNumber}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {formatDate(tuition.dueDate)}
+                        {formatDate(charge.dueDate)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <span className="font-medium">
-                          {formatCurrency(tuition.outstanding)}
+                          {formatCurrency(charge.outstanding)}
                         </span>
-                        {tuition.due.daysLate > 0 && (
+                        {charge.due.daysLate > 0 && (
                           <span className="block text-xs text-gray-500">
-                            {formatCurrency(tuition.due.principal)} +{" "}
-                            {formatCurrency(tuition.due.fine)} multa +{" "}
-                            {formatCurrency(tuition.due.interest)} juros ·{" "}
-                            {tuition.due.daysLate} dia(s) de atraso
+                            {formatCurrency(charge.due.principal)} +{" "}
+                            {formatCurrency(charge.due.fine)} multa +{" "}
+                            {formatCurrency(charge.due.interest)} juros ·{" "}
+                            {charge.due.daysLate} dia(s) de atraso
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            tuition.status === "PAID"
+                            charge.status === "PAID"
                               ? "bg-green-100 text-green-800"
-                              : tuition.status === "PENDING"
+                              : charge.status === "PENDING"
                               ? "bg-yellow-100 text-yellow-800"
                               : "bg-red-100 text-red-800"
                           }`}
                         >
-                          {tuition.status === "PAID"
+                          {charge.status === "PAID"
                             ? "Pago"
-                            : tuition.status === "PENDING"
+                            : charge.status === "PENDING"
                             ? "Pendente"
                             : "Atrasado"}
                         </span>

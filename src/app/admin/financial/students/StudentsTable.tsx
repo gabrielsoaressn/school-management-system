@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { GRADE_LEVELS } from "@/lib/constants";
 
 interface Student {
   id: string;
@@ -168,15 +169,11 @@ export default function StudentsTable() {
           className="px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
         >
           <option value="ALL">Todas as Séries</option>
-          <option value="1º Ano">1º Ano</option>
-          <option value="2º Ano">2º Ano</option>
-          <option value="3º Ano">3º Ano</option>
-          <option value="4º Ano">4º Ano</option>
-          <option value="5º Ano">5º Ano</option>
-          <option value="6º Ano">6º Ano</option>
-          <option value="7º Ano">7º Ano</option>
-          <option value="8º Ano">8º Ano</option>
-          <option value="9º Ano">9º Ano</option>
+          {GRADE_LEVELS.map((grade) => (
+            <option key={grade} value={grade}>
+              {grade}
+            </option>
+          ))}
         </select>
 
         {selectedCount > 0 && (

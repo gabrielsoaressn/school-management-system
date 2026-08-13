@@ -72,11 +72,6 @@ enum EmployeeType {
   ADMIN
 }
 
-enum DiscountType {
-  PERCENTAGE
-  FIXED_AMOUNT
-}
-
 enum BillingCycle {
   MONTHLY
   QUARTERLY
@@ -233,9 +228,6 @@ model Student {
 
   // Relations existentes
   enrollments Enrollment[]
-  grades      Grade[]
-  attendance  Attendance[]
-  tuitions    Tuition[]
   reports     AcademicReport[]
 
   // 🆕 Novos relacionamentos - Módulos Avançados
@@ -345,7 +337,6 @@ model Teacher {
 
   // Relations existentes
   subjects TeacherSubject[]
-  grades   Grade[]
 
   // 🆕 Novos relacionamentos - Módulo 2
   assessments       Assessment[]
@@ -369,7 +360,6 @@ model Subject {
 
   // Relations existentes
   teachers TeacherSubject[]
-  grades   Grade[]
 
   // 🆕 Novos relacionamentos - Módulo 2
   assessments       Assessment[]
@@ -519,80 +509,6 @@ model Enrollment {
 // FINANCEIRO (Existente)
 // ============================================
 
-// Tuition Plan Model
-model TuitionPlan {
-  id           String       @id @default(cuid())
-  name         String
-  gradeLevel   String
-  amount       Decimal      @db.Decimal(10, 2)
-  billingCycle BillingCycle
-  description  String?
-  isActive     Boolean      @default(true)
-
-  // Relations
-  tuitions Tuition[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([gradeLevel])
-}
-
-// Tuition/Invoice Model
-model Tuition {
-  id            String  @id @default(cuid())
-  invoiceNumber String  @unique
-  studentId     String
-  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  planId String
-  plan   TuitionPlan @relation(fields: [planId], references: [id])
-
-  amount        Decimal       @db.Decimal(10, 2)
-  dueDate       DateTime
-  paidDate      DateTime?
-  status        PaymentStatus @default(PENDING)
-  paymentMethod String?
-  transactionId String?
-
-  discountId     String?
-  discount       Discount? @relation(fields: [discountId], references: [id])
-  discountAmount Decimal   @default(0) @db.Decimal(10, 2)
-  notes          String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([studentId])
-  @@index([status])
-  @@index([dueDate])
-  @@index([invoiceNumber])
-}
-
-// Discount Model
-model Discount {
-  id          String       @id @default(cuid())
-  code        String       @unique
-  name        String
-  type        DiscountType
-  /// Percentage (0-100) or a fixed amount, depending on `type`.
-  value       Decimal      @db.Decimal(10, 2)
-  maxUses     Int? // null = unlimited
-  usedCount   Int          @default(0)
-  validFrom   DateTime
-  validUntil  DateTime
-  isActive    Boolean      @default(true)
-  description String?
-
-  // Relations
-  tuitions Tuition[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([code])
-}
-
 // Billing Model (Contas a Receber)
 model Billing {
   id              String         @id @default(cuid())
@@ -680,52 +596,6 @@ model Expense {
 // ============================================
 // ACADÊMICO (Existente)
 // ============================================
-
-// Grade Model (mantido para compatibilidade)
-model Grade {
-  id        String  @id @default(cuid())
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  teacherId String?
-  teacher   Teacher? @relation(fields: [teacherId], references: [id])
-
-  term         String
-  academicYear String
-  score        Float
-  maxScore     Float   @default(100)
-  grade        String // A, B, C, etc.
-  remarks      String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([studentId, subjectId, term, academicYear])
-  @@index([studentId])
-  @@index([subjectId])
-  @@index([term])
-}
-
-// Attendance Model (mantido para compatibilidade)
-model Attendance {
-  id        String  @id @default(cuid())
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  date    DateTime
-  status  AttendanceStatus
-  remarks String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([studentId, date])
-  @@index([studentId])
-  @@index([date])
-}
 
 // Academic Report Model
 model AcademicReport {

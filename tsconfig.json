@@ -23,5 +23,11 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    // One-off data migrations, already applied. They reference models that the
+    // migration itself removed, so they no longer typecheck against the current
+    // schema: kept as the record of how the data was moved.
+    "prisma/migrations-data"
+  ]
 }

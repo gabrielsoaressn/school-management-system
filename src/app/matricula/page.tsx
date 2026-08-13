@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { HONEYPOT_FIELD } from '@/lib/rate-limit';
 import Link from 'next/link';
 import { CONSENT_TEXT, CONSENT_VERSION } from '@/lib/privacy';
+import { GRADE_LEVELS } from '@/lib/constants';
 
 type FormData = {
   // Aluno
@@ -67,20 +68,13 @@ const INITIAL_FORM_DATA: FormData = {
   zipCode: '',
 };
 
-const GRADE_LEVELS = [
-  { value: '1º Ano EF', label: '1º Ano - Ensino Fundamental' },
-  { value: '2º Ano EF', label: '2º Ano - Ensino Fundamental' },
-  { value: '3º Ano EF', label: '3º Ano - Ensino Fundamental' },
-  { value: '4º Ano EF', label: '4º Ano - Ensino Fundamental' },
-  { value: '5º Ano EF', label: '5º Ano - Ensino Fundamental' },
-  { value: '6º Ano EF', label: '6º Ano - Ensino Fundamental' },
-  { value: '7º Ano EF', label: '7º Ano - Ensino Fundamental' },
-  { value: '8º Ano EF', label: '8º Ano - Ensino Fundamental' },
-  { value: '9º Ano EF', label: '9º Ano - Ensino Fundamental' },
-  { value: '1º Ano EM', label: '1º Ano - Ensino Médio' },
-  { value: '2º Ano EM', label: '2º Ano - Ensino Médio' },
-  { value: '3º Ano EM', label: '3º Ano - Ensino Médio' },
-];
+// Offered grades come from the same list the classes use: the form used to
+// offer "1º Ano EF" and Ensino Médio, none of which matched a class, so an
+// approved request had no placement.
+const GRADE_LEVEL_OPTIONS = GRADE_LEVELS.map((grade) => ({
+  value: grade,
+  label: `${grade} - Ensino Fundamental`,
+}));
 
 const STEPS = [
   { id: 1, title: 'Dados do Aluno', icon: User },
@@ -327,7 +321,7 @@ export default function MatriculaPage() {
                 onChange={(e) => updateFormData('gradeLevel', e.target.value)}
                 options={[
                   { value: '', label: 'Selecione a série' },
-                  ...GRADE_LEVELS,
+                  ...GRADE_LEVEL_OPTIONS,
                 ]}
               />
             </div>
