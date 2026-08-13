@@ -59,10 +59,11 @@ produção.
 | `npm run lint` / `lint:fix`       | ESLint                                |
 | `npm run format` / `format:check` | Prettier                              |
 | `npm test`                        | Vitest (parte dos testes exige banco) |
+| `npx playwright test`             | smoke E2E dos portais (exige seed)    |
 | `npx prisma studio`               | inspecionar o banco                   |
 
-CI roda typecheck, lint, format:check, testes e build em cada push
-(`.github/workflows/ci.yml`).
+CI roda typecheck, lint, format:check, testes unitários e build em cada push, e
+depois o smoke E2E em banco migrado e semeado (`.github/workflows/ci.yml`).
 
 ## Como o domínio funciona
 

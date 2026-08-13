@@ -349,3 +349,27 @@ movidos.
 Conferência: `Tuition` somava R$ 617.988,00 em 300 registros; os `Billing` migrados somam
 exatamente o mesmo. Linhas sem responsável ou sem matrícula no ano são **reportadas**, não
 adivinhadas.
+
+## Smoke E2E
+
+`e2e/portals.spec.ts` — 11 casos, todos verdes, rodando no CI contra build de
+produção e banco semeado. Um fluxo por portal (administração, professor,
+responsável, aluno), o formulário público de matrícula, o aviso de privacidade e
+quatro casos de separação de acesso (a secretaria não abre nem vê a folha de
+pagamento; o professor não entra no painel administrativo; o financeiro abre).
+
+Os seletores são por papel (`heading`, `link`, `columnheader`) e, na navegação,
+escopados na barra lateral. Texto puro não serve: "Cobranças", "Frequência" e
+"Dados do Aluno" aparecem duas vezes em suas telas.
+
+A suíte encontrou três defeitos reais que nem `tsc` nem os testes unitários
+pegavam:
+
+| Defeito                                                               | Por que passou                                         |
+| --------------------------------------------------------------------- | ------------------------------------------------------ |
+| painel do professor renderizava `classItem.academicYear` (relação)    | tipo declarado à mão como `string`, divergindo do dado |
+| `POST /api/admin/classes` gravava `academicYear` string após a fase 4 | corpo da requisição é `any`                            |
+| `Input`/`Select` sem `htmlFor`/`id` — label nunca associado ao campo  | nenhum teste exercia acessibilidade de formulário      |
+
+O terceiro valia por si: era defeito de acessibilidade em todos os formulários do
+sistema, não só no que o teste tocou.
