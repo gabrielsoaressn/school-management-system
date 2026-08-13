@@ -4,6 +4,18 @@ import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/datetime";
 import { formatCurrency, sum } from "@/lib/money";
+import { Prisma } from "@prisma/client";
+import { computeAmountDue, loadLateChargeSettings } from "@/lib/billing-rules";
+import { subtract } from "@/lib/money";
+
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pendente",
+  PARTIALLY_PAID: "Pago em parte",
+  PAID: "Pago",
+  OVERDUE: "Atrasado",
+  RENEGOTIATED: "Renegociado",
+  CANCELLED: "Cancelado",
+};
 
 export default async function ParentDashboard() {
   const user = await getCurrentUser();
@@ -35,23 +47,41 @@ export default async function ParentDashboard() {
 
   const studentsCount = parent?.students.length || 0;
 
-  // Get tuition info for all students
-  const tuitions = await prisma.tuition.findMany({
-    where: {
-      studentId: {
-        in: parent?.students.map((s) => s.id) || [],
-      },
-    },
-    orderBy: {
-      dueDate: "desc",
-    },
-    take: 10,
+  // Charges come from Billing, the same model the school's financial module
+  // emits, so the guardian sees exactly what the school issued — including the
+  // fine and interest of anything overdue.
+  const billings = parent
+    ? await prisma.billing.findMany({
+        where: {
+          parentId: parent.id,
+          status: { not: "DRAFT" },
+        },
+        include: { payments: { select: { amount: true } } },
+        orderBy: { dueDate: "desc" },
+        take: 10,
+      })
+    : [];
+
+  const lateCharges = await loadLateChargeSettings();
+  const now = new Date();
+
+  const charges = billings.map((billing) => {
+    const due = computeAmountDue(billing, now, lateCharges);
+    const paid = sum(billing.payments.map((payment) => payment.amount));
+
+    return {
+      ...billing,
+      due,
+      paid,
+      outstanding: Prisma.Decimal.max(subtract(due.total, paid), 0),
+    };
   });
 
-  const pendingTuitions = tuitions.filter((t) => t.status === "PENDING").length;
-  const totalDue = sum(
-    tuitions.filter((t) => t.status === "PENDING").map((t) => t.amount)
+  const openCharges = charges.filter(
+    (charge) => !["PAID", "CANCELLED"].includes(charge.status)
   );
+  const pendingTuitions = openCharges.length;
+  const totalDue = sum(openCharges.map((charge) => charge.outstanding));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -77,7 +107,7 @@ export default async function ParentDashboard() {
 
             {/* Pending Tuitions Card */}
             <div className="bg-orange-600 text-white rounded-sm p-6 border border-orange-700">
-              <h3 className="text-lg font-semibold mb-2">Mensalidades Pendentes</h3>
+              <h3 className="text-lg font-semibold mb-2">Cobranças em Aberto</h3>
               <p className="text-3xl font-bold">{pendingTuitions}</p>
               <p className="text-sm text-orange-100">Aguardando pagamento</p>
             </div>
@@ -125,7 +155,7 @@ export default async function ParentDashboard() {
           {/* Recent Tuitions */}
           <div className="mt-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Mensalidades Recentes
+              Cobranças Recentes
             </h2>
             <div className="bg-gray-50 rounded-sm border border-gray-200 overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
@@ -146,7 +176,7 @@ export default async function ParentDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {tuitions.map((tuition) => (
+                  {charges.map((tuition) => (
                     <tr key={tuition.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {tuition.invoiceNumber}
@@ -155,7 +185,17 @@ export default async function ParentDashboard() {
                         {formatDate(tuition.dueDate)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(tuition.amount)}
+                        <span className="font-medium">
+                          {formatCurrency(tuition.outstanding)}
+                        </span>
+                        {tuition.due.daysLate > 0 && (
+                          <span className="block text-xs text-gray-500">
+                            {formatCurrency(tuition.due.principal)} +{" "}
+                            {formatCurrency(tuition.due.fine)} multa +{" "}
+                            {formatCurrency(tuition.due.interest)} juros ·{" "}
+                            {tuition.due.daysLate} dia(s) de atraso
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -176,7 +216,7 @@ export default async function ParentDashboard() {
                       </td>
                     </tr>
                   ))}
-                  {tuitions.length === 0 && (
+                  {charges.length === 0 && (
                     <tr>
                       <td
                         colSpan={4}

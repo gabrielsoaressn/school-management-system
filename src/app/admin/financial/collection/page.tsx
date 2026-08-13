@@ -20,12 +20,21 @@ import {
   Handshake,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { formatCurrency } from "@/lib/money";
+import { formatCurrency } from '@/lib/money';
 
 type Billing = {
   id: string;
   invoiceNumber: string;
   amount: number;
+  amountDue: {
+    principal: number;
+    fine: number;
+    interest: number;
+    total: number;
+    daysLate: number;
+    paid: number;
+    outstanding: number;
+  };
   dueDate: string;
   status: string;
   parent: {
@@ -88,7 +97,10 @@ export default function CollectionPage() {
         setOverdueBillings(data.data);
         setTotalOverdue(data.data.length);
         setOverdueAmount(
-          data.data.reduce((sum: number, b: Billing) => sum + b.amount, 0)
+          data.data.reduce(
+            (total: number, b: Billing) => total + b.amountDue.outstanding,
+            0
+          )
         );
 
         // Calcular taxa de inadimplência (simulado)
@@ -172,8 +184,8 @@ Escola Davilla`;
   const openRenegotiationModal = (billing: Billing) => {
     setSelectedBilling(billing);
     setRenegotiationData({
-      renegotiatedAmount: billing.amount * 0.9,
-      discount: billing.amount * 0.1,
+      renegotiatedAmount: Number((billing.amountDue.outstanding * 0.9).toFixed(2)),
+      discount: Number((billing.amountDue.outstanding * 0.1).toFixed(2)),
       installments: 3,
       newDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         .toISOString()
@@ -215,12 +227,7 @@ Escola Davilla`;
     }
   };
 
-  const getDaysOverdue = (dueDate: string): number => {
-    const due = new Date(dueDate);
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, diff);
-  };
+
 
   return (
     <PageWrapper>
@@ -338,7 +345,8 @@ Escola Davilla`;
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {overdueBillings.map((billing) => {
-                    const daysOverdue = getDaysOverdue(billing.dueDate);
+                    // Days late come from the server, computed in the school timezone.
+                    const daysOverdue = billing.amountDue.daysLate;
                     const severity =
                       daysOverdue > 30
                         ? 'high'
@@ -373,7 +381,21 @@ Escola Davilla`;
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-semibold text-gray-900">
-                            R$ {billing.amount.toFixed(2)}
+                            <span className="font-semibold text-foreground">
+                              {formatCurrency(billing.amountDue.outstanding)}
+                            </span>
+                            {billing.amountDue.daysLate > 0 && (
+                              <span className="mt-0.5 block text-xs text-muted-foreground">
+                                {formatCurrency(billing.amountDue.principal)} +{" "}
+                                {formatCurrency(billing.amountDue.fine)} multa +{" "}
+                                {formatCurrency(billing.amountDue.interest)} juros
+                              </span>
+                            )}
+                            {billing.amountDue.paid > 0 && (
+                              <span className="mt-0.5 block text-xs text-success">
+                                {formatCurrency(billing.amountDue.paid)} já pago
+                              </span>
+                            )}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -518,7 +540,7 @@ Escola Davilla`;
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">Valor Original</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  R$ {selectedBilling.amount.toFixed(2)}
+                  {formatCurrency(selectedBilling.amountDue.outstanding)}
                 </p>
               </div>
 
@@ -535,7 +557,8 @@ Escola Davilla`;
                         ...renegotiationData,
                         renegotiatedAmount: parseFloat(e.target.value),
                         discount:
-                          selectedBilling.amount - parseFloat(e.target.value),
+                          selectedBilling.amountDue.outstanding -
+                            parseFloat(e.target.value),
                       })
                     }
                     min="0"

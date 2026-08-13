@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { formatCurrency } from "@/lib/money";
+import { RegisterPaymentModal } from "@/components/financial/RegisterPaymentModal";
 
 interface Billing {
   id: string;
@@ -11,6 +12,15 @@ interface Billing {
   type: string;
   description: string;
   amount: number;
+  amountDue: {
+    principal: number;
+    fine: number;
+    interest: number;
+    total: number;
+    daysLate: number;
+    paid: number;
+    outstanding: number;
+  };
   dueDate: string;
   status: string;
   parent: {
@@ -27,6 +37,7 @@ export default function BillingsTable() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [payingBilling, setPayingBilling] = useState<Billing | null>(null);
 
   const fetchBillings = async () => {
     setLoading(true);
@@ -161,12 +172,25 @@ export default function BillingsTable() {
                       </span>
                     </td>
                     <td className="p-3">
-                      <Link
-                        href={`/admin/financial/billings/${billing.id}`}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-semibold"
-                      >
-                        Ver Detalhes
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        {!["PAID", "CANCELLED", "DRAFT"].includes(
+                          billing.status
+                        ) && (
+                          <button
+                            type="button"
+                            onClick={() => setPayingBilling(billing)}
+                            className="text-sm font-semibold text-primary hover:underline"
+                          >
+                            Registrar pagamento
+                          </button>
+                        )}
+                        <Link
+                          href={`/admin/financial/billings/${billing.id}`}
+                          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+                        >
+                          Ver detalhes
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -197,6 +221,14 @@ export default function BillingsTable() {
             </div>
           )}
         </>
+      )}
+
+      {payingBilling && (
+        <RegisterPaymentModal
+          billing={payingBilling}
+          onClose={() => setPayingBilling(null)}
+          onRegistered={fetchBillings}
+        />
       )}
     </div>
   );

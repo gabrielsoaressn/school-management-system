@@ -5,6 +5,9 @@ import { nextInvoiceNumber } from "@/lib/identifiers";
 import { computeNextBillingDate } from "@/lib/billing-rules";
 import { parseDate } from "@/lib/datetime";
 import { toCents } from "@/lib/money";
+import { computeAmountDue, loadLateChargeSettings } from "@/lib/billing-rules";
+import { subtract, sum } from "@/lib/money";
+import { Prisma } from "@prisma/client";
 
 // GET - List all billings
 export const GET = withAuth(async (request, { user }) => {
@@ -63,6 +66,7 @@ export const GET = withAuth(async (request, { user }) => {
               phoneNumber: true,
             },
           },
+          payments: { select: { amount: true } },
         },
         orderBy: {
           dueDate: "desc",
@@ -73,7 +77,31 @@ export const GET = withAuth(async (request, { user }) => {
       prisma.billing.count({ where }),
     ]);
 
-    return paginated(billings, { total: total, page: page, limit: limit });
+    // Every row carries what is actually owed today: principal plus the fine
+    // and interest the school configured. Without this each screen would have
+    // to recompute it, and they would disagree.
+    const lateCharges = await loadLateChargeSettings();
+    const now = new Date();
+
+    const withAmountDue = billings.map((billing) => {
+      const due = computeAmountDue(billing, now, lateCharges);
+      const paid = sum(billing.payments.map((payment) => payment.amount));
+
+      return {
+        ...billing,
+        amountDue: {
+          principal: due.principal,
+          fine: due.fine,
+          interest: due.interest,
+          total: due.total,
+          daysLate: due.daysLate,
+          paid,
+          outstanding: Prisma.Decimal.max(subtract(due.total, paid), 0),
+        },
+      };
+    });
+
+    return paginated(withAmountDue, { total: total, page: page, limit: limit });
   } catch (error: any) {
     return serverError(error, "Erro ao buscar cobranças");
   }
