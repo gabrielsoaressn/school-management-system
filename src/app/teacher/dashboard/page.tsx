@@ -22,7 +22,7 @@ type Class = {
   name: string;
   gradeLevel: string;
   section: string;
-  academicYear: string;
+  academicYear: { year: number };
   _count: {
     enrollments: number;
   };
@@ -163,7 +163,7 @@ export default function TeacherDashboard() {
                         </h3>
                         <p className="text-sm text-gray-600">
                           {classItem.gradeLevel} - Turma {classItem.section} |{" "}
-                          {classItem.academicYear}
+                          {classItem.academicYear.year}
                         </p>
                       </div>
                     </div>
