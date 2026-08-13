@@ -6,6 +6,9 @@ formulário público de matrícula.
 
 Next.js 15 (App Router) · TypeScript strict · PostgreSQL + Prisma · NextAuth.
 
+**Demo:** <https://gabrielsoaressn.github.io/school-management-system/> — as
+telas dos quatro portais com dados fictícios, sem login e sem banco.
+
 ---
 
 ## Começando
@@ -61,9 +64,36 @@ produção.
 | `npm test`                        | Vitest (parte dos testes exige banco) |
 | `npx playwright test`             | smoke E2E dos portais (exige seed)    |
 | `npx prisma studio`               | inspecionar o banco                   |
+| `npm run demo:dev`                | demo estática em `localhost:3001`     |
+| `npm run demo:build`              | build da demo em `demo/out`           |
+| `npm run demo:typecheck`          | `tsc --noEmit` só da demo             |
 
 CI roda typecheck, lint, format:check, testes unitários e build em cada push, e
 depois o smoke E2E em banco migrado e semeado (`.github/workflows/ci.yml`).
+
+## Demo
+
+<https://gabrielsoaressn.github.io/school-management-system/>
+
+O sistema é server-side — Prisma, sessão, rotas de API — e não roda como site
+estático. Por isso a demo é um **segundo app Next** em `demo/`, com
+`output: "export"`, cujas telas leem uma escola inventada em `demo/lib/mock.ts`
+em vez do banco. Nenhum dado ali corresponde a pessoa real e nada é gravado.
+
+O que a demo não duplica: os componentes de UI vêm de `src/components` e a
+paleta vem de `src/app/globals.css`, então o visual acompanha o app. O que ela
+duplica de propósito: as telas, porque as do app são componentes de servidor que
+consultam o banco.
+
+`.github/workflows/pages.yml` publica a cada push em `master` que toque
+`demo/`, `src/components/` ou a paleta. Requer, uma vez, **Settings → Pages →
+Source: GitHub Actions** no repositório.
+
+```bash
+npm run demo:dev                     # localhost:3001, sem basePath
+npm run demo:build                   # gera demo/out com basePath /school-management-system
+DEMO_BASE_PATH="" npm run demo:build # para servir na raiz de um domínio
+```
 
 ## Como o domínio funciona
 
@@ -111,6 +141,10 @@ src/
     report-card.ts         boletim calculado
     notifications/         drivers de envio (console, smtp, whatsapp stub)
     storage/               uploads (local, s3 previsto)
+demo/
+  app/                     telas da demo estática (GitHub Pages)
+  components/              casca de navegação e boletim da demo
+  lib/mock.ts              a escola fictícia inteira
 docs/
   AUDIT.md                 estado real do código — a fonte de verdade
   BACKLOG.md               pendências conhecidas, com contexto
