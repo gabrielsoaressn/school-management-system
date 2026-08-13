@@ -36,6 +36,7 @@ export type AuditAction =
   | "enrollment.approve"
   | "enrollment.reject"
   | "enrollment.cancel"
+  | "enrollment.re_enroll"
   | "document.generate"
   | "settings.update"
   | "password.change"
