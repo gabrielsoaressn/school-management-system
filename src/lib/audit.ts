@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { logger } from "@/lib/logger";
 import { clientIp } from "@/lib/rate-limit";
 import type { AuthenticatedUser } from "@/lib/api-auth";
 
@@ -67,7 +68,9 @@ function snapshot(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(snapshot);
 
   const out: Record<string, unknown> = {};
-  for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+  for (const [key, nested] of Object.entries(
+    value as Record<string, unknown>
+  )) {
     if (SNAPSHOT_DENYLIST.has(key)) continue;
     out[key] = snapshot(nested);
   }
@@ -98,7 +101,10 @@ export async function recordAudit({
       },
     });
   } catch (error) {
-    console.error("[audit] falha ao registrar", action, entity, entityId, error);
+    logger.error(
+      { err: error, action, entity, entityId },
+      "falha ao registrar auditoria"
+    );
   }
 }
 

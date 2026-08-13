@@ -160,8 +160,8 @@ export default function CurriculumEditor({ classId }: { classId: string }) {
 
       {unstaffed > 0 && (
         <p className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-foreground">
-          {unstaffed} disciplina(s) sem professor. Ninguém poderá lançar notas ou
-          chamada delas até que um professor seja definido.
+          {unstaffed} disciplina(s) sem professor. Ninguém poderá lançar notas
+          ou chamada delas até que um professor seja definido.
         </p>
       )}
 
@@ -182,8 +182,12 @@ export default function CurriculumEditor({ classId }: { classId: string }) {
             <thead>
               <tr className="border-b border-border text-left">
                 <th className="w-10 py-2"></th>
-                <th className="py-2 font-semibold text-foreground">Disciplina</th>
-                <th className="py-2 font-semibold text-foreground">Professor</th>
+                <th className="py-2 font-semibold text-foreground">
+                  Disciplina
+                </th>
+                <th className="py-2 font-semibold text-foreground">
+                  Professor
+                </th>
                 <th className="w-28 py-2 font-semibold text-foreground">
                   Aulas/semana
                 </th>

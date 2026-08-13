@@ -13,6 +13,7 @@
 ## Task 1: Update Prisma Schema
 
 **Files:**
+
 - Modify: `prisma/schema.prisma` (Class model, lines 223-247)
 
 **Step 1: Remove subjectId and teacherId from Class model**
@@ -42,6 +43,7 @@ model Class {
 ```
 
 **Changes made:**
+
 - ❌ Removed `subjectId` field
 - ❌ Removed `subject` relation
 - ❌ Removed `teacherId` field
@@ -76,6 +78,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 2: Create and Apply Migration (Reset)
 
 **Files:**
+
 - N/A (migration will be created automatically)
 
 **Step 1: Reset database with new schema**
@@ -83,6 +86,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 Run: `npx prisma migrate reset`
 
 Expected:
+
 - Drop database
 - Create new migration
 - Apply migration
@@ -108,6 +112,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 3: Update Seed Script - Clean Data Section
 
 **Files:**
+
 - Modify: `prisma/seed.ts` (lines 249-274)
 
 **Step 1: Update class creation loop to create consolidated classes**
@@ -116,7 +121,7 @@ Replace the class creation section (lines 249-274) with:
 
 ```typescript
 // 5. Criar turmas (consolidadas - uma por série/seção)
-console.log('🏫 Criando turmas...');
+console.log("🏫 Criando turmas...");
 const classes = [];
 for (const gradeLevel of gradeLevels) {
   for (const section of sections) {
@@ -125,9 +130,9 @@ for (const gradeLevel of gradeLevels) {
         name: `${gradeLevel} - Turma ${section}`,
         gradeLevel,
         section,
-        academicYear: '2026',
+        academicYear: "2026",
         roomNumber: `${Math.floor(Math.random() * 3) + 1}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`,
-        schedule: 'Segunda a Sexta, 7h-12h',
+        schedule: "Segunda a Sexta, 7h-12h",
         capacity: 30,
       },
     });
@@ -142,6 +147,7 @@ for (const gradeLevel of gradeLevels) {
 Run: `npx prisma db seed`
 
 Expected:
+
 - 27 classes created (9 grades × 3 sections)
 - Output shows: "🏫 Criando turmas..."
 - Enrollments will fail (we'll fix next)
@@ -163,6 +169,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 4: Update Seed Script - Enrollments Section
 
 **Files:**
+
 - Modify: `prisma/seed.ts` (lines 276-291)
 
 **Step 1: Update enrollment creation to enroll once per class**
@@ -171,11 +178,11 @@ Replace the enrollment section (lines 276-291) with:
 
 ```typescript
 // 6. Matricular alunos nas turmas
-console.log('📝 Matriculando alunos...');
+console.log("📝 Matriculando alunos...");
 for (const student of students) {
   // Find the class for this student's grade and section
   const studentClass = classes.find(
-    c => c.gradeLevel === student.gradeLevel && c.section === student.section
+    (c) => c.gradeLevel === student.gradeLevel && c.section === student.section
   );
 
   if (studentClass) {
@@ -194,6 +201,7 @@ for (const student of students) {
 Run: `npx prisma migrate reset`
 
 Expected:
+
 - Database reset
 - All seed data created successfully
 - Output shows number of students, classes, enrollments
@@ -203,6 +211,7 @@ Expected:
 Run: `npx prisma studio`
 
 Navigate to Class model and verify:
+
 - 27 classes total
 - Each class has name like "6º Ano - Turma A"
 - No subjectId or teacherId fields
@@ -225,6 +234,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 5: Update Class API Route
 
 **Files:**
+
 - Modify: `src/app/api/admin/classes/route.ts`
 
 **Step 1: Read current implementation**
@@ -249,15 +259,8 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const {
-      name,
-      grade,
-      section,
-      academicYear,
-      capacity,
-      schedule,
-      room,
-    } = body;
+    const { name, grade, section, academicYear, capacity, schedule, room } =
+      body;
 
     // Validate required fields
     if (!name || !grade || !section || !academicYear) {
@@ -315,6 +318,7 @@ export async function POST(request: Request) {
 **Step 3: Test API with curl**
 
 Run:
+
 ```bash
 curl -X POST http://localhost:3000/api/admin/classes \
   -H "Content-Type: application/json" \
@@ -349,6 +353,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 6: Update Class Form Component
 
 **Files:**
+
 - Modify: `src/app/admin/classes/new/ClassForm.tsx`
 
 **Step 1: Remove teacher selection field**
@@ -360,6 +365,7 @@ In ClassForm.tsx, remove the teacher-related code:
 3. Remove `teacherId` from the fetch body (line 41)
 
 Updated formData:
+
 ```typescript
 const [formData, setFormData] = useState({
   name: "",
@@ -467,6 +473,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 7: Update Student Form - Add Grade and Section Fields
 
 **Files:**
+
 - Modify: `src/app/admin/students/new/page.tsx`
 - Modify: `src/app/admin/students/new/StudentForm.tsx` (if exists)
 
@@ -566,6 +573,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 8: Update Student Form Component
 
 **Files:**
+
 - Modify: `src/app/admin/students/new/StudentForm.tsx`
 
 **Step 1: Find StudentForm component**
@@ -740,11 +748,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 9: Update Student Creation API
 
 **Files:**
+
 - Modify: `src/app/api/admin/students/route.ts`
 
 **Step 1: Update POST handler to handle grade/section instead of classId**
 
 The API should:
+
 1. Receive gradeLevel and section from form
 2. Find or validate that class exists
 3. Create student with gradeLevel and section
@@ -814,7 +824,9 @@ export async function POST(request: Request) {
 
     if (!studentClass) {
       return NextResponse.json(
-        { message: `Turma ${gradeLevel} ${section} não encontrada para o ano ${currentYear}` },
+        {
+          message: `Turma ${gradeLevel} ${section} não encontrada para o ano ${currentYear}`,
+        },
         { status: 400 }
       );
     }
@@ -911,6 +923,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Task 10: Verification and Testing
 
 **Files:**
+
 - N/A (testing)
 
 **Step 1: Test complete flow**
@@ -946,9 +959,9 @@ const student = await prisma.student.findUnique({
   where: { id: "student-id" },
   include: {
     enrollments: {
-      include: { class: true }
-    }
-  }
+      include: { class: true },
+    },
+  },
 });
 
 // Get all subjects for student's grade
@@ -958,15 +971,16 @@ const subjects = await prisma.subject.findMany({
     teachers: {
       include: {
         teacher: {
-          include: { employee: true }
-        }
-      }
-    }
-  }
+          include: { employee: true },
+        },
+      },
+    },
+  },
 });
 ```
 
 Expected:
+
 - Student has gradeLevel and section fields
 - One enrollment per student
 - All subjects for grade are returned with assigned teachers
@@ -1009,6 +1023,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 ## Implementation Complete
 
 **Summary of changes:**
+
 - ✅ Schema: Removed subjectId/teacherId from Class, added schedule/capacity
 - ✅ Database: Reduced from ~270 to ~27 class records
 - ✅ Seed: Consolidated class creation and enrollment logic
@@ -1017,6 +1032,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 - ✅ Data integrity: Maintained relationships for grades and teacher assignments
 
 **Next steps:**
+
 - Deploy to staging for testing
 - Update any dashboard views that display classes
 - Consider adding UI to assign teachers to subjects

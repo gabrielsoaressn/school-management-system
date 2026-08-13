@@ -60,9 +60,9 @@ export default function ClassForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Nome da Turma *
           </label>
           <input
@@ -72,12 +72,12 @@ export default function ClassForm() {
             value={formData.name}
             onChange={handleChange}
             placeholder="Ex: 1º Ano A"
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Série/Ano *
           </label>
           <input
@@ -87,12 +87,12 @@ export default function ClassForm() {
             value={formData.gradeLevel}
             onChange={handleChange}
             placeholder="Ex: 1º Ano"
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Seção
           </label>
           <input
@@ -102,12 +102,12 @@ export default function ClassForm() {
             value={formData.section}
             onChange={handleChange}
             placeholder="Ex: A, B, C"
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Ano Letivo *
           </label>
           <input
@@ -118,12 +118,12 @@ export default function ClassForm() {
             onChange={handleChange}
             min="2020"
             max="2030"
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Capacidade *
           </label>
           <input
@@ -134,12 +134,12 @@ export default function ClassForm() {
             onChange={handleChange}
             min="1"
             max="100"
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Sala
           </label>
           <input
@@ -148,12 +148,12 @@ export default function ClassForm() {
             value={formData.roomNumber}
             onChange={handleChange}
             placeholder="Ex: Sala 101"
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Horário
           </label>
           <input
@@ -162,7 +162,7 @@ export default function ClassForm() {
             value={formData.schedule}
             onChange={handleChange}
             placeholder="Ex: Segunda a Sexta, 8h-12h"
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
           />
         </div>
       </div>
@@ -171,14 +171,14 @@ export default function ClassForm() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-gray-900 hover:bg-black text-white font-semibold py-3 px-6 rounded-sm border border-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-sm border border-gray-800 bg-gray-900 px-6 py-3 font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Salvando..." : "Criar Turma"}
         </button>
         <button
           type="button"
           onClick={() => router.push("/admin/dashboard")}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-sm border border-gray-300 transition"
+          className="rounded-sm border border-gray-300 bg-gray-200 px-6 py-3 font-semibold text-gray-800 transition hover:bg-gray-300"
         >
           Cancelar
         </button>

@@ -3,6 +3,7 @@
 ## Paleta de Cores Profissional
 
 ### 🔵 Azul Corporativo (Primary)
+
 ```tsx
 // Botões de ação primária
 <button className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -14,6 +15,7 @@
 ```
 
 ### ⚪ Neutros (Backgrounds & Text)
+
 ```tsx
 // Background da página
 <div className="bg-background">...</div>
@@ -28,6 +30,7 @@
 ```
 
 ### 🟢 Status Colors (Semântico)
+
 ```tsx
 // Success (confirmação, aprovado)
 <span className="bg-success text-success-foreground">✓ Aprovado</span>
@@ -47,6 +50,7 @@
 ## 🎯 Regras de UX
 
 ### Botões
+
 ```tsx
 // ✅ CORRETO - Botão primário (ação principal da tela)
 <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 rounded-lg font-semibold">
@@ -69,6 +73,7 @@
 ```
 
 ### Cards e Tabelas
+
 ```tsx
 // ✅ Card padrão com sombra sutil
 <div className="bg-card border border-border rounded-lg shadow-sm p-6">
@@ -92,6 +97,7 @@
 ```
 
 ### Formulários
+
 ```tsx
 // ✅ Input com foco azul
 <input
@@ -128,6 +134,7 @@ px-6 py-2 (24px horizontal, 8px vertical)
 ## 🔄 Antes e Depois
 
 ### ❌ Antes (Problemas)
+
 ```tsx
 // Cores inconsistentes
 <button className="bg-black">Salvar</button>
@@ -140,6 +147,7 @@ px-6 py-2 (24px horizontal, 8px vertical)
 ```
 
 ### ✅ Depois (Novo Design System)
+
 ```tsx
 // Cores semânticas claras
 <button className="bg-primary text-primary-foreground">Salvar</button>

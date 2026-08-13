@@ -11,25 +11,30 @@
 ### 🆕 13 NOVAS TABELAS CRIADAS
 
 #### MÓDULO 1: MATRÍCULA DIGITAL
+
 1. **EnrollmentRequest** - Solicitações de matrícula online pendentes
 2. **GuardianRelationship** - Relacionamento aluno ↔ responsáveis (financeiro/pedagógico)
 
 #### MÓDULO 2: GESTÃO ACADÊMICA
+
 3. **AssessmentType** - Tipos de avaliação (prova, trabalho, etc.)
 4. **Assessment** - Avaliações individuais com peso e cálculo de média
 5. **AttendanceRecord** - Presença com turma e matéria (evolução do Attendance)
 
 #### MÓDULO 3: FINANCEIRO AVANÇADO
+
 6. **PaymentReminder** - Histórico de lembretes de cobrança
 7. **PaymentRenegotiation** - Renegociações de dívidas
 8. **FinancialContact** - Contatos para cobrança (email, WhatsApp)
 
 #### MÓDULO 4: PORTAL DE COMUNICAÇÃO
+
 9. **Occurrence** - Ocorrências pedagógicas
 10. **CommunicationThread** - Threads de mensagens
 11. **Message** - Mensagens individuais
 
 #### MÓDULO 5: GERADOR DE DOCUMENTOS
+
 12. **DocumentTemplate** - Templates de documentos com placeholders
 13. **GeneratedDocument** - Histórico de documentos gerados
 
@@ -94,6 +99,7 @@ CommunicationThread (mensagens)
 ## 🎯 ÍNDICES CRIADOS (Performance)
 
 Todos os campos críticos foram indexados:
+
 - ✅ Chaves estrangeiras (studentId, parentId, classId, etc.)
 - ✅ Campos de busca (status, date, type)
 - ✅ Campos únicos (requestNumber, invoiceNumber)
@@ -104,6 +110,7 @@ Todos os campos críticos foram indexados:
 ## ⚙️ CASCATA DE EXCLUSÃO
 
 Configurado `onDelete: Cascade` para:
+
 - User → Student/Parent/Employee
 - Student → Assessments/AttendanceRecords/Occurrences
 - Parent → GuardianRelationships/FinancialContacts
@@ -115,6 +122,7 @@ Configurado `onDelete: Cascade` para:
 ## 📝 CAMPOS DE AUDITORIA
 
 Todas as tabelas incluem:
+
 - ✅ `createdAt` (data de criação)
 - ✅ `updatedAt` (última atualização)
 - ✅ Campos de rastreamento (`createdBy`, `reviewedBy`, `reportedBy`)
@@ -124,15 +132,18 @@ Todas as tabelas incluem:
 ## 🔐 TIPOS DE DADOS
 
 ### Campos de texto longos:
+
 - `htmlTemplate` (DocumentTemplate) → String (TEXT)
 - `generatedHtml` (GeneratedDocument) → String (TEXT)
 - `description` (Occurrence) → String (TEXT)
 
 ### Campos JSON:
+
 - `metadata` (GeneratedDocument) → String (JSON)
 - `availableVariables` (DocumentTemplate) → String (JSON)
 
 ### Campos de data/hora:
+
 - Timestamps: `sentAt`, `deliveredAt`, `openedAt`, `reviewedAt`
 - Datas: `dueDate`, `assessmentDate`, `generatedAt`
 
@@ -151,17 +162,21 @@ Todas as tabelas incluem:
 ## 🚀 PRÓXIMOS PASSOS
 
 ### Passo 2.1: ✅ CONCLUÍDO
+
 - ✅ Schema atualizado
 - ✅ Migration aplicada
 - ✅ Prisma Client gerado
 
 ### Passo 2.2: PRÓXIMO
+
 - 📝 Atualizar `seed.ts` com dados de teste
 - 🧪 Testar relacionamentos
 - 🎯 Criar tipos TypeScript auxiliares
 
 ### Passo 3: MÓDULO 1 - MATRÍCULA DIGITAL
+
 Após validação do seed, iniciar desenvolvimento:
+
 1. Criar rota pública `/matricula/[schoolId]`
 2. Criar formulário step-by-step
 3. Criar painel de aprovação no Admin

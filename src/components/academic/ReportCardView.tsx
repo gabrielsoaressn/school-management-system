@@ -63,7 +63,9 @@ export function ReportCardView({ report }: { report: ReportCard }) {
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
-                  <th className="p-3 font-semibold text-foreground">Disciplina</th>
+                  <th className="p-3 font-semibold text-foreground">
+                    Disciplina
+                  </th>
                   {report.terms.map((term) => (
                     <th
                       key={term}
@@ -134,13 +136,15 @@ export function ReportCardView({ report }: { report: ReportCard }) {
         )}
 
         <p className="mt-3 text-xs text-muted-foreground">
-          Média ponderada pelo peso de cada tipo de avaliação, na escala de 0 a 10.
-          Média mínima para aprovação: {passingMark.toFixed(1)}.
+          Média ponderada pelo peso de cada tipo de avaliação, na escala de 0 a
+          10. Média mínima para aprovação: {passingMark.toFixed(1)}.
         </p>
       </Card>
 
       <Card>
-        <h2 className="mb-4 text-lg font-semibold text-foreground">Frequência</h2>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">
+          Frequência
+        </h2>
 
         {report.attendance.total === 0 ? (
           <p className="text-sm text-muted-foreground">
@@ -176,7 +180,10 @@ export function ReportCardView({ report }: { report: ReportCard }) {
           <div className="space-y-4">
             {report.subjects.map((subject) => {
               const entries = subject.terms.flatMap((term) =>
-                term.assessments.map((assessment) => ({ ...assessment, term: term.term }))
+                term.assessments.map((assessment) => ({
+                  ...assessment,
+                  term: term.term,
+                }))
               );
 
               if (entries.length === 0) return null;

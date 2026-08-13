@@ -20,7 +20,9 @@ export const GET = withAuth<{ params: Promise<{ id: string }> }>(
       const document = await prisma.generatedDocument.findUnique({
         where: { id },
         include: {
-          student: { select: { firstName: true, lastName: true, studentId: true } },
+          student: {
+            select: { firstName: true, lastName: true, studentId: true },
+          },
           template: { select: { name: true } },
         },
       });

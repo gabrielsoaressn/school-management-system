@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+import { logger } from "@/lib/logger";
 
 /**
  * Single response envelope for every API route.
@@ -68,11 +69,15 @@ function serialize<T>(value: T): T {
   // Decimal would otherwise reach the client as a string and turn `a + b` into
   // string concatenation. Money crosses the wire as a number, for display only.
   if (isDecimal(value as object)) {
-    return (value as unknown as { toNumber(): number }).toNumber() as unknown as T;
+    return (
+      value as unknown as { toNumber(): number }
+    ).toNumber() as unknown as T;
   }
 
   const clean: Record<string, unknown> = {};
-  for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+  for (const [key, nested] of Object.entries(
+    value as Record<string, unknown>
+  )) {
     if (NEVER_SERIALIZE.has(key)) continue;
     clean[key] = serialize(nested);
   }
@@ -141,7 +146,10 @@ export function validationFailed(error: ZodError, message = "Dados inválidos") 
  * Last-resort handler for unexpected exceptions: logs the real error and
  * returns a generic message, so internals never leak to the client.
  */
-export function serverError(cause: unknown, error = "Erro interno do servidor") {
-  console.error("[api]", error, cause);
+export function serverError(
+  cause: unknown,
+  error = "Erro interno do servidor"
+) {
+  logger.error({ err: cause }, error);
   return fail(error, 500);
 }

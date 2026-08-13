@@ -15,8 +15,7 @@ import { isOverdue } from "@/lib/billing-rules";
  * soft-delete extension does not break the type.
  */
 type DbClient =
-  | typeof prisma
-  | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+  typeof prisma | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 /** States decided by a person, which payments must not override. */
 const MANUAL_STATES: PaymentStatus[] = ["DRAFT", "CANCELLED", "RENEGOTIATED"];
@@ -92,7 +91,10 @@ export async function recalculateBillingStatus(
       ? billing.payments[billing.payments.length - 1].paidAt
       : null;
 
-  if (status !== billing.status || billing.paidDate?.getTime() !== paidDate?.getTime()) {
+  if (
+    status !== billing.status ||
+    billing.paidDate?.getTime() !== paidDate?.getTime()
+  ) {
     await client.billing.update({
       where: { id: billingId },
       data: { status, paidDate },

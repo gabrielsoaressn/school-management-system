@@ -63,16 +63,12 @@ export function Table({ children, className = "" }: TableProps) {
 }
 
 export function TableHeader({ children, className = "" }: TableHeaderProps) {
-  return (
-    <thead className={`bg-muted ${className}`}>
-      {children}
-    </thead>
-  );
+  return <thead className={`bg-muted ${className}`}>{children}</thead>;
 }
 
 export function TableBody({ children, className = "" }: TableBodyProps) {
   return (
-    <tbody className={`bg-card divide-y divide-border ${className}`}>
+    <tbody className={`divide-y divide-border bg-card ${className}`}>
       {children}
     </tbody>
   );
@@ -97,13 +93,7 @@ export function TableRow({
 export function TableHead({ children, className = "" }: TableHeadProps) {
   return (
     <th
-      className={`
-        px-4 py-3
-        text-left text-xs font-semibold
-        text-foreground
-        uppercase tracking-wider
-        ${className}
-      `}
+      className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-foreground ${className} `}
     >
       {children}
     </th>

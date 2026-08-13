@@ -11,8 +11,7 @@ import { prisma } from "@/lib/prisma";
  */
 
 type DbClient =
-  | typeof prisma
-  | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+  typeof prisma | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 export class ClassNotFoundError extends Error {
   constructor(gradeLevel: string, section: string, year: number) {
@@ -90,7 +89,11 @@ export async function findClassForPlacement(
 ) {
   return client.class.findUnique({
     where: {
-      gradeLevel_section_academicYearId: { gradeLevel, section, academicYearId },
+      gradeLevel_section_academicYearId: {
+        gradeLevel,
+        section,
+        academicYearId,
+      },
     },
   });
 }
@@ -142,7 +145,9 @@ export async function findActiveEnrollment(studentId: string) {
  */
 export async function findActiveEnrollments(
   studentIds: string[]
-): Promise<Map<string, { gradeLevel: string; section: string; classId: string }>> {
+): Promise<
+  Map<string, { gradeLevel: string; section: string; classId: string }>
+> {
   if (studentIds.length === 0) return new Map();
 
   const enrollments = await prisma.enrollment.findMany({
@@ -172,7 +177,9 @@ export async function findActiveEnrollments(
 }
 
 /** Filter for "students enrolled in the current year", optionally by grade. */
-export function currentEnrollmentFilter(gradeLevel?: string): Prisma.StudentWhereInput {
+export function currentEnrollmentFilter(
+  gradeLevel?: string
+): Prisma.StudentWhereInput {
   return {
     enrollments: {
       some: {

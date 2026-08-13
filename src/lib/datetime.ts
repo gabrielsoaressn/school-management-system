@@ -68,7 +68,9 @@ export function formatDate(value: Date | string | null | undefined): string {
   return DATE_FORMATTER.format(coerce(value));
 }
 
-export function formatDateTime(value: Date | string | null | undefined): string {
+export function formatDateTime(
+  value: Date | string | null | undefined
+): string {
   if (!value) return "—";
   return DATE_TIME_FORMATTER.format(coerce(value));
 }
@@ -167,6 +169,9 @@ export function daysBetween(from: Date | string, to: Date | string): number {
 }
 
 /** Days a due date is past, or 0 if it is not yet due. */
-export function daysOverdue(dueDate: Date | string, now: Date = new Date()): number {
+export function daysOverdue(
+  dueDate: Date | string,
+  now: Date = new Date()
+): number {
   return Math.max(0, daysBetween(dueDate, startOfToday(now)));
 }

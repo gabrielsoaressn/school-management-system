@@ -27,7 +27,9 @@ export function Sidebar({ sections, userEmail, roleLabel }: Props) {
   const [open, setOpen] = useState(false);
 
   const isActive = (href: string, exact?: boolean) =>
-    exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+    exact
+      ? pathname === href
+      : pathname === href || pathname.startsWith(`${href}/`);
 
   const nav = (
     <nav className="flex h-full flex-col">
@@ -46,8 +48,9 @@ export function Sidebar({ sections, userEmail, roleLabel }: Props) {
                 // Icons are named in src/lib/navigation.ts so that file stays
                 // free of React imports.
                 const Icon =
-                  (icons[item.icon as keyof typeof icons] as icons.LucideIcon) ??
-                  icons.Circle;
+                  (icons[
+                    item.icon as keyof typeof icons
+                  ] as icons.LucideIcon) ?? icons.Circle;
                 const active = isActive(item.href, item.exact);
 
                 return (
@@ -74,7 +77,9 @@ export function Sidebar({ sections, userEmail, roleLabel }: Props) {
       </div>
 
       <div className="border-t border-border px-5 py-4">
-        <p className="truncate text-sm font-medium text-foreground">{userEmail}</p>
+        <p className="truncate text-sm font-medium text-foreground">
+          {userEmail}
+        </p>
         <p className="text-xs text-muted-foreground">{roleLabel}</p>
         <div className="mt-3 flex flex-col gap-1 text-sm">
           <Link

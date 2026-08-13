@@ -64,14 +64,14 @@ ou aplicar o limite na borda (nginx `limit_req`, Cloudflare).
 
 ## Variáveis de ambiente
 
-| Variável | Onde é lida | Obrigatória |
-|---|---|---|
-| `DATABASE_URL` | Prisma CLI (`.env`) e app (`.env.local`) | sim |
-| `NEXTAUTH_URL` | NextAuth e links de e-mail | sim |
-| `NEXTAUTH_SECRET` | assinatura do JWT de sessão | sim |
-| `CRON_SECRET` | `POST /api/cron/daily` | sim, para a rotina funcionar |
-| `NOTIFICATION_DRIVER` | `src/lib/notifications` (`console` por enquanto) | não |
-| `NEXT_PUBLIC_APP_NAME` | interface | não |
+| Variável               | Onde é lida                                      | Obrigatória                  |
+| ---------------------- | ------------------------------------------------ | ---------------------------- |
+| `DATABASE_URL`         | Prisma CLI (`.env`) e app (`.env.local`)         | sim                          |
+| `NEXTAUTH_URL`         | NextAuth e links de e-mail                       | sim                          |
+| `NEXTAUTH_SECRET`      | assinatura do JWT de sessão                      | sim                          |
+| `CRON_SECRET`          | `POST /api/cron/daily`                           | sim, para a rotina funcionar |
+| `NOTIFICATION_DRIVER`  | `src/lib/notifications` (`console` por enquanto) | não                          |
+| `NEXT_PUBLIC_APP_NAME` | interface                                        | não                          |
 
 O Prisma CLI lê `.env`; o Next lê `.env` e `.env.local` (com `.env.local` tendo
 precedência). Ambos estão no `.gitignore`.

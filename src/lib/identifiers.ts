@@ -47,13 +47,17 @@ export async function nextInvoiceNumber(
 }
 
 /** `EST00042` */
-export async function nextStudentId(client: SqlRunner = prisma): Promise<string> {
+export async function nextStudentId(
+  client: SqlRunner = prisma
+): Promise<string> {
   const value = await nextval(client, SEQUENCES.student);
   return `EST${pad(value, 5)}`;
 }
 
 /** `EMP00042` */
-export async function nextEmployeeId(client: SqlRunner = prisma): Promise<string> {
+export async function nextEmployeeId(
+  client: SqlRunner = prisma
+): Promise<string> {
   const value = await nextval(client, SEQUENCES.employee);
   return `EMP${pad(value, 5)}`;
 }

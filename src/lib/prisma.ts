@@ -26,10 +26,7 @@ const FILTERED_OPERATIONS = new Set([
 
 function createPrismaClient() {
   const base = new PrismaClient({
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["error", "warn"]
-        : ["error"],
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 
   return base.$extends({

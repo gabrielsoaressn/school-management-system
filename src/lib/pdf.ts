@@ -20,7 +20,12 @@ const LINE_HEIGHT = 1.45;
 
 type Block =
   | { kind: "heading"; level: 1 | 2 | 3; text: string }
-  | { kind: "paragraph"; text: string; bold?: boolean; align?: "left" | "center" }
+  | {
+      kind: "paragraph";
+      text: string;
+      bold?: boolean;
+      align?: "left" | "center";
+    }
   | { kind: "listItem"; text: string }
   | { kind: "rule" }
   | { kind: "space"; size: number };
@@ -42,7 +47,9 @@ function decodeEntities(value: string): string {
 }
 
 function stripTags(value: string): string {
-  return decodeEntities(value.replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
+  return decodeEntities(value.replace(/<[^>]+>/g, ""))
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -85,7 +92,11 @@ export function parseDocumentHtml(html: string): Block[] {
     } else {
       // A centred signature line in the templates is a div with text-align.
       const centred = /text-align:\s*center/i.test(token);
-      blocks.push({ kind: "paragraph", text, align: centred ? "center" : "left" });
+      blocks.push({
+        kind: "paragraph",
+        text,
+        align: centred ? "center" : "left",
+      });
     }
   }
 
@@ -162,7 +173,8 @@ export async function renderDocumentPdf(
     for (const line of lines) {
       ensure(size * LINE_HEIGHT);
       const width = font.widthOfTextAtSize(line, size);
-      const x = align === "center" ? MARGIN + (contentWidth - width) / 2 : MARGIN;
+      const x =
+        align === "center" ? MARGIN + (contentWidth - width) / 2 : MARGIN;
 
       page.drawText(line, { x, y: cursor - size, size, font, color: ink });
       cursor -= size * LINE_HEIGHT;

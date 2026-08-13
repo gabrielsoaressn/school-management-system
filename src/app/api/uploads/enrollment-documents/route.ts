@@ -1,7 +1,11 @@
 import { withoutAuth } from "@/lib/api-auth";
 import { created, fail, serverError } from "@/lib/api-response";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { MAX_UPLOAD_BYTES, UnsupportedFileError, storeUpload } from "@/lib/storage";
+import {
+  MAX_UPLOAD_BYTES,
+  UnsupportedFileError,
+  storeUpload,
+} from "@/lib/storage";
 
 const ALLOWED_SLOTS = [
   "birthCertificate",

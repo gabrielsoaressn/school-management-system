@@ -5,10 +5,7 @@ import toast from "react-hot-toast";
 import { Check, Paperclip, X } from "lucide-react";
 
 export type DocumentSlot =
-  | "birthCertificate"
-  | "cpf"
-  | "proofOfAddress"
-  | "previousSchool";
+  "birthCertificate" | "cpf" | "proofOfAddress" | "previousSchool";
 
 interface Props {
   slot: DocumentSlot;

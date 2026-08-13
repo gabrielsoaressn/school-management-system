@@ -38,26 +38,15 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className={`${fullWidth ? "w-full" : ""}`}>
         {label && (
-          <label className="block text-sm font-medium text-foreground mb-1.5">
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
             {label}
-            {props.required && <span className="text-destructive ml-1">*</span>}
+            {props.required && <span className="ml-1 text-destructive">*</span>}
           </label>
         )}
 
         <select
           ref={ref}
-          className={`
-            w-full
-            px-4 py-2
-            bg-card
-            border rounded-lg
-            text-foreground
-            transition-colors
-            focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0
-            disabled:opacity-50 disabled:cursor-not-allowed
-            ${hasError ? "border-destructive" : "border-input"}
-            ${className}
-          `}
+          className={`w-full rounded-lg border bg-card px-4 py-2 text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 ${hasError ? "border-destructive" : "border-input"} ${className} `}
           {...props}
         >
           {options.map((option) => (
@@ -67,9 +56,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
 
-        {error && (
-          <p className="mt-1.5 text-sm text-destructive">{error}</p>
-        )}
+        {error && <p className="mt-1.5 text-sm text-destructive">{error}</p>}
 
         {helperText && !error && (
           <p className="mt-1.5 text-sm text-muted-foreground">{helperText}</p>

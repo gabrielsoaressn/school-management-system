@@ -33,7 +33,11 @@ export async function findTeacherForUser(userId: string) {
  * whole school; a teacher sees only where they teach.
  */
 function supervisesEverything(user: AuthenticatedUser): boolean {
-  return user.role === "ADMIN" || user.role === "COORDINATOR" || user.role === "SECRETARY";
+  return (
+    user.role === "ADMIN" ||
+    user.role === "COORDINATOR" ||
+    user.role === "SECRETARY"
+  );
 }
 
 /**
@@ -62,10 +66,7 @@ export async function findTeachableClasses(user: AuthenticatedUser) {
     _count: { select: { enrollments: true } },
   };
 
-  const orderBy = [
-    { gradeLevel: "asc" as const },
-    { section: "asc" as const },
-  ];
+  const orderBy = [{ gradeLevel: "asc" as const }, { section: "asc" as const }];
 
   if (supervisesEverything(user)) {
     return prisma.class.findMany({

@@ -29,7 +29,12 @@ export default async function ClassDetailPage({ params }: Props) {
         where: { status: "ACTIVE" },
         include: {
           student: {
-            select: { id: true, studentId: true, firstName: true, lastName: true },
+            select: {
+              id: true,
+              studentId: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
         orderBy: { student: { firstName: "asc" } },
@@ -43,7 +48,6 @@ export default async function ClassDetailPage({ params }: Props) {
 
   return (
     <>
-
       <PageWrapper>
         <div className="mb-6">
           <BackButton href="/admin/classes" label="Voltar às turmas" />
@@ -78,7 +82,8 @@ export default async function ClassDetailPage({ params }: Props) {
                     className="flex items-center justify-between py-2"
                   >
                     <span className="text-foreground">
-                      {enrollment.student.firstName} {enrollment.student.lastName}
+                      {enrollment.student.firstName}{" "}
+                      {enrollment.student.lastName}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {enrollment.student.studentId}

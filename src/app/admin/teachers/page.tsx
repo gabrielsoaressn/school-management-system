@@ -68,10 +68,18 @@ export default async function TeachersPage() {
             <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
-                  <th className="p-3 font-semibold text-foreground">Professor</th>
-                  <th className="p-3 font-semibold text-foreground">Habilitações</th>
-                  <th className="p-3 font-semibold text-foreground">Turmas no ano</th>
-                  <th className="p-3 font-semibold text-foreground">Situação</th>
+                  <th className="p-3 font-semibold text-foreground">
+                    Professor
+                  </th>
+                  <th className="p-3 font-semibold text-foreground">
+                    Habilitações
+                  </th>
+                  <th className="p-3 font-semibold text-foreground">
+                    Turmas no ano
+                  </th>
+                  <th className="p-3 font-semibold text-foreground">
+                    Situação
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -88,7 +96,8 @@ export default async function TeachersPage() {
                     >
                       <td className="p-3">
                         <span className="font-medium text-foreground">
-                          {teacher.employee.firstName} {teacher.employee.lastName}
+                          {teacher.employee.firstName}{" "}
+                          {teacher.employee.lastName}
                         </span>
                         <span className="block text-xs text-muted-foreground">
                           {teacher.employee.employeeId} ·{" "}
@@ -125,7 +134,9 @@ export default async function TeachersPage() {
                       <td className="p-3">
                         <Badge
                           variant={
-                            teacher.employee.user.isActive ? "success" : "default"
+                            teacher.employee.user.isActive
+                              ? "success"
+                              : "default"
                           }
                           size="sm"
                         >

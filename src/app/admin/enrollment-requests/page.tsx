@@ -1,25 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { PageWrapper } from '@/components/layout/PageWrapper';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { SearchBar } from '@/components/ui/SearchBar';
-import { Pagination } from '@/components/ui/Pagination';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { useState, useEffect } from "react";
+import { PageWrapper } from "@/components/layout/PageWrapper";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { Pagination } from "@/components/ui/Pagination";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   FileText,
   CheckCircle,
   XCircle,
   Eye,
   Clock,
-  UserCheck,
   AlertCircle,
-  Filter
-} from 'lucide-react';
-import toast from 'react-hot-toast';
+} from "lucide-react";
+import toast from "react-hot-toast";
 
 type EnrollmentRequest = {
   id: string;
@@ -39,28 +37,28 @@ type EnrollmentRequest = {
 
 const STATUS_CONFIG = {
   PENDING: {
-    label: 'Pendente',
-    variant: 'warning' as const,
+    label: "Pendente",
+    variant: "warning" as const,
     icon: Clock,
   },
   UNDER_REVIEW: {
-    label: 'Em Análise',
-    variant: 'info' as const,
+    label: "Em Análise",
+    variant: "info" as const,
     icon: Eye,
   },
   APPROVED: {
-    label: 'Aprovada',
-    variant: 'success' as const,
+    label: "Aprovada",
+    variant: "success" as const,
     icon: CheckCircle,
   },
   REJECTED: {
-    label: 'Rejeitada',
-    variant: 'destructive' as const,
+    label: "Rejeitada",
+    variant: "destructive" as const,
     icon: XCircle,
   },
   CANCELLED: {
-    label: 'Cancelada',
-    variant: 'default' as const,
+    label: "Cancelada",
+    variant: "default" as const,
     icon: AlertCircle,
   },
 };
@@ -73,8 +71,8 @@ export default function EnrollmentRequestsPage() {
   const [actionLoading, setActionLoading] = useState(false);
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -84,7 +82,7 @@ export default function EnrollmentRequestsPage() {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: '10',
+        limit: "10",
         ...(statusFilter && { status: statusFilter }),
         ...(searchQuery && { search: searchQuery }),
       });
@@ -98,8 +96,8 @@ export default function EnrollmentRequestsPage() {
         setTotal(data.pagination.total);
       }
     } catch (error) {
-      console.error('Error fetching requests:', error);
-      toast.error('Erro ao carregar solicitações');
+      console.error("Error fetching requests:", error);
+      toast.error("Erro ao carregar solicitações");
     } finally {
       setLoading(false);
     }
@@ -124,37 +122,45 @@ export default function EnrollmentRequestsPage() {
         setShowDetailsModal(true);
       }
     } catch (error) {
-      console.error('Error fetching request details:', error);
-      toast.error('Erro ao carregar detalhes');
+      console.error("Error fetching request details:", error);
+      toast.error("Erro ao carregar detalhes");
     }
   };
 
-  const handleAction = async (id: string, action: 'approve' | 'reject', rejectionReason?: string) => {
-    if (action === 'reject' && !rejectionReason) {
-      toast.error('Informe o motivo da rejeição');
+  const handleAction = async (
+    id: string,
+    action: "approve" | "reject",
+    rejectionReason?: string
+  ) => {
+    if (action === "reject" && !rejectionReason) {
+      toast.error("Informe o motivo da rejeição");
       return;
     }
 
     setActionLoading(true);
     try {
       const response = await fetch(`/api/enrollment-requests/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, rejectionReason }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success(action === 'approve' ? 'Matrícula aprovada com sucesso!' : 'Solicitação rejeitada');
+        toast.success(
+          action === "approve"
+            ? "Matrícula aprovada com sucesso!"
+            : "Solicitação rejeitada"
+        );
         setShowDetailsModal(false);
         fetchRequests();
       } else {
-        toast.error(data.error || 'Erro ao processar solicitação');
+        toast.error(data.error || "Erro ao processar solicitação");
       }
     } catch (error) {
-      console.error('Error processing request:', error);
-      toast.error('Erro ao processar solicitação');
+      console.error("Error processing request:", error);
+      toast.error("Erro ao processar solicitação");
     } finally {
       setActionLoading(false);
     }
@@ -168,7 +174,7 @@ export default function EnrollmentRequestsPage() {
         icon={FileText}
       />
 
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row">
         <div className="flex-1">
           <SearchBar
             value={searchQuery}
@@ -185,7 +191,7 @@ export default function EnrollmentRequestsPage() {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="rounded-lg border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Todos os status</option>
             <option value="PENDING">Pendente</option>
@@ -197,14 +203,14 @@ export default function EnrollmentRequestsPage() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total</p>
               <p className="text-2xl font-bold text-gray-900">{total}</p>
             </div>
-            <FileText className="w-8 h-8 text-gray-400" />
+            <FileText className="h-8 w-8 text-gray-400" />
           </div>
         </Card>
         <Card className="p-4">
@@ -212,10 +218,10 @@ export default function EnrollmentRequestsPage() {
             <div>
               <p className="text-sm text-gray-600">Pendentes</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {requests.filter(r => r.status === 'PENDING').length}
+                {requests.filter((r) => r.status === "PENDING").length}
               </p>
             </div>
-            <Clock className="w-8 h-8 text-yellow-400" />
+            <Clock className="h-8 w-8 text-yellow-400" />
           </div>
         </Card>
         <Card className="p-4">
@@ -223,10 +229,10 @@ export default function EnrollmentRequestsPage() {
             <div>
               <p className="text-sm text-gray-600">Aprovadas</p>
               <p className="text-2xl font-bold text-green-600">
-                {requests.filter(r => r.status === 'APPROVED').length}
+                {requests.filter((r) => r.status === "APPROVED").length}
               </p>
             </div>
-            <CheckCircle className="w-8 h-8 text-green-400" />
+            <CheckCircle className="h-8 w-8 text-green-400" />
           </div>
         </Card>
         <Card className="p-4">
@@ -234,10 +240,10 @@ export default function EnrollmentRequestsPage() {
             <div>
               <p className="text-sm text-gray-600">Rejeitadas</p>
               <p className="text-2xl font-bold text-red-600">
-                {requests.filter(r => r.status === 'REJECTED').length}
+                {requests.filter((r) => r.status === "REJECTED").length}
               </p>
             </div>
-            <XCircle className="w-8 h-8 text-red-400" />
+            <XCircle className="h-8 w-8 text-red-400" />
           </div>
         </Card>
       </div>
@@ -256,72 +262,80 @@ export default function EnrollmentRequestsPage() {
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="border-b border-gray-200 bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Número
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Aluno
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Responsável
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Série
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Data
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                       Ações
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 bg-white">
                   {requests.map((request) => {
-                    const statusConfig = STATUS_CONFIG[request.status as keyof typeof STATUS_CONFIG];
+                    const statusConfig =
+                      STATUS_CONFIG[
+                        request.status as keyof typeof STATUS_CONFIG
+                      ];
                     const StatusIcon = statusConfig.icon;
 
                     return (
                       <tr key={request.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <span className="text-sm font-medium text-gray-900">
                             {request.requestNumber}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <div className="text-sm font-medium text-gray-900">
                             {request.studentFirstName} {request.studentLastName}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <div className="text-sm text-gray-500">
-                            {request.financialGuardianFirstName} {request.financialGuardianLastName}
+                            {request.financialGuardianFirstName}{" "}
+                            {request.financialGuardianLastName}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-900">{request.gradeLevel}</span>
+                        <td className="whitespace-nowrap px-6 py-4">
+                          <span className="text-sm text-gray-900">
+                            {request.gradeLevel}
+                          </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <Badge variant={statusConfig.variant}>
-                            <StatusIcon className="w-3 h-3 mr-1" />
+                            <StatusIcon className="mr-1 h-3 w-3" />
                             {statusConfig.label}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(request.createdAt).toLocaleDateString('pt-BR')}
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                          {new Date(request.createdAt).toLocaleDateString(
+                            "pt-BR"
+                          )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleViewDetails(request.id)}
                           >
-                            <Eye className="w-4 h-4 mr-1" />
+                            <Eye className="mr-1 h-4 w-4" />
                             Ver
                           </Button>
                         </td>
@@ -333,7 +347,7 @@ export default function EnrollmentRequestsPage() {
             </div>
 
             {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200">
+              <div className="border-t border-gray-200 px-6 py-4">
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -347,9 +361,9 @@ export default function EnrollmentRequestsPage() {
 
       {/* Details Modal */}
       {showDetailsModal && selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white">
+            <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Detalhes da Solicitação - {selectedRequest.requestNumber}
               </h3>
@@ -357,39 +371,65 @@ export default function EnrollmentRequestsPage() {
                 onClick={() => setShowDetailsModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                <XCircle className="w-6 h-6" />
+                <XCircle className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="space-y-6 p-6">
               {/* Status Badge */}
               <div className="flex items-center gap-2">
-                <Badge variant={STATUS_CONFIG[selectedRequest.status as keyof typeof STATUS_CONFIG].variant}>
-                  {STATUS_CONFIG[selectedRequest.status as keyof typeof STATUS_CONFIG].label}
+                <Badge
+                  variant={
+                    STATUS_CONFIG[
+                      selectedRequest.status as keyof typeof STATUS_CONFIG
+                    ].variant
+                  }
+                >
+                  {
+                    STATUS_CONFIG[
+                      selectedRequest.status as keyof typeof STATUS_CONFIG
+                    ].label
+                  }
                 </Badge>
                 {selectedRequest.approvedStudent && (
                   <span className="text-sm text-gray-500">
-                    ID do Aluno: <span className="font-medium">{selectedRequest.approvedStudent.studentId}</span>
+                    ID do Aluno:{" "}
+                    <span className="font-medium">
+                      {selectedRequest.approvedStudent.studentId}
+                    </span>
                   </span>
                 )}
               </div>
 
               {/* Dados do Aluno */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Dados do Aluno</h4>
+              <div className="rounded-lg bg-blue-50 p-4">
+                <h4 className="mb-3 font-semibold text-gray-900">
+                  Dados do Aluno
+                </h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-gray-600">Nome:</span>
-                    <p className="font-medium">{selectedRequest.studentFirstName} {selectedRequest.studentLastName}</p>
+                    <p className="font-medium">
+                      {selectedRequest.studentFirstName}{" "}
+                      {selectedRequest.studentLastName}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-600">Data de Nascimento:</span>
-                    <p className="font-medium">{new Date(selectedRequest.dateOfBirth).toLocaleDateString('pt-BR')}</p>
+                    <p className="font-medium">
+                      {new Date(selectedRequest.dateOfBirth).toLocaleDateString(
+                        "pt-BR"
+                      )}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-600">Gênero:</span>
                     <p className="font-medium">
-                      {selectedRequest.gender === 'MALE' ? 'Masculino' : selectedRequest.gender === 'FEMALE' ? 'Feminino' : 'Outro'}
+                      {selectedRequest.gender === "MALE"
+                        ? "Masculino"
+                        : selectedRequest.gender === "FEMALE"
+                          ? "Feminino"
+                          : "Outro"}
                     </p>
                   </div>
                   <div>
@@ -400,97 +440,129 @@ export default function EnrollmentRequestsPage() {
               </div>
 
               {/* Responsável Financeiro */}
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Responsável Financeiro</h4>
+              <div className="rounded-lg bg-green-50 p-4">
+                <h4 className="mb-3 font-semibold text-gray-900">
+                  Responsável Financeiro
+                </h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-gray-600">Nome:</span>
-                    <p className="font-medium">{selectedRequest.financialGuardianFirstName} {selectedRequest.financialGuardianLastName}</p>
+                    <p className="font-medium">
+                      {selectedRequest.financialGuardianFirstName}{" "}
+                      {selectedRequest.financialGuardianLastName}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-600">CPF:</span>
-                    <p className="font-medium">{selectedRequest.financialGuardianCPF}</p>
+                    <p className="font-medium">
+                      {selectedRequest.financialGuardianCPF}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-600">Telefone:</span>
-                    <p className="font-medium">{selectedRequest.financialGuardianPhone}</p>
+                    <p className="font-medium">
+                      {selectedRequest.financialGuardianPhone}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-600">E-mail:</span>
-                    <p className="font-medium">{selectedRequest.financialGuardianEmail}</p>
+                    <p className="font-medium">
+                      {selectedRequest.financialGuardianEmail}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Responsável Pedagógico */}
-              {!selectedRequest.isSameGuardian && selectedRequest.pedagogicalGuardianFirstName && (
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3">Responsável Pedagógico</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <span className="text-gray-600">Nome:</span>
-                      <p className="font-medium">{selectedRequest.pedagogicalGuardianFirstName} {selectedRequest.pedagogicalGuardianLastName}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">CPF:</span>
-                      <p className="font-medium">{selectedRequest.pedagogicalGuardianCPF}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Telefone:</span>
-                      <p className="font-medium">{selectedRequest.pedagogicalGuardianPhone}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">E-mail:</span>
-                      <p className="font-medium">{selectedRequest.pedagogicalGuardianEmail || 'Não informado'}</p>
+              {!selectedRequest.isSameGuardian &&
+                selectedRequest.pedagogicalGuardianFirstName && (
+                  <div className="rounded-lg bg-yellow-50 p-4">
+                    <h4 className="mb-3 font-semibold text-gray-900">
+                      Responsável Pedagógico
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-gray-600">Nome:</span>
+                        <p className="font-medium">
+                          {selectedRequest.pedagogicalGuardianFirstName}{" "}
+                          {selectedRequest.pedagogicalGuardianLastName}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">CPF:</span>
+                        <p className="font-medium">
+                          {selectedRequest.pedagogicalGuardianCPF}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Telefone:</span>
+                        <p className="font-medium">
+                          {selectedRequest.pedagogicalGuardianPhone}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">E-mail:</span>
+                        <p className="font-medium">
+                          {selectedRequest.pedagogicalGuardianEmail ||
+                            "Não informado"}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Endereço */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Endereço</h4>
-                <div className="text-sm space-y-1">
+              <div className="rounded-lg bg-gray-50 p-4">
+                <h4 className="mb-3 font-semibold text-gray-900">Endereço</h4>
+                <div className="space-y-1 text-sm">
                   <p>{selectedRequest.address}</p>
-                  <p>{selectedRequest.city} - {selectedRequest.state}</p>
+                  <p>
+                    {selectedRequest.city} - {selectedRequest.state}
+                  </p>
                   <p>CEP: {selectedRequest.zipCode}</p>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              {(selectedRequest.status === 'PENDING' || selectedRequest.status === 'UNDER_REVIEW') && (
-                <div className="flex gap-3 pt-4 border-t">
+              {(selectedRequest.status === "PENDING" ||
+                selectedRequest.status === "UNDER_REVIEW") && (
+                <div className="flex gap-3 border-t pt-4">
                   <Button
-                    onClick={() => handleAction(selectedRequest.id, 'approve')}
+                    onClick={() => handleAction(selectedRequest.id, "approve")}
                     disabled={actionLoading}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    {actionLoading ? 'Processando...' : 'Aprovar Matrícula'}
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    {actionLoading ? "Processando..." : "Aprovar Matrícula"}
                   </Button>
                   <Button
                     onClick={() => {
-                      const reason = prompt('Motivo da rejeição:');
+                      const reason = prompt("Motivo da rejeição:");
                       if (reason) {
-                        handleAction(selectedRequest.id, 'reject', reason);
+                        handleAction(selectedRequest.id, "reject", reason);
                       }
                     }}
                     disabled={actionLoading}
                     variant="outline"
                     className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
                   >
-                    <XCircle className="w-4 h-4 mr-2" />
+                    <XCircle className="mr-2 h-4 w-4" />
                     Rejeitar
                   </Button>
                 </div>
               )}
 
-              {selectedRequest.status === 'REJECTED' && selectedRequest.rejectionReason && (
-                <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
-                  <h4 className="font-semibold text-red-900 mb-2">Motivo da Rejeição</h4>
-                  <p className="text-sm text-red-700">{selectedRequest.rejectionReason}</p>
-                </div>
-              )}
+              {selectedRequest.status === "REJECTED" &&
+                selectedRequest.rejectionReason && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                    <h4 className="mb-2 font-semibold text-red-900">
+                      Motivo da Rejeição
+                    </h4>
+                    <p className="text-sm text-red-700">
+                      {selectedRequest.rejectionReason}
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
         </div>

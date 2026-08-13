@@ -1,6 +1,5 @@
 import { requirePermission } from "@/lib/auth-guards";
 import Link from "next/link";
-import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import StudentForm from "./StudentForm";
 
@@ -34,15 +33,13 @@ export default async function NewStudentPage() {
   const gradeLevels = Array.from(
     new Set(classes.map((c) => c.gradeLevel))
   ).sort();
-  const sections = Array.from(
-    new Set(classes.map((c) => c.section))
-  ).sort();
+  const sections = Array.from(new Set(classes.map((c) => c.section))).sort();
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="rounded-sm border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-900">
               Adicionar Novo Aluno
             </h1>

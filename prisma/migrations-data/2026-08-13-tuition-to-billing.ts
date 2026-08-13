@@ -104,7 +104,10 @@ async function main() {
     // the amount actually charged.
     const gross = new Prisma.Decimal(tuition.amount);
     const discount = new Prisma.Decimal(tuition.discountAmount ?? 0);
-    const net = Prisma.Decimal.max(gross.minus(discount), new Prisma.Decimal(0));
+    const net = Prisma.Decimal.max(
+      gross.minus(discount),
+      new Prisma.Decimal(0)
+    );
 
     const studentName = `${tuition.student.firstName} ${tuition.student.lastName}`;
     const noteParts = [
@@ -131,7 +134,8 @@ async function main() {
           invoiceNumber: `LEG-${tuition.invoiceNumber}`,
           parentId,
           type: "TUITION",
-          description: `Mensalidade ${tuition.plan?.gradeLevel ?? ""} - ${studentName}`.trim(),
+          description:
+            `Mensalidade ${tuition.plan?.gradeLevel ?? ""} - ${studentName}`.trim(),
           amount: net,
           dueDate: tuition.dueDate,
           paidDate: tuition.paidDate,
@@ -191,7 +195,11 @@ function mapPaymentMethod(
 
   if (value.includes("pix")) return "PIX";
   if (value.includes("boleto")) return "BOLETO";
-  if (value.includes("cart") || value.includes("card") || value.includes("débito"))
+  if (
+    value.includes("cart") ||
+    value.includes("card") ||
+    value.includes("débito")
+  )
     return "CARD";
   if (value.includes("dinheiro") || value.includes("cash")) return "CASH";
   return "TRANSFER";

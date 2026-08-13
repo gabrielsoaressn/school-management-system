@@ -21,12 +21,14 @@ Sistema de Gestão Escolar completo inspirado em plataformas avançadas como iSc
 ## 📊 ESTATÍSTICAS DO PROJETO
 
 ### Arquivos Criados/Modificados
+
 - **50+ novos arquivos** criados
 - **APIs RESTful**: 15+ endpoints
 - **Páginas/Interfaces**: 12+ novas páginas
 - **Schema Prisma**: +45 models/enums
 
 ### Banco de Dados
+
 - **50+ tabelas** no schema
 - **Relacionamentos complexos** entre entidades
 - **Índices otimizados** para performance
@@ -37,11 +39,13 @@ Sistema de Gestão Escolar completo inspirado em plataformas avançadas como iSc
 ## 🚀 MÓDULO 1: MATRÍCULA DIGITAL ONLINE
 
 ### Objetivo
+
 Reduzir filas na secretaria com processo de matrícula 100% online.
 
 ### Implementado
 
 #### 📱 Formulário Público (`/matricula`)
+
 - ✅ Interface step-by-step (5 etapas)
 - ✅ Otimizado para mobile
 - ✅ Validação em tempo real
@@ -53,6 +57,7 @@ Reduzir filas na secretaria com processo de matrícula 100% online.
   - Upload de documentos (preparado)
 
 #### 🔧 APIs
+
 - `POST /api/enrollment-requests` - Criar solicitação
 - `GET /api/enrollment-requests` - Listar solicitações
 - `GET /api/enrollment-requests/[id]` - Detalhes
@@ -60,6 +65,7 @@ Reduzir filas na secretaria com processo de matrícula 100% online.
 - `DELETE /api/enrollment-requests/[id]` - Cancelar
 
 #### 🎨 Interface Admin
+
 - Página `/admin/enrollment-requests`
 - Dashboard com estatísticas (Pendentes, Aprovadas, Rejeitadas)
 - Visualização detalhada de cada solicitação
@@ -67,6 +73,7 @@ Reduzir filas na secretaria com processo de matrícula 100% online.
 - Badge de notificação no dashboard principal
 
 #### 💡 Funcionalidades
+
 - ✅ Geração automática de número de solicitação (MAT-2026-0001)
 - ✅ Criação automática de aluno + responsável ao aprovar
 - ✅ Suporte para 2 responsáveis (Financeiro e Pedagógico)
@@ -78,17 +85,20 @@ Reduzir filas na secretaria com processo de matrícula 100% online.
 ## 📚 MÓDULO 2: GESTÃO ACADÊMICA (DIÁRIO DE CLASSE)
 
 ### Objetivo
+
 Facilitar a vida do professor com diário digital completo.
 
 ### Implementado
 
 #### 👨‍🏫 Portal do Professor
+
 - Página `/teacher/dashboard`
 - Lista de turmas do professor
 - Acesso rápido a Chamada e Notas
 - Estatísticas (turmas, alunos totais)
 
 #### ✅ Interface de Chamada
+
 - Página `/teacher/classes/[id]/attendance`
 - Lançamento rápido com toggles visuais
 - Status: Presente, Falta, Atraso, Justificada
@@ -98,6 +108,7 @@ Facilitar a vida do professor com diário digital completo.
 - Resumo automático (total, presentes, faltas, atrasos)
 
 #### 📊 Interface de Notas (Estilo Excel)
+
 - Página `/teacher/classes/[id]/grades`
 - Tabela interativa para lançamento de notas
 - Filtros: Disciplina, Bimestre, Tipo de Avaliação
@@ -108,6 +119,7 @@ Facilitar a vida do professor com diário digital completo.
 - Salvamento em lote
 
 #### 🔧 APIs
+
 - `POST /api/teacher/attendance` - Lançar frequência (individual ou lote)
 - `GET /api/teacher/attendance` - Buscar registros
 - `POST /api/teacher/assessments` - Lançar notas (individual ou lote)
@@ -117,6 +129,7 @@ Facilitar a vida do professor com diário digital completo.
 - `POST /api/teacher/assessment-types` - Criar tipo (Admin)
 
 #### 💡 Funcionalidades
+
 - ✅ Tipos de avaliação configuráveis (Prova, Trabalho, Participação, etc.)
 - ✅ Peso e nota máxima por tipo de avaliação
 - ✅ Cálculo automático de conceito (A-F baseado em %)
@@ -129,11 +142,13 @@ Facilitar a vida do professor com diário digital completo.
 ## 💰 MÓDULO 3: FINANCEIRO AVANÇADO (RÉGUA DE COBRANÇA)
 
 ### Objetivo
+
 Combater inadimplência com régua de cobrança automática.
 
 ### Implementado
 
 #### 📊 Dashboard de Inadimplência
+
 - Página `/admin/financial/collection`
 - Estatísticas em tempo real:
   - Total de faturas vencidas
@@ -143,6 +158,7 @@ Combater inadimplência com régua de cobrança automática.
 - Indicadores visuais de severidade (cores por dias)
 
 #### 📧 Sistema de Lembretes
+
 - Envio individual ou em lote
 - Tipos: E-mail, WhatsApp (simulado)
 - Template personalizável com variáveis dinâmicas:
@@ -154,6 +170,7 @@ Combater inadimplência com régua de cobrança automática.
 - Histórico de lembretes por fatura
 
 #### 🤝 Renegociação de Dívidas
+
 - Interface modal intuitiva
 - Campos configuráveis:
   - Novo valor (com desconto automático)
@@ -165,12 +182,14 @@ Combater inadimplência com régua de cobrança automática.
 - Histórico de renegociações
 
 #### 🔧 APIs
+
 - `POST /api/admin/payment-reminders` - Enviar lembretes (individual ou lote)
 - `GET /api/admin/payment-reminders` - Listar histórico
 - `POST /api/admin/payment-renegotiations` - Criar renegociação
 - `GET /api/admin/payment-renegotiations` - Listar renegociações
 
 #### 💡 Funcionalidades
+
 - ✅ Seleção múltipla de faturas para envio em lote
 - ✅ Simulação de envio (delay 500ms)
 - ✅ Status OVERDUE atualizado automaticamente
@@ -183,11 +202,13 @@ Combater inadimplência com régua de cobrança automática.
 ## 📢 MÓDULO 4: PORTAL DE COMUNICAÇÃO (AGENDA VIRTUAL)
 
 ### Objetivo
+
 Manter pais engajados com comunicação digital.
 
 ### Implementado
 
 #### 📝 Sistema de Avisos (Mural)
+
 - Página `/admin/communication/announcements`
 - Criação de avisos com:
   - Título e conteúdo
@@ -199,6 +220,7 @@ Manter pais engajados com comunicação digital.
 - Badges visuais de prioridade
 
 #### 🚨 Sistema de Ocorrências
+
 - Registro de ocorrências pedagógicas
 - Tipos:
   - BEHAVIORAL (Comportamento)
@@ -216,18 +238,21 @@ Manter pais engajados com comunicação digital.
   - Quem reportou
 
 #### 🔔 Sistema de Notificações
+
 - Criação automática ao publicar aviso
 - Criação automática ao registrar ocorrência
 - Notificação no painel do responsável
 - Link direto para visualização
 
 #### 🔧 APIs
+
 - `POST /api/admin/announcements` - Criar aviso
 - `GET /api/admin/announcements` - Listar avisos (com filtros)
 - `POST /api/admin/occurrences` - Criar ocorrência
 - `GET /api/admin/occurrences` - Listar ocorrências
 
 #### 💡 Funcionalidades
+
 - ✅ Notificação automática em lote (até 100 usuários)
 - ✅ Filtro inteligente por perfil e série
 - ✅ Registro de quem criou o aviso/ocorrência
@@ -239,11 +264,13 @@ Manter pais engajados com comunicação digital.
 ## 📄 MÓDULO 5: GERADOR DE DOCUMENTOS
 
 ### Objetivo
+
 Automatizar geração de documentos oficiais.
 
 ### Implementado
 
 #### 📋 Tipos de Documentos
+
 1. **Declaração de Matrícula**
    - Dados do aluno
    - Série e turma
@@ -261,6 +288,7 @@ Automatizar geração de documentos oficiais.
 5. **Certificado de Matrícula** (template preparado)
 
 #### 🎨 Interface
+
 - Página `/admin/documents/[id]` - Visualização
 - Botões de ação:
   - Imprimir (CSS otimizado para impressão)
@@ -269,10 +297,12 @@ Automatizar geração de documentos oficiais.
 - Formatação profissional
 
 #### 🔧 APIs
+
 - `POST /api/admin/documents/generate` - Gerar documento
 - `GET /api/admin/documents/[id]` - Buscar documento
 
 #### 💡 Funcionalidades
+
 - ✅ Templates HTML personalizáveis
 - ✅ Sistema de variáveis dinâmicas ({{variable}})
 - ✅ Substituição automática de dados
@@ -290,33 +320,39 @@ Automatizar geração de documentos oficiais.
 ### Novos Models Criados
 
 #### Módulo 1
+
 - `EnrollmentRequest` - Solicitações de matrícula
 - `GuardianRelationship` - Relacionamento aluno-responsável
 - Enum: `EnrollmentRequestStatus`, `GuardianType`
 
 #### Módulo 2
+
 - `Assessment` - Avaliações detalhadas
 - `AssessmentType` - Tipos de avaliação
 - `AttendanceRecord` - Registros de frequência detalhados
 
 #### Módulo 3
+
 - `PaymentReminder` - Lembretes de pagamento
 - `PaymentRenegotiation` - Renegociações
 - `FinancialContact` - Contatos financeiros
 - Enum: `ReminderType`, `ReminderStatus`
 
 #### Módulo 4
+
 - `Occurrence` - Ocorrências pedagógicas
 - `CommunicationThread` - Threads de mensagens
 - `Message` - Mensagens
 - Enum: `OccurrenceType`, `OccurrenceSeverity`
 
 #### Módulo 5
+
 - `DocumentTemplate` - Templates de documentos
 - `GeneratedDocument` - Documentos gerados
 - Enum: `DocumentType`
 
 ### Relacionamentos Principais
+
 - `Student` → `EnrollmentRequest` (1:1)
 - `Student` → `GuardianRelationship` (1:N)
 - `Parent` → `GuardianRelationship` (1:N)
@@ -333,6 +369,7 @@ Automatizar geração de documentos oficiais.
 ## 🎨 DESIGN SYSTEM
 
 ### Paleta de Cores
+
 - **Primária**: Azul Corporativo (#1e40af, #3b82f6)
 - **Sucesso**: Verde (#16a34a, #22c55e)
 - **Alerta**: Amarelo (#eab308, #facc15)
@@ -340,6 +377,7 @@ Automatizar geração de documentos oficiais.
 - **Neutro**: Cinza (#64748b, #94a3b8)
 
 ### Componentes UI Reutilizados
+
 - `Button` - Botões com variantes
 - `Input` - Campos de texto
 - `Select` - Seletores dropdown
@@ -358,11 +396,13 @@ Automatizar geração de documentos oficiais.
 ## 🔒 SEGURANÇA E VALIDAÇÃO
 
 ### Autenticação
+
 - NextAuth 4 com sessions
 - Proteção de rotas por role (ADMIN, TEACHER, PARENT, STUDENT)
 - Verificação de sessão em todas as APIs
 
 ### Validação
+
 - Zod schemas em todas as APIs
 - Validação client-side com React Hook Form
 - Sanitização de inputs
@@ -370,6 +410,7 @@ Automatizar geração de documentos oficiais.
 - Prevenção de XSS (sanitização de HTML)
 
 ### Permissões
+
 - `ADMIN` - Acesso total
 - `TEACHER` - Apenas suas turmas e diário
 - `PARENT` - Apenas dados dos filhos
@@ -380,6 +421,7 @@ Automatizar geração de documentos oficiais.
 ## 📱 RESPONSIVIDADE
 
 ### Mobile-First
+
 - ✅ Formulário de matrícula otimizado para celular
 - ✅ Tabelas com scroll horizontal
 - ✅ Grids responsivos (1 coluna no mobile, 2-4 no desktop)
@@ -387,6 +429,7 @@ Automatizar geração de documentos oficiais.
 - ✅ Modais com altura máxima e scroll
 
 ### Breakpoints
+
 - `sm:` - 640px (tablets)
 - `md:` - 768px (tablets grandes)
 - `lg:` - 1024px (desktops)
@@ -397,6 +440,7 @@ Automatizar geração de documentos oficiais.
 ## 🚀 PRÓXIMOS PASSOS (Sugestões)
 
 ### Curto Prazo
+
 1. ✅ Testar todas as funcionalidades
 2. ✅ Rodar seed do banco de dados
 3. ✅ Verificar integrações
@@ -404,6 +448,7 @@ Automatizar geração de documentos oficiais.
 5. ✅ Tratamento de erros aprimorado
 
 ### Médio Prazo
+
 1. 📧 Integração real de e-mail (SendGrid/AWS SES)
 2. 📱 Integração real de WhatsApp (Twilio API)
 3. 📄 Geração de PDF (jsPDF/Puppeteer)
@@ -412,6 +457,7 @@ Automatizar geração de documentos oficiais.
 6. 📷 Upload de arquivos (AWS S3/Cloudinary)
 
 ### Longo Prazo
+
 1. 📱 App mobile (React Native/Flutter)
 2. 🤖 Chatbot de atendimento
 3. 📊 Dashboard analítico avançado
@@ -425,18 +471,21 @@ Automatizar geração de documentos oficiais.
 ## 📝 NOTAS TÉCNICAS
 
 ### Performance
+
 - Queries otimizadas com Prisma
 - Índices em campos frequentemente buscados
 - Paginação em todas as listagens
 - Carregamento lazy de dados pesados
 
 ### Escalabilidade
+
 - Arquitetura modular
 - APIs RESTful stateless
 - Separação de concerns
 - Código reutilizável
 
 ### Manutenibilidade
+
 - Código TypeScript 100%
 - Componentes reutilizáveis
 - Naming conventions consistentes

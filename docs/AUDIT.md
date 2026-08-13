@@ -8,13 +8,13 @@ Onde os dois divergem, vale este.
 
 ## Ambiente do baseline
 
-| Item | Valor |
-|---|---|
-| Postgres | container `davilla-postgres`, `postgres:16`, porta host **5434** (5433 estava ocupada) |
-| `DATABASE_URL` | `postgresql://davilla:davilla@localhost:5434/school_management?schema=public` |
-| Migration | `prisma/migrations/20260812032019_baseline/` (versionada) |
-| Seed | 123 usuários, 50 alunos, 15 professores, 50 responsáveis, 27 turmas, 90 matérias, 300 tuitions, 60 billings |
-| `npm install` | 354 pacotes, **22 vulnerabilidades** (3 críticas, 13 altas) — ver BACKLOG |
+| Item           | Valor                                                                                                       |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| Postgres       | container `davilla-postgres`, `postgres:16`, porta host **5434** (5433 estava ocupada)                      |
+| `DATABASE_URL` | `postgresql://davilla:davilla@localhost:5434/school_management?schema=public`                               |
+| Migration      | `prisma/migrations/20260812032019_baseline/` (versionada)                                                   |
+| Seed           | 123 usuários, 50 alunos, 15 professores, 50 responsáveis, 27 turmas, 90 matérias, 300 tuitions, 60 billings |
+| `npm install`  | 354 pacotes, **22 vulnerabilidades** (3 críticas, 13 altas) — ver BACKLOG                                   |
 
 Dois arquivos de env são necessários e ambos estão no `.gitignore`: `.env` (lido pelo **Prisma
 CLI**) e `.env.local` (lido pelo **Next.js**). Ambos carregam `DATABASE_URL`. As variáveis do
@@ -26,16 +26,16 @@ Stripe foram deliberadamente omitidas — saem do projeto na Fase 5.9.
 
 `npx tsc --noEmit` → **76 erros em 8 arquivos**. O `projeto.md` dizia 6 páginas; são **8**.
 
-| Arquivo | Erros | Causa |
-|---|---|---|
-| `src/app/matricula/page.tsx` | 24 | 4× TS2614 + 20× TS7006 |
-| `src/app/admin/communication/announcements/page.tsx` | 13 | TS2614 + TS7006 |
-| `src/app/teacher/classes/[classId]/grades/page.tsx` | 9 | TS2614 + TS7006 |
-| `src/app/teacher/classes/[classId]/attendance/page.tsx` | 8 | TS2614 + TS7006 |
-| `src/app/admin/enrollment-requests/page.tsx` | 8 | TS2614 |
-| `src/app/admin/financial/collection/page.tsx` | 7 | TS2614 |
-| `src/app/teacher/dashboard/page.tsx` | 5 | TS2614 |
-| `src/app/admin/documents/[id]/page.tsx` | 2 | TS2614 |
+| Arquivo                                                 | Erros | Causa                  |
+| ------------------------------------------------------- | ----- | ---------------------- |
+| `src/app/matricula/page.tsx`                            | 24    | 4× TS2614 + 20× TS7006 |
+| `src/app/admin/communication/announcements/page.tsx`    | 13    | TS2614 + TS7006        |
+| `src/app/teacher/classes/[classId]/grades/page.tsx`     | 9     | TS2614 + TS7006        |
+| `src/app/teacher/classes/[classId]/attendance/page.tsx` | 8     | TS2614 + TS7006        |
+| `src/app/admin/enrollment-requests/page.tsx`            | 8     | TS2614                 |
+| `src/app/admin/financial/collection/page.tsx`           | 7     | TS2614                 |
+| `src/app/teacher/dashboard/page.tsx`                    | 5     | TS2614                 |
+| `src/app/admin/documents/[id]/page.tsx`                 | 2     | TS2614                 |
 
 - **TS2614 (47 erros)** — named import de componente que só tem `export default`.
   Ex.: `src/app/matricula/page.tsx:5` → `import { Button } from '@/components/ui/Button'`.
@@ -64,16 +64,16 @@ pega porque a restrição vem dos tipos gerados em `.next/types` durante o build
 **18 assinaturas em 8 arquivos** precisam virar `{ params }: { params: Promise<{ id: string }> }`
 com `await params`:
 
-| Arquivo | Assinaturas |
-|---|---|
-| `src/app/api/admin/billings/[id]/route.ts` | 3 (linhas 8, 59, 160) |
-| `src/app/api/admin/employees/[id]/route.ts` | 3 (8, 56, 161) |
-| `src/app/api/admin/parents/[id]/route.ts` | 3 (8, 64, 155) |
-| `src/app/api/admin/payroll/[id]/route.ts` | 3 (8, 52, 137) |
-| `src/app/api/enrollment-requests/[id]/route.ts` | 3 (10, 53, 269) |
-| `src/app/api/admin/billings/[id]/approve/route.ts` | 1 (7) |
-| `src/app/api/admin/billings/[id]/reject/route.ts` | 1 (7) |
-| `src/app/api/admin/documents/[id]/route.ts` | 1 (9) |
+| Arquivo                                            | Assinaturas           |
+| -------------------------------------------------- | --------------------- |
+| `src/app/api/admin/billings/[id]/route.ts`         | 3 (linhas 8, 59, 160) |
+| `src/app/api/admin/employees/[id]/route.ts`        | 3 (8, 56, 161)        |
+| `src/app/api/admin/parents/[id]/route.ts`          | 3 (8, 64, 155)        |
+| `src/app/api/admin/payroll/[id]/route.ts`          | 3 (8, 52, 137)        |
+| `src/app/api/enrollment-requests/[id]/route.ts`    | 3 (10, 53, 269)       |
+| `src/app/api/admin/billings/[id]/approve/route.ts` | 1 (7)                 |
+| `src/app/api/admin/billings/[id]/reject/route.ts`  | 1 (7)                 |
+| `src/app/api/admin/documents/[id]/route.ts`        | 1 (9)                 |
 
 As **páginas** dinâmicas não são afetadas: `/admin/documents/[id]`, `/teacher/classes/[classId]/*`
 são client components e leem a rota via `useParams()`.
@@ -85,15 +85,18 @@ são client components e leem a rota via `useParams()`.
 **Real** (`src/components/layout/PageHeader.tsx:13`):
 
 ```ts
-export default function PageHeader({ className = "", children }: PageHeaderProps)
+export default function PageHeader({
+  className = "",
+  children,
+}: PageHeaderProps);
 // PageHeaderProps = { className?: string; children?: ReactNode }
 ```
 
 Renderiza `<Logo>` à esquerda e `children` à direita. **Não aceita `title`, `subtitle` nem `icon`.**
 
-| Convenção | Páginas |
-|---|---|
-| `import PageHeader from ...` (correto hoje) | `admin/dashboard`, `admin/financial`, `admin/financial/employees`, `admin/financial/parents`, `admin/financial/students`, `admin/settings` |
+| Convenção                                                          | Páginas                                                                                                                                                                                         |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `import PageHeader from ...` (correto hoje)                        | `admin/dashboard`, `admin/financial`, `admin/financial/employees`, `admin/financial/parents`, `admin/financial/students`, `admin/settings`                                                      |
 | `import { PageHeader } from ...` + props `title`/`subtitle`/`icon` | `teacher/dashboard`, `teacher/classes/[classId]/attendance`, `teacher/classes/[classId]/grades`, `admin/enrollment-requests`, `admin/financial/collection`, `admin/communication/announcements` |
 
 As 6 páginas da segunda linha passam **exatamente** `title`, `subtitle` e `icon` (um componente
@@ -102,7 +105,7 @@ As 6 páginas da segunda linha passam **exatamente** `title`, `subtitle` e `icon
 
 ```tsx
 <PageHeader
-  title={`Lançamento de Notas - ${classData?.name || 'Turma'}`}
+  title={`Lançamento de Notas - ${classData?.name || "Turma"}`}
   subtitle={`${classData?.gradeLevel} - Turma ${classData?.section}`}
   icon={FileText}
 />
@@ -119,20 +122,20 @@ named export. `Input` e `Select` são `export default X` no fim do arquivo; os d
 
 **Nenhum campo `Decimal` existe hoje. 21 campos são `Float`**, dos quais 14 são monetários:
 
-| Model | Campo | Tipo atual | Monetário? |
-|---|---|---|---|
-| `Employee` | `salary` | `Float` | **sim** |
-| `TuitionPlan` | `amount` | `Float` | **sim** (legado, sai na Fase 4) |
-| `Tuition` | `amount`, `discountAmount` | `Float` | **sim** (legado, sai na Fase 4) |
-| `Discount` | `value` | `Float` | **sim** — ambíguo: percentual *ou* valor fixo (legado) |
-| `Billing` | `amount` | `Float` | **sim** |
-| `Payroll` | `baseSalary`, `bonus`, `deductions`, `totalAmount` | `Float` | **sim** (4 campos) |
-| `Expense` | `amount` | `Float` | **sim** |
-| `PaymentRenegotiation` | `originalAmount`, `renegotiatedAmount`, `discount` | `Float` | **sim** (3 campos) |
-| `Grade` | `score`, `maxScore` | `Float` | não — nota |
-| `Assessment` | `score`, `maxScore` | `Float` | não — nota |
-| `AssessmentType` | `weight`, `maxScore` | `Float` | não — peso/nota |
-| `AcademicReport` | `gpa`, `attendance` | `Float` | não — média e % |
+| Model                  | Campo                                              | Tipo atual | Monetário?                                             |
+| ---------------------- | -------------------------------------------------- | ---------- | ------------------------------------------------------ |
+| `Employee`             | `salary`                                           | `Float`    | **sim**                                                |
+| `TuitionPlan`          | `amount`                                           | `Float`    | **sim** (legado, sai na Fase 4)                        |
+| `Tuition`              | `amount`, `discountAmount`                         | `Float`    | **sim** (legado, sai na Fase 4)                        |
+| `Discount`             | `value`                                            | `Float`    | **sim** — ambíguo: percentual _ou_ valor fixo (legado) |
+| `Billing`              | `amount`                                           | `Float`    | **sim**                                                |
+| `Payroll`              | `baseSalary`, `bonus`, `deductions`, `totalAmount` | `Float`    | **sim** (4 campos)                                     |
+| `Expense`              | `amount`                                           | `Float`    | **sim**                                                |
+| `PaymentRenegotiation` | `originalAmount`, `renegotiatedAmount`, `discount` | `Float`    | **sim** (3 campos)                                     |
+| `Grade`                | `score`, `maxScore`                                | `Float`    | não — nota                                             |
+| `Assessment`           | `score`, `maxScore`                                | `Float`    | não — nota                                             |
+| `AssessmentType`       | `weight`, `maxScore`                               | `Float`    | não — peso/nota                                        |
+| `AcademicReport`       | `gpa`, `attendance`                                | `Float`    | não — média e %                                        |
 
 Escopo da Fase 3.1: os 14 monetários viram `Decimal @db.Decimal(10,2)`. Os 7 restantes ficam
 `Float`. Atenção ao `Discount.value`, que mistura percentual e moeda no mesmo campo — a conversão
@@ -144,24 +147,24 @@ para `Decimal(10,2)` é aceitável para ambos, mas o campo morre na Fase 4.3 jun
 
 Varredura handler por handler dos 34 arquivos de rota (60 handlers).
 
-| Rota | Método | Verificação | Veredito |
-|---|---|---|---|
-| `/api/enrollment-requests` | POST | **NENHUMA** | **OK por design** (formulário público) — mas sem rate limit nem honeypot |
-| `/api/enrollment-requests` | GET | **NENHUMA** | **VULNERÁVEL** — expõe nome de menor, CPF, telefone, e-mail e endereço dos responsáveis |
-| `/api/enrollment-requests/[id]` | GET | **NENHUMA** | **VULNERÁVEL** — mesma exposição, registro a registro, por id enumerável |
-| `/api/enrollment-requests/[id]` | PUT / DELETE | sessão + ADMIN | ok |
-| `/api/teacher/assessment-types` | GET | **NENHUMA** | **VULNERÁVEL** (baixo impacto: metadados de avaliação) |
-| `/api/teacher/assessment-types` | POST | sessão + ADMIN | ok |
-| `/api/teacher/assessments` | POST | sessão + ADMIN/TEACHER | **VULNERÁVEL** — não valida se o professor leciona a matéria/turma |
-| `/api/teacher/assessments` | GET | sessão, **sem role** | **VULNERÁVEL** — qualquer autenticado (inclusive STUDENT/PARENT) lê nota de qualquer aluno via `?studentId=` |
-| `/api/teacher/attendance` | POST | sessão + ADMIN/TEACHER | **VULNERÁVEL** — mesma falta de vínculo professor↔turma |
-| `/api/teacher/attendance` | GET | sessão, **sem role** | **VULNERÁVEL** — frequência de qualquer aluno |
-| `/api/teacher/classes` | GET | sessão + ADMIN/TEACHER | **VULNERÁVEL** — devolve **todas** as turmas da escola para qualquer professor |
-| `/api/admin/announcements` | GET | sessão, sem role (filtra por role da sessão) | ok — segmentação por `session.user.role`, comportamento intencional |
-| `/api/admin/occurrences` | GET | sessão, sem role (filtra se PARENT) | **atenção** — PARENT é restrito aos filhos, mas STUDENT e TEACHER veem **todas** as ocorrências |
-| `/api/admin/occurrences` | POST | sessão + ADMIN/TEACHER | ok |
-| `/api/admin/*` (46 handlers restantes) | GET/POST/PUT/DELETE | sessão + ADMIN | ok |
-| `/api/auth/[...nextauth]` | — | NextAuth | n/a |
+| Rota                                   | Método              | Verificação                                  | Veredito                                                                                                     |
+| -------------------------------------- | ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `/api/enrollment-requests`             | POST                | **NENHUMA**                                  | **OK por design** (formulário público) — mas sem rate limit nem honeypot                                     |
+| `/api/enrollment-requests`             | GET                 | **NENHUMA**                                  | **VULNERÁVEL** — expõe nome de menor, CPF, telefone, e-mail e endereço dos responsáveis                      |
+| `/api/enrollment-requests/[id]`        | GET                 | **NENHUMA**                                  | **VULNERÁVEL** — mesma exposição, registro a registro, por id enumerável                                     |
+| `/api/enrollment-requests/[id]`        | PUT / DELETE        | sessão + ADMIN                               | ok                                                                                                           |
+| `/api/teacher/assessment-types`        | GET                 | **NENHUMA**                                  | **VULNERÁVEL** (baixo impacto: metadados de avaliação)                                                       |
+| `/api/teacher/assessment-types`        | POST                | sessão + ADMIN                               | ok                                                                                                           |
+| `/api/teacher/assessments`             | POST                | sessão + ADMIN/TEACHER                       | **VULNERÁVEL** — não valida se o professor leciona a matéria/turma                                           |
+| `/api/teacher/assessments`             | GET                 | sessão, **sem role**                         | **VULNERÁVEL** — qualquer autenticado (inclusive STUDENT/PARENT) lê nota de qualquer aluno via `?studentId=` |
+| `/api/teacher/attendance`              | POST                | sessão + ADMIN/TEACHER                       | **VULNERÁVEL** — mesma falta de vínculo professor↔turma                                                      |
+| `/api/teacher/attendance`              | GET                 | sessão, **sem role**                         | **VULNERÁVEL** — frequência de qualquer aluno                                                                |
+| `/api/teacher/classes`                 | GET                 | sessão + ADMIN/TEACHER                       | **VULNERÁVEL** — devolve **todas** as turmas da escola para qualquer professor                               |
+| `/api/admin/announcements`             | GET                 | sessão, sem role (filtra por role da sessão) | ok — segmentação por `session.user.role`, comportamento intencional                                          |
+| `/api/admin/occurrences`               | GET                 | sessão, sem role (filtra se PARENT)          | **atenção** — PARENT é restrito aos filhos, mas STUDENT e TEACHER veem **todas** as ocorrências              |
+| `/api/admin/occurrences`               | POST                | sessão + ADMIN/TEACHER                       | ok                                                                                                           |
+| `/api/admin/*` (46 handlers restantes) | GET/POST/PUT/DELETE | sessão + ADMIN                               | ok                                                                                                           |
+| `/api/auth/[...nextauth]`              | —                   | NextAuth                                     | n/a                                                                                                          |
 
 **Resumo:** 8 handlers com falha real de autorização, em 2 categorias — (a) 4 rotas sem
 verificação alguma, sendo 2 com dado pessoal de menor; (b) 4 rotas em que a role é checada mas o
@@ -239,7 +242,7 @@ lançamento de notas de qualquer uma.
 2. Existe um segundo bloqueio de build **não documentado**: `params` do Next 15 em 18 assinaturas.
 3. São **8** handlers com falha de autorização, não 1 — incluindo escrita de nota sem vínculo e
    leitura de notas/frequência por qualquer usuário autenticado.
-4. `formatCurrency` não tem *nenhum* consumidor (o documento sugeria uso indevido em USD).
+4. `formatCurrency` não tem _nenhum_ consumidor (o documento sugeria uso indevido em USD).
 5. A migração do legado é **muito menor** que o previsto: `prisma.tuition` aparece em 2 lugares;
    `prisma.grade`/`prisma.attendance` em nenhum (o `/student/dashboard` os lê por `include`);
    `TuitionPlan` e `Discount` não são lidos por nenhuma tela.
@@ -263,17 +266,17 @@ Atualizado em 2026-08-13. As fases 4, 5 e 6 do plano **não** foram executadas.
 
 ## Resolvido
 
-| Item da auditoria | Situação |
-|---|---|
-| §1 — 8 páginas não compilavam (76 erros) | resolvido; build limpo, 28 páginas abrem com sessão real |
-| §1.1 — `params` do Next 15 em 18 assinaturas | resolvido |
-| §2 — `PageHeader` com duas convenções | resolvido; componentes exportam named + default |
-| §3 — 14 campos monetários em `Float` | resolvido; `Decimal(10,2)` |
-| §4 — 8 handlers com falha de autorização | resolvido; todos os 60 passam por `withAuth` |
-| §5 — `formatCurrency` sem consumidor e em USD | resolvido; BRL em `src/lib/money.ts`, 19 formatações manuais substituídas |
-| §6 — `nextBillingDate` nunca preenchido | resolvido, com teste de regressão |
-| §7 — `/api/teacher/classes` devolve todas as turmas | **em aberto** — depende de `ClassSubjectTeacher` (fase 4.2) |
-| §9 — `PUT /api/admin/settings` sem `upsert` | resolvido |
+| Item da auditoria                                   | Situação                                                                  |
+| --------------------------------------------------- | ------------------------------------------------------------------------- |
+| §1 — 8 páginas não compilavam (76 erros)            | resolvido; build limpo, 28 páginas abrem com sessão real                  |
+| §1.1 — `params` do Next 15 em 18 assinaturas        | resolvido                                                                 |
+| §2 — `PageHeader` com duas convenções               | resolvido; componentes exportam named + default                           |
+| §3 — 14 campos monetários em `Float`                | resolvido; `Decimal(10,2)`                                                |
+| §4 — 8 handlers com falha de autorização            | resolvido; todos os 60 passam por `withAuth`                              |
+| §5 — `formatCurrency` sem consumidor e em USD       | resolvido; BRL em `src/lib/money.ts`, 19 formatações manuais substituídas |
+| §6 — `nextBillingDate` nunca preenchido             | resolvido, com teste de regressão                                         |
+| §7 — `/api/teacher/classes` devolve todas as turmas | **em aberto** — depende de `ClassSubjectTeacher` (fase 4.2)               |
+| §9 — `PUT /api/admin/settings` sem `upsert`         | resolvido                                                                 |
 
 ## Descobertas novas, resolvidas
 
@@ -319,23 +322,23 @@ Atualizado em 2026-08-13. As fases 5 e 6 do plano **não** foram executadas.
 
 ## O que a fase 4 mudou no domínio
 
-| Antes | Depois |
-|---|---|
-| `Class.academicYear` como string `"2026"` | `AcademicYear` como entidade, com um único ano corrente garantido por índice único parcial |
+| Antes                                                            | Depois                                                                                       |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `Class.academicYear` como string `"2026"`                        | `AcademicYear` como entidade, com um único ano corrente garantido por índice único parcial   |
 | `Student.gradeLevel` — a série do aluno era um campo sobrescrito | `Enrollment.gradeLevel` — a série é sempre relativa a um ano letivo, e o histórico sobrevive |
-| Nenhum vínculo turma↔disciplina↔professor | `ClassSubjectTeacher` é a grade curricular e a autoridade de quem pode lançar nota |
-| `Tuition` (cobra o aluno) e `Billing` (cobra o responsável) | apenas `Billing`, com 300 mensalidades migradas e 245 recibos criados |
-| `Grade`/`Attendance` sem turma, professor ou ano | apenas `Assessment`/`AttendanceRecord`, com 500 notas e 6.900 presenças migradas |
-| Nenhuma forma de promover alunos de ano | `previewReEnrollment`/`runReEnrollment`, com clonagem de turmas e emissão do novo ciclo |
+| Nenhum vínculo turma↔disciplina↔professor                        | `ClassSubjectTeacher` é a grade curricular e a autoridade de quem pode lançar nota           |
+| `Tuition` (cobra o aluno) e `Billing` (cobra o responsável)      | apenas `Billing`, com 300 mensalidades migradas e 245 recibos criados                        |
+| `Grade`/`Attendance` sem turma, professor ou ano                 | apenas `Assessment`/`AttendanceRecord`, com 500 notas e 6.900 presenças migradas             |
+| Nenhuma forma de promover alunos de ano                          | `previewReEnrollment`/`runReEnrollment`, com clonagem de turmas e emissão do novo ciclo      |
 
 ## Critérios de aceite da fase 4
 
-| Critério | Situação |
-|---|---|
-| Portal do responsável mostra exatamente as cobranças que o financeiro emitiu | ✅ (fase 3, confirmado: R$ 1.535,45 nas duas telas) |
-| Portal do aluno mostra exatamente o que o professor lançou | ✅ nota 9,5 lançada por professor1 aparece no portal do aluno com disciplina e turma corretas |
-| Professor não consegue lançar nota de disciplina em que não está lotado, nem via API | ✅ recusado para disciplina alheia, turma alheia e leitura de turma alheia |
-| `grep -r "Tuition\|prisma.grade" src/` não retorna nada | ✅ |
+| Critério                                                                             | Situação                                                                                      |
+| ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Portal do responsável mostra exatamente as cobranças que o financeiro emitiu         | ✅ (fase 3, confirmado: R$ 1.535,45 nas duas telas)                                           |
+| Portal do aluno mostra exatamente o que o professor lançou                           | ✅ nota 9,5 lançada por professor1 aparece no portal do aluno com disciplina e turma corretas |
+| Professor não consegue lançar nota de disciplina em que não está lotado, nem via API | ✅ recusado para disciplina alheia, turma alheia e leitura de turma alheia                    |
+| `grep -r "Tuition\|prisma.grade" src/` não retorna nada                              | ✅                                                                                            |
 
 ## Migrações de dados
 

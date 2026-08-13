@@ -13,5 +13,7 @@ export default defineConfig({
     env: {
       TZ: "America/Sao_Paulo",
     },
+    // tests/ talks to a real Postgres (see docs/OPERATIONS.md); src/ is pure.
+    setupFiles: ["tests/setup.ts"],
   },
 });

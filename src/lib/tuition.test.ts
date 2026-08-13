@@ -14,7 +14,9 @@ describe("buildTuitionCharge", () => {
       referenceDate: schoolDate(2026, 8, 5),
     });
 
-    expect(charge.dueDate.toISOString()).toBe(schoolDate(2026, 8, 10).toISOString());
+    expect(charge.dueDate.toISOString()).toBe(
+      schoolDate(2026, 8, 10).toISOString()
+    );
     expect(charge.nextBillingDate).not.toBeNull();
     expect(charge.nextBillingDate.toISOString()).toBe(
       schoolDate(2026, 9, 10).toISOString()

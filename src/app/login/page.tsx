@@ -31,7 +31,7 @@ export default function LoginPage() {
         router.push("/");
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao entrar. Tente novamente.");
     } finally {
       setIsLoading(false);
@@ -39,11 +39,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      <div className="bg-white p-8 rounded-sm shadow-2xl w-full max-w-md border border-gray-200">
-        <div className="flex flex-col items-center mb-8">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+      <div className="w-full max-w-md rounded-sm border border-gray-200 bg-white p-8 shadow-2xl">
+        <div className="mb-8 flex flex-col items-center">
           <Logo size="lg" showText={true} className="mb-4" />
-          <p className="text-gray-600 mt-2">Entre na sua conta</p>
+          <p className="mt-2 text-gray-600">Entre na sua conta</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -60,7 +60,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-sm shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900 transition"
+              className="mt-1 block w-full rounded-sm border border-gray-300 px-3 py-2 shadow-sm transition focus:border-gray-900 focus:outline-none focus:ring-gray-900"
               placeholder="you@example.com"
             />
           </div>
@@ -78,7 +78,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-sm shadow-sm focus:outline-none focus:ring-gray-900 focus:border-gray-900 transition"
+              className="mt-1 block w-full rounded-sm border border-gray-300 px-3 py-2 shadow-sm transition focus:border-gray-900 focus:outline-none focus:ring-gray-900"
               placeholder="••••••••"
             />
           </div>
@@ -86,7 +86,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-sm shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="flex w-full justify-center rounded-sm border border-transparent bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-gray-700 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isLoading ? "Entrando..." : "Entrar"}
           </button>
@@ -109,7 +109,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
+                <span className="bg-white px-2 text-gray-500">
                   Contas de teste (apenas em desenvolvimento)
                 </span>
               </div>
@@ -120,13 +120,16 @@ export default function LoginPage() {
                 <span className="font-semibold">Admin:</span> admin@davilla.com
               </p>
               <p>
-                <span className="font-semibold">Financeiro:</span> staff3@davilla.com
+                <span className="font-semibold">Financeiro:</span>{" "}
+                staff3@davilla.com
               </p>
               <p>
-                <span className="font-semibold">Secretaria:</span> staff2@davilla.com
+                <span className="font-semibold">Secretaria:</span>{" "}
+                staff2@davilla.com
               </p>
               <p>
-                <span className="font-semibold">Professor:</span> professor1@davilla.com
+                <span className="font-semibold">Professor:</span>{" "}
+                professor1@davilla.com
               </p>
               <p>
                 <span className="font-semibold">Responsável:</span>{" "}

@@ -1,18 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
-import { Card } from '@/components/ui/Card';
-import { CheckCircle, ChevronLeft, ChevronRight, FileText, User, Users } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { HONEYPOT_FIELD } from '@/lib/rate-limit';
-import Link from 'next/link';
-import { CONSENT_TEXT, CONSENT_VERSION } from '@/lib/privacy';
-import { GRADE_LEVELS } from '@/lib/constants';
-import DocumentUpload from '@/components/forms/DocumentUpload';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Card } from "@/components/ui/Card";
+import {
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  User,
+  Users,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { HONEYPOT_FIELD } from "@/lib/rate-limit";
+import Link from "next/link";
+import { CONSENT_TEXT, CONSENT_VERSION } from "@/lib/privacy";
+import { GRADE_LEVELS } from "@/lib/constants";
+import DocumentUpload from "@/components/forms/DocumentUpload";
 
 type FormData = {
   // Aluno
@@ -46,27 +53,27 @@ type FormData = {
 };
 
 const INITIAL_FORM_DATA: FormData = {
-  studentFirstName: '',
-  studentLastName: '',
-  dateOfBirth: '',
-  gender: '',
-  gradeLevel: '',
-  section: '',
-  financialGuardianFirstName: '',
-  financialGuardianLastName: '',
-  financialGuardianCPF: '',
-  financialGuardianPhone: '',
-  financialGuardianEmail: '',
+  studentFirstName: "",
+  studentLastName: "",
+  dateOfBirth: "",
+  gender: "",
+  gradeLevel: "",
+  section: "",
+  financialGuardianFirstName: "",
+  financialGuardianLastName: "",
+  financialGuardianCPF: "",
+  financialGuardianPhone: "",
+  financialGuardianEmail: "",
   isSameGuardian: false,
-  pedagogicalGuardianFirstName: '',
-  pedagogicalGuardianLastName: '',
-  pedagogicalGuardianCPF: '',
-  pedagogicalGuardianPhone: '',
-  pedagogicalGuardianEmail: '',
-  address: '',
-  city: '',
-  state: '',
-  zipCode: '',
+  pedagogicalGuardianFirstName: "",
+  pedagogicalGuardianLastName: "",
+  pedagogicalGuardianCPF: "",
+  pedagogicalGuardianPhone: "",
+  pedagogicalGuardianEmail: "",
+  address: "",
+  city: "",
+  state: "",
+  zipCode: "",
 };
 
 // Offered grades come from the same list the classes use: the form used to
@@ -78,11 +85,11 @@ const GRADE_LEVEL_OPTIONS = GRADE_LEVELS.map((grade) => ({
 }));
 
 const STEPS = [
-  { id: 1, title: 'Dados do Aluno', icon: User },
-  { id: 2, title: 'Responsável Financeiro', icon: Users },
-  { id: 3, title: 'Responsável Pedagógico', icon: Users },
-  { id: 4, title: 'Endereço', icon: FileText },
-  { id: 5, title: 'Revisão', icon: CheckCircle },
+  { id: 1, title: "Dados do Aluno", icon: User },
+  { id: 2, title: "Responsável Financeiro", icon: Users },
+  { id: 3, title: "Responsável Pedagógico", icon: Users },
+  { id: 4, title: "Endereço", icon: FileText },
+  { id: 5, title: "Revisão", icon: CheckCircle },
 ];
 
 export default function MatriculaPage() {
@@ -91,7 +98,7 @@ export default function MatriculaPage() {
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Honeypot: hidden from users, tempting to bots. Filled in => request dropped.
-  const [honeypot, setHoneypot] = useState('');
+  const [honeypot, setHoneypot] = useState("");
   const [consentGiven, setConsentGiven] = useState(false);
   // Uploaded ahead of submission: the payload carries only the storage keys.
   const [documents, setDocuments] = useState<Record<string, string | null>>({
@@ -103,42 +110,66 @@ export default function MatriculaPage() {
   const [requestNumber, setRequestNumber] = useState<string | null>(null);
 
   const updateFormData = (field: keyof FormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        if (!formData.studentFirstName || !formData.studentLastName || !formData.dateOfBirth || !formData.gender || !formData.gradeLevel) {
-          toast.error('Preencha todos os campos obrigatórios do aluno');
+        if (
+          !formData.studentFirstName ||
+          !formData.studentLastName ||
+          !formData.dateOfBirth ||
+          !formData.gender ||
+          !formData.gradeLevel
+        ) {
+          toast.error("Preencha todos os campos obrigatórios do aluno");
           return false;
         }
         return true;
       case 2:
-        if (!formData.financialGuardianFirstName || !formData.financialGuardianLastName || !formData.financialGuardianCPF || !formData.financialGuardianPhone || !formData.financialGuardianEmail) {
-          toast.error('Preencha todos os campos do responsável financeiro');
+        if (
+          !formData.financialGuardianFirstName ||
+          !formData.financialGuardianLastName ||
+          !formData.financialGuardianCPF ||
+          !formData.financialGuardianPhone ||
+          !formData.financialGuardianEmail
+        ) {
+          toast.error("Preencha todos os campos do responsável financeiro");
           return false;
         }
-        if (formData.financialGuardianCPF.replace(/\D/g, '').length !== 11) {
-          toast.error('CPF inválido');
+        if (formData.financialGuardianCPF.replace(/\D/g, "").length !== 11) {
+          toast.error("CPF inválido");
           return false;
         }
         return true;
       case 3:
         if (!formData.isSameGuardian) {
-          if (!formData.pedagogicalGuardianFirstName || !formData.pedagogicalGuardianLastName || !formData.pedagogicalGuardianCPF || !formData.pedagogicalGuardianPhone) {
-            toast.error('Preencha todos os campos do responsável pedagógico');
+          if (
+            !formData.pedagogicalGuardianFirstName ||
+            !formData.pedagogicalGuardianLastName ||
+            !formData.pedagogicalGuardianCPF ||
+            !formData.pedagogicalGuardianPhone
+          ) {
+            toast.error("Preencha todos os campos do responsável pedagógico");
             return false;
           }
-          if (formData.pedagogicalGuardianCPF.replace(/\D/g, '').length !== 11) {
-            toast.error('CPF do responsável pedagógico inválido');
+          if (
+            formData.pedagogicalGuardianCPF.replace(/\D/g, "").length !== 11
+          ) {
+            toast.error("CPF do responsável pedagógico inválido");
             return false;
           }
         }
         return true;
       case 4:
-        if (!formData.address || !formData.city || !formData.state || !formData.zipCode) {
-          toast.error('Preencha todos os campos de endereço');
+        if (
+          !formData.address ||
+          !formData.city ||
+          !formData.state ||
+          !formData.zipCode
+        ) {
+          toast.error("Preencha todos os campos de endereço");
           return false;
         }
         return true;
@@ -149,25 +180,25 @@ export default function MatriculaPage() {
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 5));
+      setCurrentStep((prev) => Math.min(prev + 1, 5));
     }
   };
 
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSubmit = async () => {
     if (!consentGiven) {
-      toast.error('É necessário concordar com o uso dos dados para enviar');
+      toast.error("É necessário concordar com o uso dos dados para enviar");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/enrollment-requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/enrollment-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
           [HONEYPOT_FIELD]: honeypot,
@@ -177,9 +208,14 @@ export default function MatriculaPage() {
           cpfUrl: documents.cpfUrl ?? undefined,
           proofOfAddressUrl: documents.proofOfAddressUrl ?? undefined,
           previousSchoolUrl: documents.previousSchoolUrl ?? undefined,
-          financialGuardianCPF: formData.financialGuardianCPF.replace(/\D/g, ''),
-          pedagogicalGuardianCPF: formData.isSameGuardian ? '' : formData.pedagogicalGuardianCPF.replace(/\D/g, ''),
-          zipCode: formData.zipCode.replace(/\D/g, ''),
+          financialGuardianCPF: formData.financialGuardianCPF.replace(
+            /\D/g,
+            ""
+          ),
+          pedagogicalGuardianCPF: formData.isSameGuardian
+            ? ""
+            : formData.pedagogicalGuardianCPF.replace(/\D/g, ""),
+          zipCode: formData.zipCode.replace(/\D/g, ""),
         }),
       });
 
@@ -187,13 +223,13 @@ export default function MatriculaPage() {
 
       if (data.success) {
         setRequestNumber(data.data.requestNumber);
-        toast.success('Matrícula solicitada com sucesso!');
+        toast.success("Matrícula solicitada com sucesso!");
       } else {
-        toast.error(data.error || 'Erro ao enviar solicitação');
+        toast.error(data.error || "Erro ao enviar solicitação");
       }
     } catch (error) {
-      console.error('Error submitting enrollment:', error);
-      toast.error('Erro ao enviar solicitação');
+      console.error("Error submitting enrollment:", error);
+      toast.error("Erro ao enviar solicitação");
     } finally {
       setIsSubmitting(false);
     }
@@ -201,26 +237,35 @@ export default function MatriculaPage() {
 
   if (requestNumber) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-8 px-4">
-        <div className="max-w-2xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4 py-8">
+        <div className="mx-auto max-w-2xl">
           <Card className="p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-10 h-10 text-green-600" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle className="h-10 w-10 text-green-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="mb-2 text-2xl font-bold text-gray-900">
               Matrícula Solicitada com Sucesso!
             </h1>
-            <p className="text-gray-600 mb-4">
-              Sua solicitação foi enviada e está sendo analisada pela equipe da escola.
+            <p className="mb-4 text-gray-600">
+              Sua solicitação foi enviada e está sendo analisada pela equipe da
+              escola.
             </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-gray-600 mb-1">Número da Solicitação:</p>
-              <p className="text-2xl font-bold text-blue-600">{requestNumber}</p>
+            <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <p className="mb-1 text-sm text-gray-600">
+                Número da Solicitação:
+              </p>
+              <p className="text-2xl font-bold text-blue-600">
+                {requestNumber}
+              </p>
             </div>
-            <p className="text-sm text-gray-500 mb-6">
-              Guarde este número para acompanhar o status da sua matrícula. Você receberá um e-mail com as próximas etapas.
+            <p className="mb-6 text-sm text-gray-500">
+              Guarde este número para acompanhar o status da sua matrícula. Você
+              receberá um e-mail com as próximas etapas.
             </p>
-            <Button onClick={() => router.push('/')} className="w-full sm:w-auto">
+            <Button
+              onClick={() => router.push("/")}
+              className="w-full sm:w-auto"
+            >
               Voltar para Início
             </Button>
           </Card>
@@ -230,12 +275,16 @@ export default function MatriculaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4 py-8">
+      <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Matrícula Online</h1>
-          <p className="text-gray-600">Preencha os dados abaixo para solicitar a matrícula</p>
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
+            Matrícula Online
+          </h1>
+          <p className="text-gray-600">
+            Preencha os dados abaixo para solicitar a matrícula
+          </p>
         </div>
 
         {/* Steps Indicator */}
@@ -247,31 +296,31 @@ export default function MatriculaPage() {
               const isCompleted = currentStep > step.id;
 
               return (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1">
+                <div key={step.id} className="flex flex-1 items-center">
+                  <div className="flex flex-1 flex-col items-center">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${
+                      className={`mb-2 flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
                         isCompleted
-                          ? 'bg-green-600 text-white'
+                          ? "bg-green-600 text-white"
                           : isActive
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-500'
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 text-gray-500"
                       }`}
                     >
                       {isCompleted ? (
-                        <CheckCircle className="w-5 h-5" />
+                        <CheckCircle className="h-5 w-5" />
                       ) : (
-                        <Icon className="w-5 h-5" />
+                        <Icon className="h-5 w-5" />
                       )}
                     </div>
-                    <span className="text-xs text-center text-gray-600 hidden sm:block">
+                    <span className="hidden text-center text-xs text-gray-600 sm:block">
                       {step.title}
                     </span>
                   </div>
                   {index < STEPS.length - 1 && (
                     <div
-                      className={`h-1 flex-1 mx-2 transition-colors ${
-                        isCompleted ? 'bg-green-600' : 'bg-gray-200'
+                      className={`mx-2 h-1 flex-1 transition-colors ${
+                        isCompleted ? "bg-green-600" : "bg-gray-200"
                       }`}
                     />
                   )}
@@ -286,43 +335,51 @@ export default function MatriculaPage() {
           {/* Step 1: Dados do Aluno */}
           {currentStep === 1 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Dados do Aluno</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">
+                Dados do Aluno
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="Nome *"
                   value={formData.studentFirstName}
-                  onChange={(e) => updateFormData('studentFirstName', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("studentFirstName", e.target.value)
+                  }
                   placeholder="Nome do aluno"
                 />
                 <Input
                   label="Sobrenome *"
                   value={formData.studentLastName}
-                  onChange={(e) => updateFormData('studentLastName', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("studentLastName", e.target.value)
+                  }
                   placeholder="Sobrenome do aluno"
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Input
                   label="Data de Nascimento *"
                   type="date"
                   value={formData.dateOfBirth}
-                  onChange={(e) => updateFormData('dateOfBirth', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("dateOfBirth", e.target.value)
+                  }
                 />
                 <Select
                   label="Gênero *"
                   value={formData.gender}
-                  onChange={(e) => updateFormData('gender', e.target.value)}
+                  onChange={(e) => updateFormData("gender", e.target.value)}
                   options={[
-                    { value: '', label: 'Selecione' },
-                    { value: 'MALE', label: 'Masculino' },
-                    { value: 'FEMALE', label: 'Feminino' },
-                    { value: 'OTHER', label: 'Outro' },
+                    { value: "", label: "Selecione" },
+                    { value: "MALE", label: "Masculino" },
+                    { value: "FEMALE", label: "Feminino" },
+                    { value: "OTHER", label: "Outro" },
                   ]}
                 />
                 <Input
                   label="Turma/Seção"
                   value={formData.section}
-                  onChange={(e) => updateFormData('section', e.target.value)}
+                  onChange={(e) => updateFormData("section", e.target.value)}
                   placeholder="A, B, C..."
                   maxLength={2}
                 />
@@ -330,9 +387,9 @@ export default function MatriculaPage() {
               <Select
                 label="Série *"
                 value={formData.gradeLevel}
-                onChange={(e) => updateFormData('gradeLevel', e.target.value)}
+                onChange={(e) => updateFormData("gradeLevel", e.target.value)}
                 options={[
-                  { value: '', label: 'Selecione a série' },
+                  { value: "", label: "Selecione a série" },
                   ...GRADE_LEVEL_OPTIONS,
                 ]}
               />
@@ -342,33 +399,43 @@ export default function MatriculaPage() {
           {/* Step 2: Responsável Financeiro */}
           {currentStep === 2 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Responsável Financeiro</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">
+                Responsável Financeiro
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="Nome *"
                   value={formData.financialGuardianFirstName}
-                  onChange={(e) => updateFormData('financialGuardianFirstName', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("financialGuardianFirstName", e.target.value)
+                  }
                   placeholder="Nome do responsável"
                 />
                 <Input
                   label="Sobrenome *"
                   value={formData.financialGuardianLastName}
-                  onChange={(e) => updateFormData('financialGuardianLastName', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("financialGuardianLastName", e.target.value)
+                  }
                   placeholder="Sobrenome do responsável"
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Input
                   label="CPF *"
                   value={formData.financialGuardianCPF}
-                  onChange={(e) => updateFormData('financialGuardianCPF', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("financialGuardianCPF", e.target.value)
+                  }
                   placeholder="000.000.000-00"
                   maxLength={14}
                 />
                 <Input
                   label="Telefone *"
                   value={formData.financialGuardianPhone}
-                  onChange={(e) => updateFormData('financialGuardianPhone', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("financialGuardianPhone", e.target.value)
+                  }
                   placeholder="(00) 00000-0000"
                   maxLength={15}
                 />
@@ -377,7 +444,9 @@ export default function MatriculaPage() {
                 label="E-mail *"
                 type="email"
                 value={formData.financialGuardianEmail}
-                onChange={(e) => updateFormData('financialGuardianEmail', e.target.value)}
+                onChange={(e) =>
+                  updateFormData("financialGuardianEmail", e.target.value)
+                }
                 placeholder="email@exemplo.com"
               />
             </div>
@@ -386,15 +455,19 @@ export default function MatriculaPage() {
           {/* Step 3: Responsável Pedagógico */}
           {currentStep === 3 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Responsável Pedagógico</h2>
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">
+                Responsável Pedagógico
+              </h2>
 
-              <div className="flex items-center space-x-2 p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center space-x-2 rounded-lg bg-blue-50 p-4">
                 <input
                   type="checkbox"
                   id="sameGuardian"
                   checked={formData.isSameGuardian}
-                  onChange={(e) => updateFormData('isSameGuardian', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded"
+                  onChange={(e) =>
+                    updateFormData("isSameGuardian", e.target.checked)
+                  }
+                  className="h-4 w-4 rounded text-blue-600"
                 />
                 <label htmlFor="sameGuardian" className="text-sm text-gray-700">
                   O responsável financeiro é também o responsável pedagógico
@@ -403,32 +476,49 @@ export default function MatriculaPage() {
 
               {!formData.isSameGuardian && (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Input
                       label="Nome *"
                       value={formData.pedagogicalGuardianFirstName}
-                      onChange={(e) => updateFormData('pedagogicalGuardianFirstName', e.target.value)}
+                      onChange={(e) =>
+                        updateFormData(
+                          "pedagogicalGuardianFirstName",
+                          e.target.value
+                        )
+                      }
                       placeholder="Nome do responsável"
                     />
                     <Input
                       label="Sobrenome *"
                       value={formData.pedagogicalGuardianLastName}
-                      onChange={(e) => updateFormData('pedagogicalGuardianLastName', e.target.value)}
+                      onChange={(e) =>
+                        updateFormData(
+                          "pedagogicalGuardianLastName",
+                          e.target.value
+                        )
+                      }
                       placeholder="Sobrenome do responsável"
                     />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Input
                       label="CPF *"
                       value={formData.pedagogicalGuardianCPF}
-                      onChange={(e) => updateFormData('pedagogicalGuardianCPF', e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("pedagogicalGuardianCPF", e.target.value)
+                      }
                       placeholder="000.000.000-00"
                       maxLength={14}
                     />
                     <Input
                       label="Telefone *"
                       value={formData.pedagogicalGuardianPhone}
-                      onChange={(e) => updateFormData('pedagogicalGuardianPhone', e.target.value)}
+                      onChange={(e) =>
+                        updateFormData(
+                          "pedagogicalGuardianPhone",
+                          e.target.value
+                        )
+                      }
                       placeholder="(00) 00000-0000"
                       maxLength={15}
                     />
@@ -437,7 +527,9 @@ export default function MatriculaPage() {
                     label="E-mail"
                     type="email"
                     value={formData.pedagogicalGuardianEmail}
-                    onChange={(e) => updateFormData('pedagogicalGuardianEmail', e.target.value)}
+                    onChange={(e) =>
+                      updateFormData("pedagogicalGuardianEmail", e.target.value)
+                    }
                     placeholder="email@exemplo.com (opcional)"
                   />
                 </>
@@ -448,31 +540,33 @@ export default function MatriculaPage() {
           {/* Step 4: Endereço */}
           {currentStep === 4 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Endereço</h2>
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">
+                Endereço
+              </h2>
               <Input
                 label="Endereço Completo *"
                 value={formData.address}
-                onChange={(e) => updateFormData('address', e.target.value)}
+                onChange={(e) => updateFormData("address", e.target.value)}
                 placeholder="Rua, número, complemento"
               />
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Input
                   label="Cidade *"
                   value={formData.city}
-                  onChange={(e) => updateFormData('city', e.target.value)}
+                  onChange={(e) => updateFormData("city", e.target.value)}
                   placeholder="Cidade"
                 />
                 <Input
                   label="Estado *"
                   value={formData.state}
-                  onChange={(e) => updateFormData('state', e.target.value)}
+                  onChange={(e) => updateFormData("state", e.target.value)}
                   placeholder="UF"
                   maxLength={2}
                 />
                 <Input
                   label="CEP *"
                   value={formData.zipCode}
-                  onChange={(e) => updateFormData('zipCode', e.target.value)}
+                  onChange={(e) => updateFormData("zipCode", e.target.value)}
                   placeholder="00000-000"
                   maxLength={9}
                 />
@@ -483,44 +577,88 @@ export default function MatriculaPage() {
           {/* Step 5: Revisão */}
           {currentStep === 5 && (
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Revisão dos Dados</h2>
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">
+                Revisão dos Dados
+              </h2>
 
               <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-900 mb-2">Aluno</h3>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p><span className="font-medium">Nome:</span> {formData.studentFirstName} {formData.studentLastName}</p>
-                    <p><span className="font-medium">Data de Nascimento:</span> {new Date(formData.dateOfBirth).toLocaleDateString('pt-BR')}</p>
-                    <p><span className="font-medium">Série:</span> {formData.gradeLevel} {formData.section && `- Turma ${formData.section}`}</p>
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <h3 className="mb-2 font-semibold text-gray-900">Aluno</h3>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>
+                      <span className="font-medium">Nome:</span>{" "}
+                      {formData.studentFirstName} {formData.studentLastName}
+                    </p>
+                    <p>
+                      <span className="font-medium">Data de Nascimento:</span>{" "}
+                      {new Date(formData.dateOfBirth).toLocaleDateString(
+                        "pt-BR"
+                      )}
+                    </p>
+                    <p>
+                      <span className="font-medium">Série:</span>{" "}
+                      {formData.gradeLevel}{" "}
+                      {formData.section && `- Turma ${formData.section}`}
+                    </p>
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-900 mb-2">Responsável Financeiro</h3>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p><span className="font-medium">Nome:</span> {formData.financialGuardianFirstName} {formData.financialGuardianLastName}</p>
-                    <p><span className="font-medium">CPF:</span> {formData.financialGuardianCPF}</p>
-                    <p><span className="font-medium">Telefone:</span> {formData.financialGuardianPhone}</p>
-                    <p><span className="font-medium">E-mail:</span> {formData.financialGuardianEmail}</p>
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <h3 className="mb-2 font-semibold text-gray-900">
+                    Responsável Financeiro
+                  </h3>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>
+                      <span className="font-medium">Nome:</span>{" "}
+                      {formData.financialGuardianFirstName}{" "}
+                      {formData.financialGuardianLastName}
+                    </p>
+                    <p>
+                      <span className="font-medium">CPF:</span>{" "}
+                      {formData.financialGuardianCPF}
+                    </p>
+                    <p>
+                      <span className="font-medium">Telefone:</span>{" "}
+                      {formData.financialGuardianPhone}
+                    </p>
+                    <p>
+                      <span className="font-medium">E-mail:</span>{" "}
+                      {formData.financialGuardianEmail}
+                    </p>
                   </div>
                 </div>
 
-                {!formData.isSameGuardian && formData.pedagogicalGuardianFirstName && (
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-900 mb-2">Responsável Pedagógico</h3>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p><span className="font-medium">Nome:</span> {formData.pedagogicalGuardianFirstName} {formData.pedagogicalGuardianLastName}</p>
-                      <p><span className="font-medium">CPF:</span> {formData.pedagogicalGuardianCPF}</p>
-                      <p><span className="font-medium">Telefone:</span> {formData.pedagogicalGuardianPhone}</p>
+                {!formData.isSameGuardian &&
+                  formData.pedagogicalGuardianFirstName && (
+                    <div className="rounded-lg bg-gray-50 p-4">
+                      <h3 className="mb-2 font-semibold text-gray-900">
+                        Responsável Pedagógico
+                      </h3>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <p>
+                          <span className="font-medium">Nome:</span>{" "}
+                          {formData.pedagogicalGuardianFirstName}{" "}
+                          {formData.pedagogicalGuardianLastName}
+                        </p>
+                        <p>
+                          <span className="font-medium">CPF:</span>{" "}
+                          {formData.pedagogicalGuardianCPF}
+                        </p>
+                        <p>
+                          <span className="font-medium">Telefone:</span>{" "}
+                          {formData.pedagogicalGuardianPhone}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h3 className="font-semibold text-gray-900 mb-2">Endereço</h3>
-                  <div className="text-sm text-gray-600 space-y-1">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <h3 className="mb-2 font-semibold text-gray-900">Endereço</h3>
+                  <div className="space-y-1 text-sm text-gray-600">
                     <p>{formData.address}</p>
-                    <p>{formData.city} - {formData.state}</p>
+                    <p>
+                      {formData.city} - {formData.state}
+                    </p>
                     <p>CEP: {formData.zipCode}</p>
                   </div>
                 </div>
@@ -540,7 +678,10 @@ export default function MatriculaPage() {
                     label="Certidão de nascimento"
                     value={documents.birthCertificateUrl}
                     onChange={(key) =>
-                      setDocuments((prev) => ({ ...prev, birthCertificateUrl: key }))
+                      setDocuments((prev) => ({
+                        ...prev,
+                        birthCertificateUrl: key,
+                      }))
                     }
                   />
                   <DocumentUpload
@@ -556,7 +697,10 @@ export default function MatriculaPage() {
                     label="Comprovante de residência"
                     value={documents.proofOfAddressUrl}
                     onChange={(key) =>
-                      setDocuments((prev) => ({ ...prev, proofOfAddressUrl: key }))
+                      setDocuments((prev) => ({
+                        ...prev,
+                        proofOfAddressUrl: key,
+                      }))
                     }
                   />
                   <DocumentUpload
@@ -564,7 +708,10 @@ export default function MatriculaPage() {
                     label="Histórico da escola anterior"
                     value={documents.previousSchoolUrl}
                     onChange={(key) =>
-                      setDocuments((prev) => ({ ...prev, previousSchoolUrl: key }))
+                      setDocuments((prev) => ({
+                        ...prev,
+                        previousSchoolUrl: key,
+                      }))
                     }
                   />
                 </div>
@@ -604,14 +751,14 @@ export default function MatriculaPage() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t">
+          <div className="mt-8 flex justify-between border-t pt-6">
             {currentStep > 1 && (
               <Button
                 variant="outline"
                 onClick={prevStep}
                 disabled={isSubmitting}
               >
-                <ChevronLeft className="w-4 h-4 mr-2" />
+                <ChevronLeft className="mr-2 h-4 w-4" />
                 Voltar
               </Button>
             )}
@@ -632,7 +779,7 @@ export default function MatriculaPage() {
             {currentStep < 5 ? (
               <Button onClick={nextStep}>
                 Próximo
-                <ChevronRight className="w-4 h-4 ml-2" />
+                <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
               <Button
@@ -640,7 +787,7 @@ export default function MatriculaPage() {
                 disabled={isSubmitting || !consentGiven}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {isSubmitting ? 'Enviando...' : 'Enviar Solicitação'}
+                {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
               </Button>
             )}
           </div>

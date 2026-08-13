@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { PageWrapper } from '@/components/layout/PageWrapper';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { SearchBar } from '@/components/ui/SearchBar';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { useState, useEffect } from "react";
+import { PageWrapper } from "@/components/layout/PageWrapper";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   DollarSign,
   Send,
@@ -18,9 +17,9 @@ import {
   CheckCircle,
   Clock,
   Handshake,
-} from 'lucide-react';
-import toast from 'react-hot-toast';
-import { formatCurrency } from '@/lib/money';
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { formatCurrency } from "@/lib/money";
 
 type Billing = {
   id: string;
@@ -48,13 +47,6 @@ type Billing = {
   reminders: any[];
 };
 
-const STATUS_CONFIG = {
-  PENDING: { label: 'Aberto', variant: 'info' as const },
-  OVERDUE: { label: 'Vencido', variant: 'destructive' as const },
-  PAID: { label: 'Pago', variant: 'success' as const },
-  RENEGOTIATED: { label: 'Renegociado', variant: 'warning' as const },
-};
-
 export default function CollectionPage() {
   const [overdueBillings, setOverdueBillings] = useState<Billing[]>([]);
   const [selectedBillings, setSelectedBillings] = useState<string[]>([]);
@@ -70,27 +62,31 @@ export default function CollectionPage() {
   const [defaultRate, setDefaultRate] = useState(0);
 
   // Reminder form
-  const [reminderType, setReminderType] = useState<'EMAIL' | 'WHATSAPP'>('EMAIL');
-  const [reminderMessage, setReminderMessage] = useState('');
+  const [reminderType, setReminderType] = useState<"EMAIL" | "WHATSAPP">(
+    "EMAIL"
+  );
+  const [reminderMessage, setReminderMessage] = useState("");
 
   // Renegotiation form
   const [renegotiationData, setRenegotiationData] = useState({
     renegotiatedAmount: 0,
     discount: 0,
     installments: 1,
-    newDueDate: '',
-    reason: '',
-    notes: '',
+    newDueDate: "",
+    reason: "",
+    notes: "",
   });
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  async function fetchData() {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/billings?status=OVERDUE&limit=100');
+      const response = await fetch(
+        "/api/admin/billings?status=OVERDUE&limit=100"
+      );
       const data = await response.json();
 
       if (data.success) {
@@ -109,12 +105,12 @@ export default function CollectionPage() {
         setDefaultRate(rate);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Erro ao carregar dados');
+      console.error("Error fetching data:", error);
+      toast.error("Erro ao carregar dados");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleSelectBilling = (id: string) => {
     setSelectedBillings((prev) =>
@@ -132,7 +128,7 @@ export default function CollectionPage() {
 
   const openReminderModal = () => {
     if (selectedBillings.length === 0) {
-      toast.error('Selecione pelo menos uma fatura');
+      toast.error("Selecione pelo menos uma fatura");
       return;
     }
 
@@ -149,16 +145,16 @@ Escola Davilla`;
     setShowReminderModal(true);
   };
 
-  const sendReminders = async () => {
+  async function sendReminders() {
     setSending(true);
     try {
-      const response = await fetch('/api/admin/payment-reminders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/payment-reminders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           billingIds: selectedBillings,
           reminderType,
-          subject: 'Lembrete de Pagamento - Escola Davilla',
+          subject: "Lembrete de Pagamento - Escola Davilla",
           message: reminderMessage,
         }),
       });
@@ -171,39 +167,41 @@ Escola Davilla`;
         setSelectedBillings([]);
         fetchData();
       } else {
-        toast.error(data.error || 'Erro ao enviar lembretes');
+        toast.error(data.error || "Erro ao enviar lembretes");
       }
     } catch (error) {
-      console.error('Error sending reminders:', error);
-      toast.error('Erro ao enviar lembretes');
+      console.error("Error sending reminders:", error);
+      toast.error("Erro ao enviar lembretes");
     } finally {
       setSending(false);
     }
-  };
+  }
 
   const openRenegotiationModal = (billing: Billing) => {
     setSelectedBilling(billing);
     setRenegotiationData({
-      renegotiatedAmount: Number((billing.amountDue.outstanding * 0.9).toFixed(2)),
+      renegotiatedAmount: Number(
+        (billing.amountDue.outstanding * 0.9).toFixed(2)
+      ),
       discount: Number((billing.amountDue.outstanding * 0.1).toFixed(2)),
       installments: 3,
       newDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
         .toISOString()
-        .split('T')[0],
-      reason: 'Dificuldade financeira',
-      notes: '',
+        .split("T")[0],
+      reason: "Dificuldade financeira",
+      notes: "",
     });
     setShowRenegotiationModal(true);
   };
 
-  const handleRenegotiation = async () => {
+  async function handleRenegotiation() {
     if (!selectedBilling) return;
 
     setSending(true);
     try {
-      const response = await fetch('/api/admin/payment-renegotiations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/admin/payment-renegotiations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           billingId: selectedBilling.id,
           ...renegotiationData,
@@ -213,21 +211,19 @@ Escola Davilla`;
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Renegociação criada com sucesso!');
+        toast.success("Renegociação criada com sucesso!");
         setShowRenegotiationModal(false);
         fetchData();
       } else {
-        toast.error(data.error || 'Erro ao criar renegociação');
+        toast.error(data.error || "Erro ao criar renegociação");
       }
     } catch (error) {
-      console.error('Error creating renegotiation:', error);
-      toast.error('Erro ao criar renegociação');
+      console.error("Error creating renegotiation:", error);
+      toast.error("Erro ao criar renegociação");
     } finally {
       setSending(false);
     }
-  };
-
-
+  }
 
   return (
     <PageWrapper>
@@ -238,14 +234,14 @@ Escola Davilla`;
       />
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Faturas Vencidas</p>
               <p className="text-2xl font-bold text-red-600">{totalOverdue}</p>
             </div>
-            <AlertTriangle className="w-8 h-8 text-red-400" />
+            <AlertTriangle className="h-8 w-8 text-red-400" />
           </div>
         </Card>
 
@@ -257,7 +253,7 @@ Escola Davilla`;
                 {formatCurrency(overdueAmount)}
               </p>
             </div>
-            <TrendingDown className="w-8 h-8 text-red-400" />
+            <TrendingDown className="h-8 w-8 text-red-400" />
           </div>
         </Card>
 
@@ -269,19 +265,19 @@ Escola Davilla`;
                 {defaultRate.toFixed(1)}%
               </p>
             </div>
-            <TrendingDown className="w-8 h-8 text-orange-400" />
+            <TrendingDown className="h-8 w-8 text-orange-400" />
           </div>
         </Card>
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row">
         <Button
           onClick={openReminderModal}
           disabled={selectedBillings.length === 0}
           className="flex-1 sm:flex-none"
         >
-          <Send className="w-4 h-4 mr-2" />
+          <Send className="mr-2 h-4 w-4" />
           Enviar Lembretes ({selectedBillings.length})
         </Button>
       </div>
@@ -298,13 +294,13 @@ Escola Davilla`;
           />
         ) : (
           <>
-            <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
                   checked={selectedBillings.length === overdueBillings.length}
                   onChange={handleSelectAll}
-                  className="w-4 h-4 text-blue-600 rounded"
+                  className="h-4 w-4 rounded text-blue-600"
                 />
                 <span className="text-sm text-gray-700">Selecionar todos</span>
               </label>
@@ -315,44 +311,48 @@ Escola Davilla`;
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="border-b border-gray-200 bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left">
-                      <input type="checkbox" className="w-4 h-4 opacity-0" disabled />
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 opacity-0"
+                        disabled
+                      />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                       Fatura
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                       Responsável
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                       Valor
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                       Vencimento
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                       Dias Atraso
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                       Lembretes
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">
                       Ações
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 bg-white">
                   {overdueBillings.map((billing) => {
                     // Days late come from the server, computed in the school timezone.
                     const daysOverdue = billing.amountDue.daysLate;
                     const severity =
                       daysOverdue > 30
-                        ? 'high'
+                        ? "high"
                         : daysOverdue > 15
-                        ? 'medium'
-                        : 'low';
+                          ? "medium"
+                          : "low";
 
                     return (
                       <tr key={billing.id} className="hover:bg-gray-50">
@@ -361,25 +361,27 @@ Escola Davilla`;
                             type="checkbox"
                             checked={selectedBillings.includes(billing.id)}
                             onChange={() => handleSelectBilling(billing.id)}
-                            className="w-4 h-4 text-blue-600 rounded"
+                            className="h-4 w-4 rounded text-blue-600"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <span className="text-sm font-medium text-gray-900">
                             {billing.invoiceNumber}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {billing.parent.firstName} {billing.parent.lastName}
+                              {billing.parent.firstName}{" "}
+                              {billing.parent.lastName}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {billing.parent.email || billing.parent.phoneNumber}
+                              {billing.parent.email ||
+                                billing.parent.phoneNumber}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <span className="text-sm font-semibold text-gray-900">
                             <span className="font-semibold text-foreground">
                               {formatCurrency(billing.amountDue.outstanding)}
@@ -388,7 +390,8 @@ Escola Davilla`;
                               <span className="mt-0.5 block text-xs text-muted-foreground">
                                 {formatCurrency(billing.amountDue.principal)} +{" "}
                                 {formatCurrency(billing.amountDue.fine)} multa +{" "}
-                                {formatCurrency(billing.amountDue.interest)} juros
+                                {formatCurrency(billing.amountDue.interest)}{" "}
+                                juros
                               </span>
                             )}
                             {billing.amountDue.paid > 0 && (
@@ -398,33 +401,35 @@ Escola Davilla`;
                             )}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(billing.dueDate).toLocaleDateString('pt-BR')}
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                          {new Date(billing.dueDate).toLocaleDateString(
+                            "pt-BR"
+                          )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <Badge
                             variant={
-                              severity === 'high'
-                                ? 'destructive'
-                                : severity === 'medium'
-                                ? 'warning'
-                                : 'default'
+                              severity === "high"
+                                ? "destructive"
+                                : severity === "medium"
+                                  ? "warning"
+                                  : "default"
                             }
                           >
-                            <Clock className="w-3 h-3 mr-1" />
+                            <Clock className="mr-1 h-3 w-3" />
                             {daysOverdue} dias
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                           {billing.reminders?.length || 0} enviados
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => openRenegotiationModal(billing)}
                           >
-                            <Handshake className="w-4 h-4 mr-1" />
+                            <Handshake className="mr-1 h-4 w-4" />
                             Renegociar
                           </Button>
                         </td>
@@ -440,62 +445,68 @@ Escola Davilla`;
 
       {/* Reminder Modal */}
       {showReminderModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+            <div className="sticky top-0 border-b border-gray-200 bg-white px-6 py-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Enviar Lembretes de Pagamento
               </h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="mt-1 text-sm text-gray-600">
                 {selectedBillings.length} faturas selecionadas
               </p>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="space-y-4 p-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Tipo de Lembrete
                 </label>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setReminderType('EMAIL')}
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
-                      reminderType === 'EMAIL'
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                    onClick={() => setReminderType("EMAIL")}
+                    className={`flex-1 rounded-lg border-2 px-4 py-3 transition-all ${
+                      reminderType === "EMAIL"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <Mail className="w-5 h-5 mx-auto mb-1" />
+                    <Mail className="mx-auto mb-1 h-5 w-5" />
                     <span className="text-sm font-medium">E-mail</span>
                   </button>
                   <button
-                    onClick={() => setReminderType('WHATSAPP')}
-                    className={`flex-1 px-4 py-3 rounded-lg border-2 transition-all ${
-                      reminderType === 'WHATSAPP'
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                    onClick={() => setReminderType("WHATSAPP")}
+                    className={`flex-1 rounded-lg border-2 px-4 py-3 transition-all ${
+                      reminderType === "WHATSAPP"
+                        ? "border-green-500 bg-green-50"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <MessageSquare className="w-5 h-5 mx-auto mb-1" />
+                    <MessageSquare className="mx-auto mb-1 h-5 w-5" />
                     <span className="text-sm font-medium">WhatsApp</span>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Mensagem
                 </label>
                 <textarea
                   value={reminderMessage}
                   onChange={(e) => setReminderMessage(e.target.value)}
                   rows={10}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="Digite a mensagem..."
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Use: {'{'}{'{'} name{'}'}{'}'}, {'{'}{'{'} amount{'}'}{'}'}, {'{'}{'{'}
-                  dueDate{'}'}{'}'} para personalizar
+                <p className="mt-1 text-xs text-gray-500">
+                  Use: {"{"}
+                  {"{"} name{"}"}
+                  {"}"}, {"{"}
+                  {"{"} amount{"}"}
+                  {"}"}, {"{"}
+                  {"{"}
+                  dueDate{"}"}
+                  {"}"} para personalizar
                 </p>
               </div>
 
@@ -513,8 +524,8 @@ Escola Davilla`;
                   disabled={sending}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  {sending ? 'Enviando...' : 'Enviar Lembretes'}
+                  <Send className="mr-2 h-4 w-4" />
+                  {sending ? "Enviando..." : "Enviar Lembretes"}
                 </Button>
               </div>
             </div>
@@ -524,20 +535,21 @@ Escola Davilla`;
 
       {/* Renegotiation Modal */}
       {showRenegotiationModal && selectedBilling && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white">
+            <div className="sticky top-0 border-b border-gray-200 bg-white px-6 py-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Renegociar Pagamento
               </h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Fatura {selectedBilling.invoiceNumber} - {selectedBilling.parent.firstName}{' '}
+              <p className="mt-1 text-sm text-gray-600">
+                Fatura {selectedBilling.invoiceNumber} -{" "}
+                {selectedBilling.parent.firstName}{" "}
                 {selectedBilling.parent.lastName}
               </p>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="space-y-4 p-6">
+              <div className="rounded-lg bg-gray-50 p-4">
                 <p className="text-sm text-gray-600">Valor Original</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(selectedBilling.amountDue.outstanding)}
@@ -546,7 +558,7 @@ Escola Davilla`;
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
                     Novo Valor *
                   </label>
                   <input
@@ -558,31 +570,31 @@ Escola Davilla`;
                         renegotiatedAmount: parseFloat(e.target.value),
                         discount:
                           selectedBilling.amountDue.outstanding -
-                            parseFloat(e.target.value),
+                          parseFloat(e.target.value),
                       })
                     }
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
                     Desconto
                   </label>
                   <input
                     type="number"
                     value={renegotiationData.discount}
                     readOnly
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
                     Parcelas
                   </label>
                   <input
@@ -596,12 +608,12 @@ Escola Davilla`;
                     }
                     min="1"
                     max="12"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
                     Nova Data de Vencimento *
                   </label>
                   <input
@@ -613,13 +625,13 @@ Escola Davilla`;
                         newDueDate: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Motivo
                 </label>
                 <input
@@ -631,13 +643,13 @@ Escola Davilla`;
                       reason: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   placeholder="Ex: Dificuldade financeira temporária"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Observações
                 </label>
                 <textarea
@@ -649,7 +661,7 @@ Escola Davilla`;
                     })
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500"
                   placeholder="Observações internas..."
                 />
               </div>
@@ -668,8 +680,8 @@ Escola Davilla`;
                   disabled={sending}
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >
-                  <Handshake className="w-4 h-4 mr-2" />
-                  {sending ? 'Salvando...' : 'Confirmar Renegociação'}
+                  <Handshake className="mr-2 h-4 w-4" />
+                  {sending ? "Salvando..." : "Confirmar Renegociação"}
                 </Button>
               </div>
             </div>

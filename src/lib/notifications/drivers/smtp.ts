@@ -26,8 +26,7 @@ export function createSmtpDriver(): NotificationDriver | null {
   }
 
   const port = Number(process.env.SMTP_PORT ?? 587);
-  const from =
-    process.env.SMTP_FROM ?? `Escola D'Ávilla <${user}>`;
+  const from = process.env.SMTP_FROM ?? `Escola D'Ávilla <${user}>`;
 
   transporter ??= nodemailer.createTransport({
     host,

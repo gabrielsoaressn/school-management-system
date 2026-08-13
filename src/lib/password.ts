@@ -67,7 +67,11 @@ export function validatePassword(
   }
 
   const localPart = context.email?.split("@")[0]?.toLowerCase();
-  if (localPart && localPart.length >= 4 && value.toLowerCase().includes(localPart)) {
+  if (
+    localPart &&
+    localPart.length >= 4 &&
+    value.toLowerCase().includes(localPart)
+  ) {
     errors.push("A senha não pode conter o seu e-mail");
   }
 
@@ -82,7 +86,8 @@ export function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-const TEMP_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+const TEMP_ALPHABET =
+  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 
 /**
  * Random first-access password. Ambiguous glyphs (O/0, I/l/1) are left out so

@@ -194,7 +194,9 @@ export default function OccurrencesBoard({
               <Select
                 label="Aluno"
                 value={form.studentId}
-                onChange={(e) => setForm({ ...form, studentId: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, studentId: e.target.value })
+                }
                 options={[
                   { value: "", label: "Selecione o aluno" },
                   ...students.map((student) => ({
@@ -235,7 +237,9 @@ export default function OccurrencesBoard({
               </label>
               <textarea
                 value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
                 rows={4}
                 required
                 minLength={10}
@@ -247,7 +251,9 @@ export default function OccurrencesBoard({
             <Input
               label="Providência tomada"
               value={form.actionTaken}
-              onChange={(e) => setForm({ ...form, actionTaken: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, actionTaken: e.target.value })
+              }
               placeholder="Opcional"
             />
 
@@ -296,8 +302,9 @@ export default function OccurrencesBoard({
                       {occurrence.title}
                     </h3>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                      {occurrence.student.firstName} {occurrence.student.lastName}{" "}
-                      · {formatDateTime(occurrence.date)} ·{" "}
+                      {occurrence.student.firstName}{" "}
+                      {occurrence.student.lastName} ·{" "}
+                      {formatDateTime(occurrence.date)} ·{" "}
                       {occurrence.reportedByName}
                     </p>
                   </div>
@@ -306,7 +313,9 @@ export default function OccurrencesBoard({
                       {TYPE_LABEL[occurrence.type] ?? occurrence.type}
                     </Badge>
                     <Badge
-                      variant={SEVERITY_VARIANT[occurrence.severity] ?? "default"}
+                      variant={
+                        SEVERITY_VARIANT[occurrence.severity] ?? "default"
+                      }
                       size="sm"
                     >
                       {SEVERITIES.find((s) => s.value === occurrence.severity)

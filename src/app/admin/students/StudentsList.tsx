@@ -117,19 +117,23 @@ export default function StudentsList() {
         />
       ) : (
         <>
-          <p className="mb-3 text-sm text-muted-foreground">
-            {total} aluno(s)
-          </p>
+          <p className="mb-3 text-sm text-muted-foreground">{total} aluno(s)</p>
 
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
                   <th className="p-3 font-semibold text-foreground">Aluno</th>
-                  <th className="p-3 font-semibold text-foreground">Matrícula</th>
+                  <th className="p-3 font-semibold text-foreground">
+                    Matrícula
+                  </th>
                   <th className="p-3 font-semibold text-foreground">Turma</th>
-                  <th className="p-3 font-semibold text-foreground">Responsável</th>
-                  <th className="p-3 font-semibold text-foreground">Situação</th>
+                  <th className="p-3 font-semibold text-foreground">
+                    Responsável
+                  </th>
+                  <th className="p-3 font-semibold text-foreground">
+                    Situação
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -172,7 +176,8 @@ export default function StudentsList() {
                         {student.parent ? (
                           <>
                             <span className="text-foreground">
-                              {student.parent.firstName} {student.parent.lastName}
+                              {student.parent.firstName}{" "}
+                              {student.parent.lastName}
                             </span>
                             <span className="block text-xs text-muted-foreground">
                               {student.parent.phoneNumber}
@@ -184,7 +189,9 @@ export default function StudentsList() {
                       </td>
                       <td className="p-3">
                         <Badge
-                          variant={student.user.isActive ? "success" : "default"}
+                          variant={
+                            student.user.isActive ? "success" : "default"
+                          }
                           size="sm"
                         >
                           {student.user.isActive ? "Ativo" : "Inativo"}

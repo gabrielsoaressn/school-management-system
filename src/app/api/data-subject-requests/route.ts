@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withoutAuth } from "@/lib/api-auth";
-import { created, fail, serverError, validationFailed } from "@/lib/api-response";
+import {
+  created,
+  fail,
+  serverError,
+  validationFailed,
+} from "@/lib/api-response";
 import { clientIp, looksLikeBot, rateLimit } from "@/lib/rate-limit";
 import { recordAudit } from "@/lib/audit";
 import { send } from "@/lib/notifications";
@@ -82,7 +87,9 @@ export const POST = withoutAuth(async (request) => {
 
     return created(
       { protocol },
-      { message: "Solicitação registrada. Você receberá a resposta por e-mail." }
+      {
+        message: "Solicitação registrada. Você receberá a resposta por e-mail.",
+      }
     );
   } catch (error) {
     if (error instanceof z.ZodError) {

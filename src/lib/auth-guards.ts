@@ -1,10 +1,6 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import {
-  DEFAULT_ROUTE_BY_ROLE,
-  can,
-  type Permission,
-} from "@/lib/permissions";
+import { DEFAULT_ROUTE_BY_ROLE, can, type Permission } from "@/lib/permissions";
 
 /**
  * Server-component guards.

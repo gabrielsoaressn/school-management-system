@@ -3,6 +3,7 @@
 ## 🎯 RESUMO DAS MUDANÇAS
 
 ### ✅ O que já temos e pode ser reaproveitado:
+
 - **User, Student, Parent, Employee, Teacher** → Base de usuários OK
 - **Grade, Attendance** → Notas e presença (precisa melhorias)
 - **Billing, Tuition, Payroll** → Financeiro básico (precisa expansão)
@@ -12,24 +13,29 @@
 ### 🆕 Novas tabelas necessárias:
 
 #### MÓDULO 1: MATRÍCULA DIGITAL
+
 1. **EnrollmentRequest** - Solicitações de matrícula pendentes
 2. **GuardianRelationship** - Relacionamento entre aluno e responsáveis (financeiro + pedagógico)
 
 #### MÓDULO 2: GESTÃO ACADÊMICA
+
 3. **AssessmentType** - Tipos de avaliação (prova, trabalho, participação)
 4. **Assessment** - Avaliações individuais (substitui/complementa Grade)
 5. **AttendanceRecord** - Melhorar Attendance com classId e subjectId
 
 #### MÓDULO 3: FINANCEIRO AVANÇADO
+
 6. **PaymentReminder** - Histórico de lembretes enviados
 7. **PaymentRenegotiation** - Renegociações de dívidas
 8. **FinancialContact** - Contatos para cobrança (email, WhatsApp)
 
 #### MÓDULO 4: PORTAL DE COMUNICAÇÃO
+
 9. **Occurrence** - Ocorrências pedagógicas
 10. **CommunicationThread** - Thread de mensagens (opcional, pode usar Notification)
 
 #### MÓDULO 5: GERADOR DE DOCUMENTOS
+
 11. **DocumentTemplate** - Templates de documentos
 12. **GeneratedDocument** - Histórico de documentos gerados
 
@@ -588,6 +594,7 @@ model User {
 ## 📊 RESUMO DE IMPACTO
 
 ### 🆕 Novas Tabelas: 12
+
 1. EnrollmentRequest
 2. GuardianRelationship
 3. AssessmentType
@@ -603,6 +610,7 @@ model User {
 13. GeneratedDocument
 
 ### 🔄 Tabelas Modificadas: 7
+
 - User (adicionar role TEACHER)
 - Student (novos relacionamentos)
 - Parent (whatsappNumber + relacionamentos)
@@ -612,6 +620,7 @@ model User {
 - Teacher (novos relacionamentos)
 
 ### 🆕 Novos Enums: 6
+
 - EnrollmentRequestStatus
 - GuardianType
 - ReminderType, ReminderStatus
@@ -619,6 +628,7 @@ model User {
 - DocumentType
 
 ### 🔄 Enums Modificados: 2
+
 - PaymentStatus (adicionar RENEGOTIATED)
 - UserRole (adicionar TEACHER)
 
@@ -627,18 +637,22 @@ model User {
 ## ⚠️ PONTOS DE ATENÇÃO
 
 ### 1. Migração de Dados Existentes
+
 - **Attendance → AttendanceRecord**: Precisaremos migrar os dados existentes da tabela `Attendance` para `AttendanceRecord` (com novos campos `classId` e `subjectId`)
 - **Grade → Assessment**: Podemos manter ambas por enquanto ou migrar. Recomendo manter `Grade` para compatibilidade e usar `Assessment` para novas funcionalidades.
 
 ### 2. Índices para Performance
+
 - Todos os relacionamentos têm `@@index` para queries rápidas
 - Campos de busca frequente (status, datas) estão indexados
 
 ### 3. Cascata de Exclusão
+
 - Relacionamentos críticos usam `onDelete: Cascade` para manter integridade
 - Relacionamentos opcionais (teacherId?) são nullable
 
 ### 4. Campos de Auditoria
+
 - Todas as tabelas têm `createdAt` e `updatedAt`
 - Tabelas críticas têm `createdBy` / `reviewedBy` para rastreabilidade
 
@@ -647,6 +661,7 @@ model User {
 ## ✅ PRÓXIMOS PASSOS
 
 Aguardando sua aprovação para:
+
 1. ✅ Criar o arquivo de migração Prisma
 2. ✅ Executar `prisma migrate dev`
 3. ✅ Atualizar o seed.ts com dados de teste

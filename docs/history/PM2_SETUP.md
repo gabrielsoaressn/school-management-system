@@ -20,6 +20,7 @@ pm2 start ecosystem.config.js
 A configuração usa `@reboot` no crontab para ressuscitar os processos salvos do PM2.
 
 Se precisar reconfigurar manualmente:
+
 ```bash
 pm2 save
 crontab -e
@@ -54,6 +55,7 @@ pm2 monit
 ## 5. Verificar se está funcionando
 
 Após configurar, você pode:
+
 - Reiniciar o computador
 - Verificar se o servidor está rodando: `pm2 status`
 - Acessar http://localhost:3000
@@ -61,6 +63,7 @@ Após configurar, você pode:
 ## Logs
 
 Os logs ficam salvos em:
+
 - `/home/gab/Projects/school-management-system/logs/pm2-error.log` - erros
 - `/home/gab/Projects/school-management-system/logs/pm2-out.log` - output normal
 - `/home/gab/Projects/school-management-system/logs/pm2-combined.log` - combinado
@@ -77,6 +80,7 @@ pm2 delete school-management-system
 ## Configuração do ecosystem.config.js
 
 O arquivo `ecosystem.config.js` contém toda a configuração:
+
 - Nome do processo: `school-management-system`
 - Script: `npm run dev`
 - Auto-restart: habilitado

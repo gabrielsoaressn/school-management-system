@@ -73,7 +73,9 @@ export interface ReportCard {
 function weightedAverage(
   entries: { score: number; maxScore: number; weight: number }[]
 ): number | null {
-  const usable = entries.filter((entry) => entry.maxScore > 0 && entry.weight > 0);
+  const usable = entries.filter(
+    (entry) => entry.maxScore > 0 && entry.weight > 0
+  );
 
   if (usable.length === 0) return null;
 
@@ -121,7 +123,11 @@ export async function buildReportCard(
       include: {
         subject: { select: { id: true, name: true } },
         assessmentType: { select: { name: true, weight: true } },
-        teacher: { include: { employee: { select: { firstName: true, lastName: true } } } },
+        teacher: {
+          include: {
+            employee: { select: { firstName: true, lastName: true } },
+          },
+        },
       },
       orderBy: [{ subject: { name: "asc" } }, { assessmentDate: "asc" }],
     }),
@@ -169,8 +175,9 @@ export async function buildReportCard(
         };
       });
 
-      const teacher = subjectAssessments.find((assessment) => assessment.teacher)
-        ?.teacher;
+      const teacher = subjectAssessments.find(
+        (assessment) => assessment.teacher
+      )?.teacher;
 
       return {
         subjectId,

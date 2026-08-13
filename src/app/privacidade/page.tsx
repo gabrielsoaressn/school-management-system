@@ -48,8 +48,8 @@ export default function PrivacyPage() {
 
         <section className="mt-8 space-y-4 text-sm leading-relaxed text-foreground">
           <p>
-            A Escola D'Ávilla trata dados pessoais de alunos, responsáveis e
-            funcionários para prestar o serviço educacional e cumprir suas
+            A Escola D&apos;Ávilla trata dados pessoais de alunos, responsáveis
+            e funcionários para prestar o serviço educacional e cumprir suas
             obrigações legais. Este aviso explica quais dados usamos, com que
             finalidade, com que base legal e por quanto tempo.
           </p>

@@ -51,7 +51,11 @@ const METHODS = [
  * server: principal plus the fine and interest of anything overdue, minus what
  * has already been received.
  */
-export function RegisterPaymentModal({ billing, onClose, onRegistered }: Props) {
+export function RegisterPaymentModal({
+  billing,
+  onClose,
+  onRegistered,
+}: Props) {
   const [balance, setBalance] = useState<Balance | null>(null);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [amount, setAmount] = useState("");
@@ -94,11 +98,19 @@ export function RegisterPaymentModal({ billing, onClose, onRegistered }: Props) 
     setSaving(true);
 
     try {
-      const response = await fetch(`/api/admin/billings/${billing.id}/payments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount, paidAt, method, notes: notes || undefined }),
-      });
+      const response = await fetch(
+        `/api/admin/billings/${billing.id}/payments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount,
+            paidAt,
+            method,
+            notes: notes || undefined,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -117,7 +129,9 @@ export function RegisterPaymentModal({ billing, onClose, onRegistered }: Props) 
   };
 
   const partial =
-    balance !== null && Number(amount) > 0 && Number(amount) < balance.outstanding;
+    balance !== null &&
+    Number(amount) > 0 &&
+    Number(amount) < balance.outstanding;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -217,8 +231,8 @@ export function RegisterPaymentModal({ billing, onClose, onRegistered }: Props) 
                     {payments.map((payment) => (
                       <li key={payment.id} className="flex justify-between">
                         <span className="text-muted-foreground">
-                          {new Date(payment.paidAt).toLocaleDateString("pt-BR")} ·{" "}
-                          {payment.method}
+                          {new Date(payment.paidAt).toLocaleDateString("pt-BR")}{" "}
+                          · {payment.method}
                         </span>
                         <span>{formatCurrency(payment.amount)}</span>
                       </li>

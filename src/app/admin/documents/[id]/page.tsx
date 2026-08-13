@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/Button';
-import { BackButton } from '@/components/ui/BackButton';
-import { Printer, Download } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { BackButton } from "@/components/ui/BackButton";
+import { Printer, Download } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function DocumentViewPage() {
   const params = useParams();
@@ -21,7 +21,7 @@ export default function DocumentViewPage() {
     }
   }, [documentId]);
 
-  const fetchDocument = async () => {
+  async function fetchDocument() {
     setLoading(true);
     try {
       const response = await fetch(`/api/admin/documents/${documentId}`);
@@ -30,20 +30,20 @@ export default function DocumentViewPage() {
       if (data.success) {
         setDocument(data.data);
       } else {
-        toast.error('Documento não encontrado');
-        router.push('/admin/dashboard');
+        toast.error("Documento não encontrado");
+        router.push("/admin/dashboard");
       }
     } catch (error) {
-      console.error('Error fetching document:', error);
-      toast.error('Erro ao carregar documento');
+      console.error("Error fetching document:", error);
+      toast.error("Erro ao carregar documento");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handlePrint = () => {
+  function handlePrint() {
     window.print();
-  };
+  }
 
   // The PDF is produced by the server from the same HTML shown here, so the
   // file the school hands over cannot differ from the record. The old button
@@ -52,9 +52,9 @@ export default function DocumentViewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <p className="text-gray-600">Carregando documento...</p>
         </div>
       </div>
@@ -64,19 +64,19 @@ export default function DocumentViewPage() {
   return (
     <>
       {/* Actions Bar - Hidden on print */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 print:hidden sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-6 py-4 print:hidden">
+        <div className="mx-auto flex max-w-5xl items-center justify-between">
           <BackButton href="/admin/dashboard" />
 
           <div className="flex gap-2">
             <a href={pdfHref}>
               <Button variant="outline">
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="mr-2 h-4 w-4" />
                 Baixar PDF
               </Button>
             </a>
             <Button onClick={handlePrint}>
-              <Printer className="w-4 h-4 mr-2" />
+              <Printer className="mr-2 h-4 w-4" />
               Imprimir
             </Button>
           </div>
@@ -85,10 +85,10 @@ export default function DocumentViewPage() {
 
       {/* Document Content */}
       <div className="min-h-screen bg-gray-100 py-8 print:bg-white print:py-0">
-        <div className="max-w-5xl mx-auto">
+        <div className="mx-auto max-w-5xl">
           <div
             className="bg-white shadow-lg print:shadow-none"
-            dangerouslySetInnerHTML={{ __html: document?.generatedHtml || '' }}
+            dangerouslySetInnerHTML={{ __html: document?.generatedHtml || "" }}
           />
         </div>
       </div>

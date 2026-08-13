@@ -1,6 +1,8 @@
-import { Prisma, type Enrollment } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { createAcademicYear, findAcademicYearByNumber } from "@/lib/academic-year";
+import {
+  createAcademicYear,
+  findAcademicYearByNumber,
+} from "@/lib/academic-year";
 import { GRADE_LEVELS } from "@/lib/constants";
 import { buildTuitionCharge, tuitionChargeNote } from "@/lib/tuition";
 import { nextInvoiceNumber } from "@/lib/identifiers";
@@ -22,7 +24,9 @@ import { getSettingAsBoolean, getSettingAsNumber } from "@/lib/settings";
 
 /** Next grade after `gradeLevel`, or null if it is the last one. */
 export function nextGradeLevel(gradeLevel: string): string | null {
-  const index = GRADE_LEVELS.indexOf(gradeLevel as (typeof GRADE_LEVELS)[number]);
+  const index = GRADE_LEVELS.indexOf(
+    gradeLevel as (typeof GRADE_LEVELS)[number]
+  );
 
   if (index === -1) return null;
   if (index === GRADE_LEVELS.length - 1) return null;
@@ -31,11 +35,7 @@ export function nextGradeLevel(gradeLevel: string): string | null {
 }
 
 export type ReEnrollmentOutcome =
-  | "PROMOTED"
-  | "RETAINED"
-  | "GRADUATING"
-  | "NO_CLASS"
-  | "ALREADY_ENROLLED";
+  "PROMOTED" | "RETAINED" | "GRADUATING" | "NO_CLASS" | "ALREADY_ENROLLED";
 
 export interface StudentPlan {
   studentId: string;

@@ -59,7 +59,9 @@ export default function DataSubjectRequestForm() {
   if (protocol) {
     return (
       <Card padding="lg" className="border-success/30 bg-success/5">
-        <h3 className="font-semibold text-foreground">Solicitação registrada</h3>
+        <h3 className="font-semibold text-foreground">
+          Solicitação registrada
+        </h3>
         <p className="mt-2 text-sm text-muted-foreground">
           Seu protocolo é{" "}
           <span className="font-semibold text-foreground">{protocol}</span>.

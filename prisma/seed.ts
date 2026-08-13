@@ -13,42 +13,87 @@ import {
   OccurrenceType,
   OccurrenceSeverity,
   DocumentType,
-} from '@prisma/client';
-import bcrypt from 'bcryptjs';
-import { schoolDate } from '../src/lib/datetime';
+} from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { schoolDate } from "../src/lib/datetime";
 
 const prisma = new PrismaClient();
 
 // Dados de exemplo
 const firstNames = {
-  male: ['João', 'Pedro', 'Lucas', 'Gabriel', 'Rafael', 'Felipe', 'Bruno', 'Matheus', 'Carlos', 'André'],
-  female: ['Maria', 'Ana', 'Julia', 'Beatriz', 'Carolina', 'Fernanda', 'Camila', 'Larissa', 'Patricia', 'Amanda']
+  male: [
+    "João",
+    "Pedro",
+    "Lucas",
+    "Gabriel",
+    "Rafael",
+    "Felipe",
+    "Bruno",
+    "Matheus",
+    "Carlos",
+    "André",
+  ],
+  female: [
+    "Maria",
+    "Ana",
+    "Julia",
+    "Beatriz",
+    "Carolina",
+    "Fernanda",
+    "Camila",
+    "Larissa",
+    "Patricia",
+    "Amanda",
+  ],
 };
 
-const lastNames = ['Silva', 'Santos', 'Oliveira', 'Souza', 'Rodrigues', 'Ferreira', 'Alves', 'Pereira', 'Lima', 'Costa'];
-
-const subjects = [
-  { name: 'Matemática', code: 'MAT' },
-  { name: 'Português', code: 'POR' },
-  { name: 'História', code: 'HIS' },
-  { name: 'Geografia', code: 'GEO' },
-  { name: 'Ciências', code: 'CIE' },
-  { name: 'Física', code: 'FIS' },
-  { name: 'Química', code: 'QUI' },
-  { name: 'Biologia', code: 'BIO' },
-  { name: 'Inglês', code: 'ING' },
-  { name: 'Educação Física', code: 'EDF' },
+const lastNames = [
+  "Silva",
+  "Santos",
+  "Oliveira",
+  "Souza",
+  "Rodrigues",
+  "Ferreira",
+  "Alves",
+  "Pereira",
+  "Lima",
+  "Costa",
 ];
 
-const gradeLevels = ['1º Ano', '2º Ano', '3º Ano', '4º Ano', '5º Ano', '6º Ano', '7º Ano', '8º Ano', '9º Ano'];
-const sections = ['A', 'B', 'C'];
+const subjects = [
+  { name: "Matemática", code: "MAT" },
+  { name: "Português", code: "POR" },
+  { name: "História", code: "HIS" },
+  { name: "Geografia", code: "GEO" },
+  { name: "Ciências", code: "CIE" },
+  { name: "Física", code: "FIS" },
+  { name: "Química", code: "QUI" },
+  { name: "Biologia", code: "BIO" },
+  { name: "Inglês", code: "ING" },
+  { name: "Educação Física", code: "EDF" },
+];
+
+const gradeLevels = [
+  "1º Ano",
+  "2º Ano",
+  "3º Ano",
+  "4º Ano",
+  "5º Ano",
+  "6º Ano",
+  "7º Ano",
+  "8º Ano",
+  "9º Ano",
+];
+const sections = ["A", "B", "C"];
 
 function randomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
 
 function randomDate(start: Date, end: Date): Date {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+  return new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime())
+  );
 }
 
 /**
@@ -61,23 +106,11 @@ function dueDateMonthsFromNow(offset: number, day = 10): Date {
   return schoolDate(now.getFullYear(), now.getMonth() + 1 + offset, day);
 }
 
-function randomScore(): number {
-  return Math.floor(Math.random() * 41) + 60; // 60-100
-}
-
-function getGradeLetter(score: number): string {
-  if (score >= 90) return 'A';
-  if (score >= 80) return 'B';
-  if (score >= 70) return 'C';
-  if (score >= 60) return 'D';
-  return 'F';
-}
-
 async function main() {
-  console.log('🌱 Iniciando seed do banco de dados...');
+  console.log("🌱 Iniciando seed do banco de dados...");
 
   // Limpar banco de dados
-  console.log('🗑️  Limpando banco de dados...');
+  console.log("🗑️  Limpando banco de dados...");
 
   // 🆕 Novas tabelas - Módulos Avançados
   await prisma.generatedDocument.deleteMany();
@@ -117,121 +150,146 @@ async function main() {
   await prisma.academicYear.deleteMany();
   await prisma.settings.deleteMany();
 
-  const hashedPassword = await bcrypt.hash('password123', 10);
+  const hashedPassword = await bcrypt.hash("password123", 10);
 
   // 0. Criar configurações do sistema
-  console.log('⚙️  Criando configurações do sistema...');
+  console.log("⚙️  Criando configurações do sistema...");
   await prisma.settings.createMany({
     data: [
       {
-        key: 'default_tuition_monthly',
-        value: '1500',
-        label: 'Mensalidade Padrão',
-        type: 'number',
+        key: "default_tuition_monthly",
+        value: "1500",
+        label: "Mensalidade Padrão",
+        type: "number",
       },
       {
-        key: 'hour_rate',
-        value: '50',
-        label: 'Valor da Hora-Aula',
-        type: 'number',
+        key: "hour_rate",
+        value: "50",
+        label: "Valor da Hora-Aula",
+        type: "number",
       },
       {
-        key: 'enrollment_fee',
-        value: '300',
-        label: 'Taxa de Matrícula',
-        type: 'number',
+        key: "enrollment_fee",
+        value: "300",
+        label: "Taxa de Matrícula",
+        type: "number",
       },
       {
-        key: 'material_fee',
-        value: '200',
-        label: 'Taxa de Material Escolar',
-        type: 'number',
+        key: "material_fee",
+        value: "200",
+        label: "Taxa de Material Escolar",
+        type: "number",
       },
       {
-        key: 'late_payment_fine_percentage',
-        value: '2',
-        label: 'Multa por Atraso (%)',
-        type: 'number',
+        key: "late_payment_fine_percentage",
+        value: "2",
+        label: "Multa por Atraso (%)",
+        type: "number",
       },
       {
-        key: 'late_payment_interest_daily',
-        value: '0.033',
-        label: 'Juros Diário (%)',
-        type: 'number',
+        key: "late_payment_interest_daily",
+        value: "0.033",
+        label: "Juros Diário (%)",
+        type: "number",
       },
       {
-        key: 'auto_generate_billing',
-        value: 'true',
-        label: 'Gerar Cobrança Automaticamente',
-        type: 'boolean',
+        key: "auto_generate_billing",
+        value: "true",
+        label: "Gerar Cobrança Automaticamente",
+        type: "boolean",
       },
       {
-        key: 'billing_due_day',
-        value: '10',
-        label: 'Dia de Vencimento das Mensalidades',
-        type: 'number',
+        key: "billing_due_day",
+        value: "10",
+        label: "Dia de Vencimento das Mensalidades",
+        type: "number",
       },
       {
-        key: 'school_name',
-        value: 'Escola D\'Ávilla',
-        label: 'Nome da Escola',
-        type: 'text',
+        key: "school_name",
+        value: "Escola D'Ávilla",
+        label: "Nome da Escola",
+        type: "text",
       },
       {
-        key: 'school_cnpj',
-        value: '12.345.678/0001-90',
-        label: 'CNPJ da Escola',
-        type: 'text',
+        key: "school_cnpj",
+        value: "12.345.678/0001-90",
+        label: "CNPJ da Escola",
+        type: "text",
       },
     ],
   });
 
   // 1. Criar usuário admin
-  console.log('👤 Criando usuário admin...');
+  console.log("👤 Criando usuário admin...");
   const adminUser = await prisma.user.create({
     data: {
-      email: 'admin@davilla.com',
+      email: "admin@davilla.com",
       password: hashedPassword,
       role: UserRole.ADMIN,
       isActive: true,
     },
   });
 
-  const adminEmployee = await prisma.employee.create({
-    data: {
-      employeeId: 'EMP001',
-      userId: adminUser.id,
-      firstName: 'Administrador',
-      lastName: 'Sistema',
-      dateOfBirth: new Date('1980-01-01'),
-      gender: Gender.MALE,
-      phoneNumber: '(11) 99999-9999',
-      address: 'Rua Principal, 100',
-      employeeType: EmployeeType.PRINCIPAL,
-      position: 'Diretor',
-      department: 'Administração',
-      salary: 15000,
-    },
-  });
-
   // Create additional staff members
-  console.log('👥 Criando equipe de apoio...');
+  console.log("👥 Criando equipe de apoio...");
   // `role` is the login role: support staff must not get admin access.
   const staffMembers = [
-    { type: EmployeeType.COORDINATOR, position: 'Coordenador Pedagógico', salary: 8000, role: UserRole.COORDINATOR },
-    { type: EmployeeType.ADMINISTRATIVE, position: 'Secretário', salary: 4000, role: UserRole.SECRETARY },
-    { type: EmployeeType.ADMINISTRATIVE, position: 'Analista Financeiro', salary: 5000, role: UserRole.FINANCE },
-    { type: EmployeeType.PSYCHOLOGIST, position: 'Psicólogo Escolar', salary: 6000, role: UserRole.STAFF },
-    { type: EmployeeType.CLASSROOM_ASSISTANT, position: 'Auxiliar de Sala', salary: 3000, role: UserRole.STAFF },
-    { type: EmployeeType.HALLWAY_ASSISTANT, position: 'Auxiliar de Corredor', salary: 2800, role: UserRole.STAFF },
-    { type: EmployeeType.MAINTENANCE, position: 'Zelador', salary: 2500, role: UserRole.STAFF },
-    { type: EmployeeType.CLEANING, position: 'Auxiliar de Limpeza', salary: 2300, role: UserRole.STAFF },
+    {
+      type: EmployeeType.COORDINATOR,
+      position: "Coordenador Pedagógico",
+      salary: 8000,
+      role: UserRole.COORDINATOR,
+    },
+    {
+      type: EmployeeType.ADMINISTRATIVE,
+      position: "Secretário",
+      salary: 4000,
+      role: UserRole.SECRETARY,
+    },
+    {
+      type: EmployeeType.ADMINISTRATIVE,
+      position: "Analista Financeiro",
+      salary: 5000,
+      role: UserRole.FINANCE,
+    },
+    {
+      type: EmployeeType.PSYCHOLOGIST,
+      position: "Psicólogo Escolar",
+      salary: 6000,
+      role: UserRole.STAFF,
+    },
+    {
+      type: EmployeeType.CLASSROOM_ASSISTANT,
+      position: "Auxiliar de Sala",
+      salary: 3000,
+      role: UserRole.STAFF,
+    },
+    {
+      type: EmployeeType.HALLWAY_ASSISTANT,
+      position: "Auxiliar de Corredor",
+      salary: 2800,
+      role: UserRole.STAFF,
+    },
+    {
+      type: EmployeeType.MAINTENANCE,
+      position: "Zelador",
+      salary: 2500,
+      role: UserRole.STAFF,
+    },
+    {
+      type: EmployeeType.CLEANING,
+      position: "Auxiliar de Limpeza",
+      salary: 2300,
+      role: UserRole.STAFF,
+    },
   ];
 
   for (let i = 0; i < staffMembers.length; i++) {
     const staff = staffMembers[i];
     const gender = i % 2 === 0 ? Gender.FEMALE : Gender.MALE;
-    const firstName = randomItem(firstNames[gender === Gender.MALE ? 'male' : 'female']);
+    const firstName = randomItem(
+      firstNames[gender === Gender.MALE ? "male" : "female"]
+    );
     const lastName = randomItem(lastNames);
 
     const staffUser = await prisma.user.create({
@@ -245,24 +303,24 @@ async function main() {
 
     await prisma.employee.create({
       data: {
-        employeeId: `STAFF${String(i + 1).padStart(3, '0')}`,
+        employeeId: `STAFF${String(i + 1).padStart(3, "0")}`,
         userId: staffUser.id,
         firstName,
         lastName,
-        dateOfBirth: randomDate(new Date('1975-01-01'), new Date('1995-12-31')),
+        dateOfBirth: randomDate(new Date("1975-01-01"), new Date("1995-12-31")),
         gender,
         phoneNumber: `(11) 9${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
         address: `Rua ${randomItem(lastNames)}, ${Math.floor(Math.random() * 900 + 100)}`,
         employeeType: staff.type,
         position: staff.position,
-        department: 'Apoio',
+        department: "Apoio",
         salary: staff.salary,
       },
     });
   }
 
   // 2. Criar matérias
-  console.log('📚 Criando matérias...');
+  console.log("📚 Criando matérias...");
   const createdSubjects = [];
   for (const subject of subjects) {
     for (const gradeLevel of gradeLevels) {
@@ -280,14 +338,16 @@ async function main() {
   }
 
   // 3. Criar professores
-  console.log('👨‍🏫 Criando professores...');
+  console.log("👨‍🏫 Criando professores...");
   // subjectId -> professores habilitados, para montar a grade curricular.
   const teacherSubjectMap = new Map<string, string[]>();
   const teachers = [];
   const teacherCount = 15;
   for (let i = 1; i <= teacherCount; i++) {
     const gender = i % 2 === 0 ? Gender.FEMALE : Gender.MALE;
-    const firstName = randomItem(firstNames[gender === Gender.MALE ? 'male' : 'female']);
+    const firstName = randomItem(
+      firstNames[gender === Gender.MALE ? "male" : "female"]
+    );
     const lastName = randomItem(lastNames);
 
     const teacherUser = await prisma.user.create({
@@ -301,17 +361,17 @@ async function main() {
 
     const employee = await prisma.employee.create({
       data: {
-        employeeId: `PROF${String(i).padStart(3, '0')}`,
+        employeeId: `PROF${String(i).padStart(3, "0")}`,
         userId: teacherUser.id,
         firstName,
         lastName,
-        dateOfBirth: randomDate(new Date('1975-01-01'), new Date('1995-12-31')),
+        dateOfBirth: randomDate(new Date("1975-01-01"), new Date("1995-12-31")),
         gender,
         phoneNumber: `(11) 9${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
         address: `Rua ${randomItem(lastNames)}, ${Math.floor(Math.random() * 900 + 100)}`,
         employeeType: EmployeeType.TEACHER,
-        position: 'Professor',
-        department: 'Ensino',
+        position: "Professor",
+        department: "Ensino",
         salary: Math.floor(Math.random() * 5000) + 5000,
       },
     });
@@ -319,7 +379,12 @@ async function main() {
     const teacher = await prisma.teacher.create({
       data: {
         employeeId: employee.id,
-        qualification: randomItem(['Licenciatura', 'Bacharelado', 'Mestrado', 'Doutorado']),
+        qualification: randomItem([
+          "Licenciatura",
+          "Bacharelado",
+          "Mestrado",
+          "Doutorado",
+        ]),
         specialization: randomItem(subjects).name,
         experience: Math.floor(Math.random() * 20) + 1,
       },
@@ -351,17 +416,21 @@ async function main() {
   }
 
   // 4. Criar pais e alunos
-  console.log('👨‍👩‍👧‍👦 Criando pais e alunos...');
+  console.log("👨‍👩‍👧‍👦 Criando pais e alunos...");
   const students = [];
 
   for (let i = 1; i <= 50; i++) {
     const gender = i % 2 === 0 ? Gender.FEMALE : Gender.MALE;
-    const firstName = randomItem(firstNames[gender === Gender.MALE ? 'male' : 'female']);
+    const firstName = randomItem(
+      firstNames[gender === Gender.MALE ? "male" : "female"]
+    );
     const lastName = randomItem(lastNames);
 
     // Criar pai/mãe
     const parentGender = Math.random() > 0.5 ? Gender.MALE : Gender.FEMALE;
-    const parentFirstName = randomItem(firstNames[parentGender === Gender.MALE ? 'male' : 'female']);
+    const parentFirstName = randomItem(
+      firstNames[parentGender === Gender.MALE ? "male" : "female"]
+    );
 
     const parentUser = await prisma.user.create({
       data: {
@@ -379,7 +448,14 @@ async function main() {
         lastName: lastName,
         phoneNumber: `(11) 9${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
         address: `Rua ${randomItem(lastNames)}, ${Math.floor(Math.random() * 900 + 100)}`,
-        occupation: randomItem(['Engenheiro', 'Médico', 'Professor', 'Empresário', 'Advogado', 'Contador']),
+        occupation: randomItem([
+          "Engenheiro",
+          "Médico",
+          "Professor",
+          "Empresário",
+          "Advogado",
+          "Contador",
+        ]),
       },
     });
 
@@ -398,11 +474,11 @@ async function main() {
 
     const student = await prisma.student.create({
       data: {
-        studentId: `EST${String(i).padStart(4, '0')}`,
+        studentId: `EST${String(i).padStart(4, "0")}`,
         userId: studentUser.id,
         firstName,
         lastName,
-        dateOfBirth: randomDate(new Date('2008-01-01'), new Date('2018-12-31')),
+        dateOfBirth: randomDate(new Date("2008-01-01"), new Date("2018-12-31")),
         gender,
         address: `Rua ${randomItem(lastNames)}, ${Math.floor(Math.random() * 900 + 100)}`,
         phoneNumber: `(11) 9${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`,
@@ -416,7 +492,7 @@ async function main() {
   }
 
   // 5. Ano letivo corrente
-  console.log('📆 Criando ano letivo...');
+  console.log("📆 Criando ano letivo...");
   const year = new Date().getFullYear();
   const academicYear = await prisma.academicYear.create({
     data: {
@@ -424,12 +500,12 @@ async function main() {
       startDate: schoolDate(year, 2, 1),
       endDate: schoolDate(year, 12, 20),
       isCurrent: true,
-      status: 'ACTIVE',
+      status: "ACTIVE",
     },
   });
 
   // 6. Turmas: uma por série/seção, dentro do ano letivo
-  console.log('🏫 Criando turmas...');
+  console.log("🏫 Criando turmas...");
   const classes = [];
   for (const gradeLevel of gradeLevels) {
     for (const section of sections) {
@@ -440,7 +516,7 @@ async function main() {
           section,
           academicYearId: academicYear.id,
           roomNumber: `${Math.floor(Math.random() * 3) + 1}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`,
-          schedule: 'Segunda a Sexta, 7h-12h',
+          schedule: "Segunda a Sexta, 7h-12h",
           capacity: 30,
         },
       });
@@ -451,7 +527,7 @@ async function main() {
 
   // 7. Grade curricular: quem leciona o quê em cada turma. É isto que autoriza
   // um professor a lançar nota e chamada.
-  console.log('📘 Montando grade curricular...');
+  console.log("📘 Montando grade curricular...");
   let assignmentCount = 0;
   for (const classData of classes) {
     const gradeSubjects = createdSubjects.filter(
@@ -476,10 +552,11 @@ async function main() {
   console.log(`   ${assignmentCount} vínculos turma/disciplina/professor`);
 
   // 8. Matricular alunos nas turmas
-  console.log('📝 Matriculando alunos...');
+  console.log("📝 Matriculando alunos...");
   for (const student of students) {
     const studentClass = classes.find(
-      c => c.gradeLevel === student.gradeLevel && c.section === student.section
+      (c) =>
+        c.gradeLevel === student.gradeLevel && c.section === student.section
     );
 
     if (studentClass) {
@@ -490,45 +567,53 @@ async function main() {
           academicYearId: academicYear.id,
           gradeLevel: studentClass.gradeLevel,
           section: studentClass.section,
-          status: 'ACTIVE',
+          status: "ACTIVE",
         },
       });
     }
   }
 
   // 12. Criar despesas
-  console.log('💸 Criando despesas...');
-  const expenseCategories = ['Salários', 'Manutenção', 'Material Didático', 'Infraestrutura', 'Serviços'];
+  console.log("💸 Criando despesas...");
+  const expenseCategories = [
+    "Salários",
+    "Manutenção",
+    "Material Didático",
+    "Infraestrutura",
+    "Serviços",
+  ];
   for (let i = 0; i < 30; i++) {
     await prisma.expense.create({
       data: {
         category: randomItem(expenseCategories),
         description: `Despesa ${i + 1}`,
         amount: Math.floor(Math.random() * 10000) + 1000,
-        date: randomDate(new Date('2026-01-01'), new Date()),
-        paymentMethod: randomItem(['Transferência', 'Boleto', 'Cheque']),
+        date: randomDate(new Date("2026-01-01"), new Date()),
+        paymentMethod: randomItem(["Transferência", "Boleto", "Cheque"]),
       },
     });
   }
 
   // 13. Criar anúncios
-  console.log('📢 Criando anúncios...');
+  console.log("📢 Criando anúncios...");
   await prisma.announcement.create({
     data: {
-      title: 'Bem-vindos ao D\'Ávilla!',
-      content: 'Estamos felizes em tê-los conosco neste ano letivo de 2026. Desejamos a todos um excelente ano de aprendizado e crescimento.',
-      priority: 'high',
+      title: "Bem-vindos ao D'Ávilla!",
+      content:
+        "Estamos felizes em tê-los conosco neste ano letivo de 2026. Desejamos a todos um excelente ano de aprendizado e crescimento.",
+      priority: "high",
       createdBy: adminUser.id,
     },
   });
 
   await prisma.announcement.create({
     data: {
-      title: 'Reunião de Pais e Mestres',
-      content: 'A reunião de pais e mestres será realizada no dia 20 de março às 19h. Contamos com a presença de todos!',
-      targetRole: 'PARENT',
-      priority: 'normal',
-      expiresAt: new Date('2026-03-20'),
+      title: "Reunião de Pais e Mestres",
+      content:
+        "A reunião de pais e mestres será realizada no dia 20 de março às 19h. Contamos com a presença de todos!",
+      targetRole: "PARENT",
+      priority: "normal",
+      expiresAt: new Date("2026-03-20"),
       createdBy: adminUser.id,
     },
   });
@@ -537,54 +622,54 @@ async function main() {
   // 🆕 MÓDULO 1: MATRÍCULA DIGITAL
   // ============================================
 
-  console.log('📝 Criando solicitações de matrícula...');
+  console.log("📝 Criando solicitações de matrícula...");
 
   // Criar algumas solicitações de matrícula pendentes
   const enrollmentRequests = [
     {
       status: EnrollmentRequestStatus.PENDING,
-      studentFirstName: 'Lucas',
-      studentLastName: 'Mendes',
+      studentFirstName: "Lucas",
+      studentLastName: "Mendes",
       gender: Gender.MALE,
-      gradeLevel: '6º Ano',
-      financialGuardianFirstName: 'Roberto',
-      financialGuardianLastName: 'Mendes',
-      financialGuardianCPF: '123.456.789-01',
-      financialGuardianPhone: '(11) 98888-8888',
-      financialGuardianEmail: 'roberto.mendes@email.com',
+      gradeLevel: "6º Ano",
+      financialGuardianFirstName: "Roberto",
+      financialGuardianLastName: "Mendes",
+      financialGuardianCPF: "123.456.789-01",
+      financialGuardianPhone: "(11) 98888-8888",
+      financialGuardianEmail: "roberto.mendes@email.com",
       isSameGuardian: true,
     },
     {
       status: EnrollmentRequestStatus.UNDER_REVIEW,
-      studentFirstName: 'Isabella',
-      studentLastName: 'Rocha',
+      studentFirstName: "Isabella",
+      studentLastName: "Rocha",
       gender: Gender.FEMALE,
-      gradeLevel: '7º Ano',
-      financialGuardianFirstName: 'Marcos',
-      financialGuardianLastName: 'Rocha',
-      financialGuardianCPF: '234.567.890-12',
-      financialGuardianPhone: '(11) 97777-7777',
-      financialGuardianEmail: 'marcos.rocha@email.com',
-      pedagogicalGuardianFirstName: 'Sandra',
-      pedagogicalGuardianLastName: 'Rocha',
-      pedagogicalGuardianCPF: '345.678.901-23',
-      pedagogicalGuardianPhone: '(11) 97777-7778',
-      pedagogicalGuardianEmail: 'sandra.rocha@email.com',
+      gradeLevel: "7º Ano",
+      financialGuardianFirstName: "Marcos",
+      financialGuardianLastName: "Rocha",
+      financialGuardianCPF: "234.567.890-12",
+      financialGuardianPhone: "(11) 97777-7777",
+      financialGuardianEmail: "marcos.rocha@email.com",
+      pedagogicalGuardianFirstName: "Sandra",
+      pedagogicalGuardianLastName: "Rocha",
+      pedagogicalGuardianCPF: "345.678.901-23",
+      pedagogicalGuardianPhone: "(11) 97777-7778",
+      pedagogicalGuardianEmail: "sandra.rocha@email.com",
       isSameGuardian: false,
       reviewedBy: adminUser.id,
       reviewedAt: new Date(),
     },
     {
       status: EnrollmentRequestStatus.APPROVED,
-      studentFirstName: 'Miguel',
-      studentLastName: 'Cardoso',
+      studentFirstName: "Miguel",
+      studentLastName: "Cardoso",
       gender: Gender.MALE,
-      gradeLevel: '3º Ano',
-      financialGuardianFirstName: 'Patricia',
-      financialGuardianLastName: 'Cardoso',
-      financialGuardianCPF: '456.789.012-34',
-      financialGuardianPhone: '(11) 96666-6666',
-      financialGuardianEmail: 'patricia.cardoso@email.com',
+      gradeLevel: "3º Ano",
+      financialGuardianFirstName: "Patricia",
+      financialGuardianLastName: "Cardoso",
+      financialGuardianCPF: "456.789.012-34",
+      financialGuardianPhone: "(11) 96666-6666",
+      financialGuardianEmail: "patricia.cardoso@email.com",
       isSameGuardian: true,
       reviewedBy: adminUser.id,
       reviewedAt: new Date(),
@@ -595,14 +680,14 @@ async function main() {
     const req = enrollmentRequests[i];
     await prisma.enrollmentRequest.create({
       data: {
-        requestNumber: `ENR-2026-${String(i + 1).padStart(4, '0')}`,
+        requestNumber: `ENR-2026-${String(i + 1).padStart(4, "0")}`,
         status: req.status,
         studentFirstName: req.studentFirstName,
         studentLastName: req.studentLastName,
-        dateOfBirth: randomDate(new Date('2010-01-01'), new Date('2018-12-31')),
+        dateOfBirth: randomDate(new Date("2010-01-01"), new Date("2018-12-31")),
         gender: req.gender,
         gradeLevel: req.gradeLevel,
-        section: 'A',
+        section: "A",
         financialGuardianFirstName: req.financialGuardianFirstName,
         financialGuardianLastName: req.financialGuardianLastName,
         financialGuardianCPF: req.financialGuardianCPF,
@@ -615,8 +700,8 @@ async function main() {
         pedagogicalGuardianEmail: req.pedagogicalGuardianEmail,
         isSameGuardian: req.isSameGuardian,
         address: `Rua ${randomItem(lastNames)}, ${Math.floor(Math.random() * 900 + 100)}`,
-        city: 'São Paulo',
-        state: 'SP',
+        city: "São Paulo",
+        state: "SP",
         zipCode: `${Math.floor(Math.random() * 90000 + 10000)}-${Math.floor(Math.random() * 900 + 100)}`,
         reviewedBy: req.reviewedBy,
         reviewedAt: req.reviewedAt,
@@ -625,7 +710,7 @@ async function main() {
   }
 
   // Criar relacionamentos de responsáveis (FINANCIAL/PEDAGOGICAL)
-  console.log('👨‍👩‍👧 Criando relacionamentos de responsáveis...');
+  console.log("👨‍👩‍👧 Criando relacionamentos de responsáveis...");
 
   // Para os primeiros 10 alunos, criar relacionamentos explícitos
   for (let i = 0; i < Math.min(10, students.length); i++) {
@@ -647,13 +732,13 @@ async function main() {
   // 🆕 MÓDULO 2: GESTÃO ACADÊMICA
   // ============================================
 
-  console.log('📚 Criando tipos de avaliação...');
+  console.log("📚 Criando tipos de avaliação...");
 
   const assessmentTypes = [
-    { name: 'Prova Bimestral', code: 'P1', weight: 0.4, maxScore: 10 },
-    { name: 'Trabalho em Grupo', code: 'TG', weight: 0.3, maxScore: 10 },
-    { name: 'Participação', code: 'PART', weight: 0.2, maxScore: 10 },
-    { name: 'Atividades', code: 'ATIV', weight: 0.1, maxScore: 10 },
+    { name: "Prova Bimestral", code: "P1", weight: 0.4, maxScore: 10 },
+    { name: "Trabalho em Grupo", code: "TG", weight: 0.3, maxScore: 10 },
+    { name: "Participação", code: "PART", weight: 0.2, maxScore: 10 },
+    { name: "Atividades", code: "ATIV", weight: 0.1, maxScore: 10 },
   ];
 
   const createdAssessmentTypes = [];
@@ -670,7 +755,7 @@ async function main() {
     createdAssessmentTypes.push(created);
   }
 
-  console.log('📊 Criando avaliações detalhadas...');
+  console.log("📊 Criando avaliações detalhadas...");
 
   // Criar algumas avaliações para os primeiros 20 alunos
   for (let i = 0; i < Math.min(20, students.length); i++) {
@@ -684,9 +769,9 @@ async function main() {
     if (!enrollment) continue;
 
     // Get subjects for this grade
-    const studentSubjects = createdSubjects.filter(
-      s => s.gradeLevel === student.gradeLevel
-    ).slice(0, 3); // Limit to 3 subjects
+    const studentSubjects = createdSubjects
+      .filter((s) => s.gradeLevel === student.gradeLevel)
+      .slice(0, 3); // Limit to 3 subjects
 
     for (const subject of studentSubjects) {
       // Find a teacher for this subject
@@ -694,9 +779,10 @@ async function main() {
         where: { subjectId: subject.id },
       });
 
-      const teacherSubject = teacherSubjects.length > 0
-        ? teacherSubjects[Math.floor(Math.random() * teacherSubjects.length)]
-        : null;
+      const teacherSubject =
+        teacherSubjects.length > 0
+          ? teacherSubjects[Math.floor(Math.random() * teacherSubjects.length)]
+          : null;
 
       // Create assessments for each type
       for (const assessmentType of createdAssessmentTypes) {
@@ -709,11 +795,11 @@ async function main() {
             classId: enrollment.classId,
             teacherId: teacherSubject?.teacherId,
             assessmentTypeId: assessmentType.id,
-            term: '1º Bimestre',
+            term: "1º Bimestre",
             academicYearId: academicYear.id,
             score: parseFloat(score.toFixed(2)),
             maxScore: assessmentType.maxScore,
-            grade: score >= 7 ? 'A' : score >= 6 ? 'B' : score >= 5 ? 'C' : 'D',
+            grade: score >= 7 ? "A" : score >= 6 ? "B" : score >= 5 ? "C" : "D",
             assessmentDate: randomDate(academicYear.startDate, new Date()),
           },
         });
@@ -721,7 +807,7 @@ async function main() {
     }
   }
 
-  console.log('📅 Criando registros de presença detalhados...');
+  console.log("📅 Criando registros de presença detalhados...");
 
   // Criar registros de presença para os primeiros 10 alunos (últimos 10 dias úteis)
   for (let i = 0; i < Math.min(10, students.length); i++) {
@@ -735,14 +821,14 @@ async function main() {
 
     // Get one subject for this student
     const studentSubject = createdSubjects.find(
-      s => s.gradeLevel === student.gradeLevel
+      (s) => s.gradeLevel === student.gradeLevel
     );
 
     if (!studentSubject) continue;
 
     // Last 10 business days
     let daysAdded = 0;
-    let currentDate = new Date();
+    const currentDate = new Date();
 
     while (daysAdded < 10) {
       // Skip weekends
@@ -751,7 +837,7 @@ async function main() {
         let status: AttendanceStatus;
 
         if (random > 0.95) status = AttendanceStatus.ABSENT;
-        else if (random > 0.90) status = AttendanceStatus.LATE;
+        else if (random > 0.9) status = AttendanceStatus.LATE;
         else status = AttendanceStatus.PRESENT;
 
         await prisma.attendanceRecord.create({
@@ -776,7 +862,7 @@ async function main() {
   // 🆕 MÓDULO 3: FINANCEIRO AVANÇADO
   // ============================================
 
-  console.log('💰 Criando cobranças para responsáveis...');
+  console.log("💰 Criando cobranças para responsáveis...");
 
   // Criar algumas cobranças (Billing) para os primeiros 20 pais
   const parentsWithBillings = await prisma.parent.findMany({
@@ -811,15 +897,17 @@ async function main() {
 
       const createdBilling = await prisma.billing.create({
         data: {
-          invoiceNumber: `BILL-${String(i * 3 + j + 1).padStart(6, '0')}`,
+          invoiceNumber: `BILL-${String(i * 3 + j + 1).padStart(6, "0")}`,
           parentId: parent.id,
-          type: 'TUITION',
-          description: 'Mensalidade escolar',
+          type: "TUITION",
+          description: "Mensalidade escolar",
           amount: 1500 + Math.random() * 500,
           dueDate: billing.dueDate,
           paidDate: billing.paidDate,
           status: billing.status,
-          paymentMethod: billing.paidDate ? randomItem(['PIX', 'Cartão', 'Boleto']) : null,
+          paymentMethod: billing.paidDate
+            ? randomItem(["PIX", "Cartão", "Boleto"])
+            : null,
         },
       });
 
@@ -832,10 +920,11 @@ async function main() {
             reminderType: ReminderType.EMAIL,
             status: ReminderStatus.DELIVERED,
             recipientName: `${parent.firstName} ${parent.lastName}`,
-            recipientEmail: parent.email || `${parent.firstName.toLowerCase()}@email.com`,
-            subject: 'Lembrete: Mensalidade em atraso',
-            message: `Prezado(a) ${parent.firstName}, identificamos que a mensalidade com vencimento em ${billing.dueDate.toLocaleDateString('pt-BR')} está em atraso. Por favor, regularize sua situação.`,
-            templateUsed: 'reminder_overdue',
+            recipientEmail:
+              parent.email || `${parent.firstName.toLowerCase()}@email.com`,
+            subject: "Lembrete: Mensalidade em atraso",
+            message: `Prezado(a) ${parent.firstName}, identificamos que a mensalidade com vencimento em ${billing.dueDate.toLocaleDateString("pt-BR")} está em atraso. Por favor, regularize sua situação.`,
+            templateUsed: "reminder_overdue",
             sentAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 dias atrás
             deliveredAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 60000),
           },
@@ -849,7 +938,7 @@ async function main() {
             recipientName: `${parent.firstName} ${parent.lastName}`,
             recipientPhone: parent.phoneNumber,
             message: `Olá ${parent.firstName}! Sua mensalidade está em atraso. Acesse o portal para regularizar.`,
-            templateUsed: 'reminder_whatsapp',
+            templateUsed: "reminder_whatsapp",
             sentAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 dias atrás
           },
         });
@@ -857,7 +946,7 @@ async function main() {
     }
   }
 
-  console.log('🔄 Criando renegociações...');
+  console.log("🔄 Criando renegociações...");
 
   // Criar algumas renegociações
   const overdueBillings = await prisma.billing.findMany({
@@ -875,8 +964,8 @@ async function main() {
         installments: 3,
         newDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
         renegotiatedBy: adminUser.id,
-        reason: 'Dificuldade financeira temporária',
-        notes: 'Acordo de parcelamento em 3x sem juros',
+        reason: "Dificuldade financeira temporária",
+        notes: "Acordo de parcelamento em 3x sem juros",
       },
     });
 
@@ -887,7 +976,7 @@ async function main() {
     });
   }
 
-  console.log('📞 Criando contatos financeiros...');
+  console.log("📞 Criando contatos financeiros...");
 
   // Criar contatos financeiros para os primeiros 15 pais
   for (let i = 0; i < Math.min(15, parentsWithBillings.length); i++) {
@@ -896,12 +985,12 @@ async function main() {
     await prisma.financialContact.create({
       data: {
         parentId: parent.id,
-        contactType: 'PRIMARY',
+        contactType: "PRIMARY",
         name: `${parent.firstName} ${parent.lastName}`,
         email: parent.email || `${parent.firstName.toLowerCase()}@email.com`,
         phoneNumber: parent.phoneNumber,
         whatsappNumber: parent.phoneNumber,
-        preferredMethod: randomItem(['EMAIL', 'WHATSAPP']),
+        preferredMethod: randomItem(["EMAIL", "WHATSAPP"]),
         isActive: true,
       },
     });
@@ -925,32 +1014,36 @@ async function main() {
   // 🆕 MÓDULO 4: PORTAL DE COMUNICAÇÃO
   // ============================================
 
-  console.log('📢 Criando ocorrências pedagógicas...');
+  console.log("📢 Criando ocorrências pedagógicas...");
 
   const occurrences = [
     {
       type: OccurrenceType.BEHAVIORAL,
       severity: OccurrenceSeverity.LOW,
-      title: 'Conversa em sala',
-      description: 'Aluno foi advertido por conversar durante a aula de matemática.',
+      title: "Conversa em sala",
+      description:
+        "Aluno foi advertido por conversar durante a aula de matemática.",
     },
     {
       type: OccurrenceType.POSITIVE,
       severity: OccurrenceSeverity.LOW,
-      title: 'Excelente participação',
-      description: 'Aluno demonstrou excelente participação e ajudou colegas com dificuldade.',
+      title: "Excelente participação",
+      description:
+        "Aluno demonstrou excelente participação e ajudou colegas com dificuldade.",
     },
     {
       type: OccurrenceType.ACADEMIC,
       severity: OccurrenceSeverity.MEDIUM,
-      title: 'Tarefa não entregue',
-      description: 'Aluno não entregou a tarefa de casa pela terceira vez consecutiva.',
+      title: "Tarefa não entregue",
+      description:
+        "Aluno não entregou a tarefa de casa pela terceira vez consecutiva.",
     },
     {
       type: OccurrenceType.ATTENDANCE,
       severity: OccurrenceSeverity.HIGH,
-      title: 'Faltas excessivas',
-      description: 'Aluno ultrapassou 10% de faltas no bimestre. Responsável será convocado.',
+      title: "Faltas excessivas",
+      description:
+        "Aluno ultrapassou 10% de faltas no bimestre. Responsável será convocado.",
     },
   ];
 
@@ -967,14 +1060,17 @@ async function main() {
         description: occurrence.description,
         reportedBy: teachers[i % teachers.length]?.id || adminUser.id,
         reportedByName: `Prof. ${randomItem(firstNames.male)} ${randomItem(lastNames)}`,
-        date: randomDate(new Date('2026-02-01'), new Date()),
+        date: randomDate(new Date("2026-02-01"), new Date()),
         parentNotified: Math.random() > 0.5,
-        parentViewedAt: Math.random() > 0.7 ? randomDate(new Date('2026-02-10'), new Date()) : null,
+        parentViewedAt:
+          Math.random() > 0.7
+            ? randomDate(new Date("2026-02-10"), new Date())
+            : null,
       },
     });
   }
 
-  console.log('💬 Criando threads de comunicação...');
+  console.log("💬 Criando threads de comunicação...");
 
   // Criar algumas threads de comunicação
   for (let i = 0; i < 5; i++) {
@@ -983,17 +1079,17 @@ async function main() {
     const thread = await prisma.communicationThread.create({
       data: {
         subject: randomItem([
-          'Dúvida sobre tarefa de casa',
-          'Solicitação de reunião',
-          'Feedback sobre desempenho',
-          'Informação sobre evento',
+          "Dúvida sobre tarefa de casa",
+          "Solicitação de reunião",
+          "Feedback sobre desempenho",
+          "Informação sobre evento",
         ]),
         senderId: parent.userId,
         senderName: `${parent.firstName} ${parent.lastName}`,
-        senderRole: 'PARENT',
+        senderRole: "PARENT",
         recipientId: adminUser.id,
-        recipientName: 'Coordenação Pedagógica',
-        recipientRole: 'ADMIN',
+        recipientName: "Coordenação Pedagógica",
+        recipientRole: "ADMIN",
         lastMessageAt: new Date(),
       },
     });
@@ -1007,10 +1103,12 @@ async function main() {
         data: {
           threadId: thread.id,
           senderId: isFromParent ? parent.userId : adminUser.id,
-          senderName: isFromParent ? `${parent.firstName} ${parent.lastName}` : 'Coordenação',
+          senderName: isFromParent
+            ? `${parent.firstName} ${parent.lastName}`
+            : "Coordenação",
           content: isFromParent
-            ? 'Gostaria de agendar uma reunião para conversar sobre o desempenho do meu filho.'
-            : 'Claro! Temos disponibilidade na próxima terça-feira às 14h. Confirma?',
+            ? "Gostaria de agendar uma reunião para conversar sobre o desempenho do meu filho."
+            : "Claro! Temos disponibilidade na próxima terça-feira às 14h. Confirma?",
           isRead: Math.random() > 0.3,
           readAt: Math.random() > 0.5 ? new Date() : null,
         },
@@ -1022,13 +1120,13 @@ async function main() {
   // 🆕 MÓDULO 5: GERADOR DE DOCUMENTOS
   // ============================================
 
-  console.log('📄 Criando templates de documentos...');
+  console.log("📄 Criando templates de documentos...");
 
   const templates = [
     {
-      name: 'Declaração de Matrícula',
+      name: "Declaração de Matrícula",
       type: DocumentType.ENROLLMENT_DECLARATION,
-      description: 'Declaração padrão de matrícula do aluno',
+      description: "Declaração padrão de matrícula do aluno",
       htmlTemplate: `
         <html>
           <body>
@@ -1045,17 +1143,23 @@ async function main() {
         </html>
       `,
       availableVariables: JSON.stringify([
-        'student.fullName', 'student.cpf', 'student.dateOfBirth',
-        'student.gradeLevel', 'student.section', 'student.academicYear',
-        'parent.fullName', 'parent.cpf',
-        'school.name', 'school.cnpj',
-        'document.generatedDate',
+        "student.fullName",
+        "student.cpf",
+        "student.dateOfBirth",
+        "student.gradeLevel",
+        "student.section",
+        "student.academicYear",
+        "parent.fullName",
+        "parent.cpf",
+        "school.name",
+        "school.cnpj",
+        "document.generatedDate",
       ]),
     },
     {
-      name: 'Contrato de Prestação de Serviços',
+      name: "Contrato de Prestação de Serviços",
       type: DocumentType.SERVICE_CONTRACT,
-      description: 'Contrato padrão de prestação de serviços educacionais',
+      description: "Contrato padrão de prestação de serviços educacionais",
       htmlTemplate: `
         <html>
           <body>
@@ -1075,11 +1179,15 @@ async function main() {
         </html>
       `,
       availableVariables: JSON.stringify([
-        'student.fullName', 'student.gradeLevel',
-        'parent.fullName', 'parent.cpf',
-        'school.name', 'school.cnpj',
-        'tuition.amount', 'tuition.dueDay',
-        'document.generatedDate',
+        "student.fullName",
+        "student.gradeLevel",
+        "parent.fullName",
+        "parent.cpf",
+        "school.name",
+        "school.cnpj",
+        "tuition.amount",
+        "tuition.dueDay",
+        "document.generatedDate",
       ]),
     },
   ];
@@ -1097,7 +1205,7 @@ async function main() {
     });
   }
 
-  console.log('📝 Gerando documentos de exemplo...');
+  console.log("📝 Gerando documentos de exemplo...");
 
   // Gerar alguns documentos para os primeiros 5 alunos
   const documentTemplates = await prisma.documentTemplate.findMany();
@@ -1114,22 +1222,28 @@ async function main() {
         studentId: student.id,
         type: template.type,
         generatedHtml: template.htmlTemplate
-          .replace('{{student.fullName}}', `${student.firstName} ${student.lastName}`)
-          .replace('{{student.gradeLevel}}', student.gradeLevel)
-          .replace('{{document.generatedDate}}', new Date().toLocaleDateString('pt-BR')),
+          .replace(
+            "{{student.fullName}}",
+            `${student.firstName} ${student.lastName}`
+          )
+          .replace("{{student.gradeLevel}}", student.gradeLevel)
+          .replace(
+            "{{document.generatedDate}}",
+            new Date().toLocaleDateString("pt-BR")
+          ),
         generatedBy: adminUser.id,
         generatedAt: new Date(),
         metadata: JSON.stringify({
-          purpose: 'Transferência de escola',
-          requestedBy: 'Responsável',
+          purpose: "Transferência de escola",
+          requestedBy: "Responsável",
         }),
       },
     });
   }
 
-  console.log('✅ Seed concluído com sucesso!');
-  console.log('\n📊 Resumo:');
-  console.log('\n🎯 Dados Básicos:');
+  console.log("✅ Seed concluído com sucesso!");
+  console.log("\n📊 Resumo:");
+  console.log("\n🎯 Dados Básicos:");
   console.log(`  - ${await prisma.user.count()} usuários`);
   console.log(`  - ${await prisma.student.count()} alunos`);
   console.log(`  - ${await prisma.teacher.count()} professores`);
@@ -1139,41 +1253,65 @@ async function main() {
   console.log(`  - ${await prisma.enrollment.count()} matrículas`);
   console.log(`  - ${await prisma.expense.count()} despesas`);
 
-  console.log('\n🆕 Módulos Avançados:');
+  console.log("\n🆕 Módulos Avançados:");
   console.log(`  📝 Módulo 1 - Matrícula Digital:`);
-  console.log(`     - ${await prisma.enrollmentRequest.count()} solicitações de matrícula`);
-  console.log(`     - ${await prisma.guardianRelationship.count()} relacionamentos de responsáveis`);
+  console.log(
+    `     - ${await prisma.enrollmentRequest.count()} solicitações de matrícula`
+  );
+  console.log(
+    `     - ${await prisma.guardianRelationship.count()} relacionamentos de responsáveis`
+  );
 
   console.log(`  📚 Módulo 2 - Gestão Acadêmica:`);
-  console.log(`     - ${await prisma.assessmentType.count()} tipos de avaliação`);
-  console.log(`     - ${await prisma.assessment.count()} avaliações detalhadas`);
-  console.log(`     - ${await prisma.attendanceRecord.count()} registros de presença (novos)`);
+  console.log(
+    `     - ${await prisma.assessmentType.count()} tipos de avaliação`
+  );
+  console.log(
+    `     - ${await prisma.assessment.count()} avaliações detalhadas`
+  );
+  console.log(
+    `     - ${await prisma.attendanceRecord.count()} registros de presença (novos)`
+  );
 
   console.log(`  💰 Módulo 3 - Financeiro Avançado:`);
   console.log(`     - ${await prisma.billing.count()} cobranças (billings)`);
-  console.log(`     - ${await prisma.paymentReminder.count()} lembretes enviados`);
-  console.log(`     - ${await prisma.paymentRenegotiation.count()} renegociações`);
-  console.log(`     - ${await prisma.financialContact.count()} contatos financeiros`);
+  console.log(
+    `     - ${await prisma.paymentReminder.count()} lembretes enviados`
+  );
+  console.log(
+    `     - ${await prisma.paymentRenegotiation.count()} renegociações`
+  );
+  console.log(
+    `     - ${await prisma.financialContact.count()} contatos financeiros`
+  );
 
   console.log(`  📢 Módulo 4 - Portal de Comunicação:`);
-  console.log(`     - ${await prisma.occurrence.count()} ocorrências pedagógicas`);
-  console.log(`     - ${await prisma.communicationThread.count()} threads de comunicação`);
+  console.log(
+    `     - ${await prisma.occurrence.count()} ocorrências pedagógicas`
+  );
+  console.log(
+    `     - ${await prisma.communicationThread.count()} threads de comunicação`
+  );
   console.log(`     - ${await prisma.message.count()} mensagens`);
 
   console.log(`  📄 Módulo 5 - Gerador de Documentos:`);
-  console.log(`     - ${await prisma.documentTemplate.count()} templates de documentos`);
-  console.log(`     - ${await prisma.generatedDocument.count()} documentos gerados`);
+  console.log(
+    `     - ${await prisma.documentTemplate.count()} templates de documentos`
+  );
+  console.log(
+    `     - ${await prisma.generatedDocument.count()} documentos gerados`
+  );
 
-  console.log('\n🔑 Credenciais de acesso:');
-  console.log('  Admin: admin@davilla.com / password123');
-  console.log('  Professor: professor1@davilla.com / password123');
-  console.log('  Responsável: responsavel1@davilla.com / password123');
-  console.log('  Aluno: aluno1@davilla.com / password123');
+  console.log("\n🔑 Credenciais de acesso:");
+  console.log("  Admin: admin@davilla.com / password123");
+  console.log("  Professor: professor1@davilla.com / password123");
+  console.log("  Responsável: responsavel1@davilla.com / password123");
+  console.log("  Aluno: aluno1@davilla.com / password123");
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Erro durante o seed:', e);
+    console.error("❌ Erro durante o seed:", e);
     process.exit(1);
   })
   .finally(async () => {

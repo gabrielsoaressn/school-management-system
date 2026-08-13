@@ -34,7 +34,6 @@ export default async function ClassesPage() {
 
   return (
     <>
-
       <PageWrapper>
         <div className="mb-6">
           <BackButton href="/admin/dashboard" label="Voltar ao Dashboard" />
@@ -78,7 +77,10 @@ export default async function ClassesPage() {
               ).length;
 
               return (
-                <Link key={schoolClass.id} href={`/admin/classes/${schoolClass.id}`}>
+                <Link
+                  key={schoolClass.id}
+                  href={`/admin/classes/${schoolClass.id}`}
+                >
                   <Card hover className="h-full">
                     <div className="flex items-start justify-between">
                       <div>

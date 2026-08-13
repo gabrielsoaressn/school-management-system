@@ -38,10 +38,11 @@ import {
       </TableCell>
     </TableRow>
   </TableBody>
-</Table>
+</Table>;
 ```
 
 **Características:**
+
 - ✅ Header com fundo destacado (bg-muted)
 - ✅ Bordas sutis entre linhas
 - ✅ Hover effect opcional
@@ -84,6 +85,7 @@ import Input from "@/components/ui/Input";
 ```
 
 **Props:**
+
 - `label` - Label do campo
 - `error` - Mensagem de erro (muda a borda para vermelho)
 - `helperText` - Texto auxiliar (abaixo do input)
@@ -106,7 +108,7 @@ import Select from "@/components/ui/Select";
     { value: "3", label: "3º Ano" },
   ]}
   required
-/>
+/>;
 ```
 
 ---
@@ -133,14 +135,15 @@ import Badge from "@/components/ui/Badge";
 ```
 
 **Variantes Semânticas:**
-| Variante | Uso | Cor |
-|----------|-----|-----|
-| `success` | Ativo, Aprovado, Confirmado | Verde |
-| `warning` | Pendente, Aguardando, Alerta | Âmbar |
-| `destructive` | Inativo, Rejeitado, Erro | Vermelho |
-| `info` | Informação, Novo | Azul claro |
-| `primary` | Destaque principal | Azul corporativo |
-| `default` | Neutro | Cinza |
+
+| Variante      | Uso                          | Cor              |
+| ------------- | ---------------------------- | ---------------- |
+| `success`     | Ativo, Aprovado, Confirmado  | Verde            |
+| `warning`     | Pendente, Aguardando, Alerta | Âmbar            |
+| `destructive` | Inativo, Rejeitado, Erro     | Vermelho         |
+| `info`        | Informação, Novo             | Azul claro       |
+| `primary`     | Destaque principal           | Azul corporativo |
+| `default`     | Neutro                       | Cinza            |
 
 ---
 
@@ -154,10 +157,11 @@ import SearchBar from "@/components/ui/SearchBar";
   onSearch={(value) => console.log(value)}
   onClear={() => console.log("limpo!")}
   debounce={300}
-/>
+/>;
 ```
 
 **Características:**
+
 - ✅ Ícone de busca à esquerda
 - ✅ Botão X para limpar (aparece ao digitar)
 - ✅ Debounce automático (300ms padrão)
@@ -202,10 +206,11 @@ import Pagination from "@/components/ui/Pagination";
   currentPage={page}
   totalPages={10}
   onPageChange={(newPage) => setPage(newPage)}
-/>
+/>;
 ```
 
 **Características:**
+
 - ✅ Botões Anterior/Próxima com ícones
 - ✅ Indicador "Página X de Y"
 - ✅ Desabilita automaticamente quando no limite
@@ -319,16 +324,8 @@ import Card from "@/components/ui/Card";
 <Card>
   <form className="space-y-6">
     <div className="grid grid-cols-2 gap-4">
-      <Input
-        label="Primeiro Nome"
-        placeholder="João"
-        required
-      />
-      <Input
-        label="Sobrenome"
-        placeholder="Silva"
-        required
-      />
+      <Input label="Primeiro Nome" placeholder="João" required />
+      <Input label="Sobrenome" placeholder="Silva" required />
     </div>
 
     <Input
@@ -358,7 +355,7 @@ import Card from "@/components/ui/Card";
       </Button>
     </div>
   </form>
-</Card>
+</Card>;
 ```
 
 ---

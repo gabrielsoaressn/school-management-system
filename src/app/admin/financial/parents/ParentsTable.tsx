@@ -51,7 +51,7 @@ export default function ParentsTable() {
       } else {
         toast.error(data.error || "Erro ao carregar responsáveis");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao carregar responsáveis");
     } finally {
       setLoading(false);
@@ -66,14 +66,14 @@ export default function ParentsTable() {
     if (selectedIds.size === parents.length && !selectAll) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(parents.map(p => p.id)));
+      setSelectedIds(new Set(parents.map((p) => p.id)));
       setSelectAll(false);
     }
   };
 
   const handleSelectAllPages = () => {
     setSelectAll(true);
-    setSelectedIds(new Set(parents.map(p => p.id)));
+    setSelectedIds(new Set(parents.map((p) => p.id)));
   };
 
   const handleToggleSelect = (id: string) => {
@@ -118,7 +118,7 @@ export default function ParentsTable() {
       } else {
         toast.error(data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao excluir responsáveis");
     } finally {
       setIsDeleting(false);
@@ -141,14 +141,14 @@ export default function ParentsTable() {
             setSelectedIds(new Set());
             setSelectAll(false);
           }}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-black"
+          className="flex-1 rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
         />
 
         {selectedCount > 0 && (
           <button
             onClick={handleBulkDelete}
             disabled={isDeleting}
-            className="bg-black hover:bg-gray-800 text-white font-semibold py-2 px-6 rounded-sm transition disabled:opacity-50"
+            className="rounded-sm bg-black px-6 py-2 font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50"
           >
             {isDeleting ? "Excluindo..." : `Excluir (${selectedCount})`}
           </button>
@@ -156,22 +156,25 @@ export default function ParentsTable() {
       </div>
 
       {/* Selection Banner */}
-      {selectedIds.size > 0 && !selectAll && selectedIds.size === parents.length && totalPages > 1 && (
-        <div className="mb-4 bg-gray-100 border border-gray-300 rounded-sm p-3 flex justify-between items-center">
-          <span className="text-sm text-gray-700">
-            {selectedIds.size} responsável(is) selecionado(s) nesta página.
-          </span>
-          <button
-            onClick={handleSelectAllPages}
-            className="text-sm font-semibold text-black hover:underline"
-          >
-            Selecionar todos os {totalCount} responsáveis
-          </button>
-        </div>
-      )}
+      {selectedIds.size > 0 &&
+        !selectAll &&
+        selectedIds.size === parents.length &&
+        totalPages > 1 && (
+          <div className="mb-4 flex items-center justify-between rounded-sm border border-gray-300 bg-gray-100 p-3">
+            <span className="text-sm text-gray-700">
+              {selectedIds.size} responsável(is) selecionado(s) nesta página.
+            </span>
+            <button
+              onClick={handleSelectAllPages}
+              className="text-sm font-semibold text-black hover:underline"
+            >
+              Selecionar todos os {totalCount} responsáveis
+            </button>
+          </div>
+        )}
 
       {selectAll && (
-        <div className="mb-4 bg-black text-white rounded-sm p-3 flex justify-between items-center">
+        <div className="mb-4 flex items-center justify-between rounded-sm bg-black p-3 text-white">
           <span className="text-sm">
             Todos os {totalCount} responsáveis estão selecionados.
           </span>
@@ -189,11 +192,11 @@ export default function ParentsTable() {
 
       {/* Table */}
       {loading ? (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-gray-500">Carregando...</p>
         </div>
       ) : parents.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-gray-500">Nenhum responsável encontrado</p>
         </div>
       ) : (
@@ -201,22 +204,39 @@ export default function ParentsTable() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-100 border-b border-gray-200">
-                  <th className="text-left p-3">
+                <tr className="border-b border-gray-200 bg-gray-100">
+                  <th className="p-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedIds.size === parents.length && parents.length > 0}
+                      checked={
+                        selectedIds.size === parents.length &&
+                        parents.length > 0
+                      }
                       onChange={handleSelectAll}
-                      className="w-4 h-4 cursor-pointer"
+                      className="h-4 w-4 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Nome</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">CPF</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Telefone</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Email</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Alunos</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Status</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Ações</th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Nome
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    CPF
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Telefone
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Email
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Alunos
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Status
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -224,7 +244,7 @@ export default function ParentsTable() {
                   <tr
                     key={parent.id}
                     className={`border-b border-gray-200 hover:bg-gray-50 ${
-                      selectedIds.has(parent.id) ? 'bg-gray-50' : ''
+                      selectedIds.has(parent.id) ? "bg-gray-50" : ""
                     }`}
                   >
                     <td className="p-3">
@@ -232,7 +252,7 @@ export default function ParentsTable() {
                         type="checkbox"
                         checked={selectedIds.has(parent.id)}
                         onChange={() => handleToggleSelect(parent.id)}
-                        className="w-4 h-4 cursor-pointer"
+                        className="h-4 w-4 cursor-pointer"
                       />
                     </td>
                     <td className="p-3">
@@ -252,7 +272,7 @@ export default function ParentsTable() {
                     </td>
                     <td className="p-3">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${
+                        className={`rounded px-2 py-1 text-xs font-semibold ${
                           parent.user.isActive
                             ? "bg-gray-200 text-gray-900"
                             : "bg-gray-100 text-gray-500"
@@ -265,13 +285,13 @@ export default function ParentsTable() {
                       <div className="flex gap-2">
                         <Link
                           href={`/admin/financial/parents/${parent.id}`}
-                          className="text-black hover:text-gray-600 text-sm font-semibold"
+                          className="text-sm font-semibold text-black hover:text-gray-600"
                         >
                           Ver
                         </Link>
                         <Link
                           href={`/admin/financial/parents/${parent.id}/edit`}
-                          className="text-gray-600 hover:text-gray-800 text-sm font-semibold"
+                          className="text-sm font-semibold text-gray-600 hover:text-gray-800"
                         >
                           Editar
                         </Link>
@@ -289,7 +309,7 @@ export default function ParentsTable() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-black text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800"
+                className="rounded-sm bg-black px-4 py-2 text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Anterior
               </button>
@@ -299,7 +319,7 @@ export default function ParentsTable() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-black text-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800"
+                className="rounded-sm bg-black px-4 py-2 text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Próxima
               </button>

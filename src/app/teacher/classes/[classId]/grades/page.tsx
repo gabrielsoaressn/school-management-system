@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { PageWrapper } from '@/components/layout/PageWrapper';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { BackButton } from '@/components/ui/BackButton';
-import { Select } from '@/components/ui/Select';
-import { FileText, Save, Plus } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { PageWrapper } from "@/components/layout/PageWrapper";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { BackButton } from "@/components/ui/BackButton";
+import { Select } from "@/components/ui/Select";
+import { FileText, Save } from "lucide-react";
+import toast from "react-hot-toast";
 
 type Student = {
   id: string;
@@ -34,15 +34,14 @@ type AssessmentType = {
 
 type ScoreEntry = {
   studentId: string;
-  score: number | '';
+  score: number | "";
   remarks: string;
 };
 
-const TERMS = ['1º Bimestre', '2º Bimestre', '3º Bimestre', '4º Bimestre'];
+const TERMS = ["1º Bimestre", "2º Bimestre", "3º Bimestre", "4º Bimestre"];
 
 export default function GradesPage() {
   const params = useParams();
-  const router = useRouter();
   const classId = params.classId as string;
 
   const [classData, setClassData] = useState<any>(null);
@@ -53,9 +52,9 @@ export default function GradesPage() {
   const [saving, setSaving] = useState(false);
 
   // Filters
-  const [selectedSubject, setSelectedSubject] = useState('');
+  const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedTerm, setSelectedTerm] = useState(TERMS[0]);
-  const [selectedAssessmentType, setSelectedAssessmentType] = useState('');
+  const [selectedAssessmentType, setSelectedAssessmentType] = useState("");
   const [maxScore, setMaxScore] = useState(10);
 
   // Scores
@@ -71,13 +70,13 @@ export default function GradesPage() {
     }
   }, [selectedSubject, selectedTerm, selectedAssessmentType]);
 
-  const fetchInitialData = async () => {
+  async function fetchInitialData() {
     setLoading(true);
     try {
       const [classRes, subjectsRes, typesRes] = await Promise.all([
-        fetch('/api/teacher/classes'),
+        fetch("/api/teacher/classes"),
         fetch(`/api/teacher/subjects?classId=${classId}`),
-        fetch('/api/teacher/assessment-types'),
+        fetch("/api/teacher/assessment-types"),
       ]);
 
       const [classData, subjectsData, typesData] = await Promise.all([
@@ -90,15 +89,17 @@ export default function GradesPage() {
         const currentClass = classData.data.find((c: any) => c.id === classId);
         if (currentClass) {
           setClassData(currentClass);
-          const studentList = currentClass.enrollments.map((e: any) => e.student);
+          const studentList = currentClass.enrollments.map(
+            (e: any) => e.student
+          );
           setStudents(studentList);
 
           // Inicializar scores vazios
           setScores(
             studentList.map((s: Student) => ({
               studentId: s.id,
-              score: '',
-              remarks: '',
+              score: "",
+              remarks: "",
             }))
           );
         }
@@ -107,21 +108,21 @@ export default function GradesPage() {
       if (subjectsData.success) {
         setSubjects(subjectsData.data);
       } else {
-        toast.error(subjectsData.error || 'Erro ao carregar disciplinas');
+        toast.error(subjectsData.error || "Erro ao carregar disciplinas");
       }
 
       if (typesData.success) {
         setAssessmentTypes(typesData.data);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Erro ao carregar dados');
+      console.error("Error fetching data:", error);
+      toast.error("Erro ao carregar dados");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const fetchExistingGrades = async () => {
+  async function fetchExistingGrades() {
     try {
       const response = await fetch(
         `/api/teacher/assessments?classId=${classId}&subjectId=${selectedSubject}&term=${selectedTerm}`
@@ -143,12 +144,12 @@ export default function GradesPage() {
             ? {
                 studentId: student.id,
                 score: existing.score,
-                remarks: existing.remarks || '',
+                remarks: existing.remarks || "",
               }
             : {
                 studentId: student.id,
-                score: '',
-                remarks: '',
+                score: "",
+                remarks: "",
               };
         });
 
@@ -161,52 +162,54 @@ export default function GradesPage() {
         setScores(
           students.map((s) => ({
             studentId: s.id,
-            score: '',
-            remarks: '',
+            score: "",
+            remarks: "",
           }))
         );
       }
     } catch (error) {
-      console.error('Error fetching grades:', error);
+      console.error("Error fetching grades:", error);
     }
-  };
+  }
 
-  const updateScore = (studentId: string, score: string) => {
-    const numericScore = score === '' ? '' : parseFloat(score);
+  function updateScore(studentId: string, score: string) {
+    const numericScore = score === "" ? "" : parseFloat(score);
     setScores((prev) =>
       prev.map((entry) =>
-        entry.studentId === studentId ? { ...entry, score: numericScore } : entry
+        entry.studentId === studentId
+          ? { ...entry, score: numericScore }
+          : entry
       )
     );
-  };
+  }
 
-  const updateRemarks = (studentId: string, remarks: string) => {
+  function updateRemarks(studentId: string, remarks: string) {
     setScores((prev) =>
       prev.map((entry) =>
         entry.studentId === studentId ? { ...entry, remarks } : entry
       )
     );
-  };
+  }
 
-  const handleSave = async () => {
+  async function handleSave() {
     if (!selectedSubject || !selectedAssessmentType) {
-      toast.error('Selecione a disciplina e o tipo de avaliação');
+      toast.error("Selecione a disciplina e o tipo de avaliação");
       return;
     }
 
     // Filter only scores that have been filled
-    const filledScores = scores.filter((s) => s.score !== '');
+    const filledScores = scores.filter((s) => s.score !== "");
 
     if (filledScores.length === 0) {
-      toast.error('Preencha pelo menos uma nota');
+      toast.error("Preencha pelo menos uma nota");
       return;
     }
 
     setSaving(true);
     try {
-      const response = await fetch('/api/teacher/assessments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/teacher/assessments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subjectId: selectedSubject,
           classId,
@@ -224,31 +227,31 @@ export default function GradesPage() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success('Notas salvas com sucesso!');
+        toast.success("Notas salvas com sucesso!");
       } else {
-        toast.error(data.error || 'Erro ao salvar notas');
+        toast.error(data.error || "Erro ao salvar notas");
       }
     } catch (error) {
-      console.error('Error saving grades:', error);
-      toast.error('Erro ao salvar notas');
+      console.error("Error saving grades:", error);
+      toast.error("Erro ao salvar notas");
     } finally {
       setSaving(false);
     }
-  };
+  }
 
-  const calculateGrade = (score: number | ''): string => {
-    if (score === '') return '-';
+  const calculateGrade = (score: number | ""): string => {
+    if (score === "") return "-";
     const percentage = (Number(score) / maxScore) * 100;
-    if (percentage >= 90) return 'A';
-    if (percentage >= 80) return 'B';
-    if (percentage >= 70) return 'C';
-    if (percentage >= 60) return 'D';
-    return 'F';
+    if (percentage >= 90) return "A";
+    if (percentage >= 80) return "B";
+    if (percentage >= 70) return "C";
+    if (percentage >= 60) return "D";
+    return "F";
   };
 
   const calculateAverage = (): string => {
-    const filledScores = scores.filter((s) => s.score !== '');
-    if (filledScores.length === 0) return '-';
+    const filledScores = scores.filter((s) => s.score !== "");
+    if (filledScores.length === 0) return "-";
 
     const sum = filledScores.reduce((acc, s) => acc + Number(s.score), 0);
     const avg = sum / filledScores.length;
@@ -258,9 +261,9 @@ export default function GradesPage() {
   if (loading) {
     return (
       <PageWrapper>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
             <p className="text-gray-600">Carregando...</p>
           </div>
         </div>
@@ -273,20 +276,20 @@ export default function GradesPage() {
       <BackButton href="/teacher/dashboard" />
 
       <PageHeader
-        title={`Lançamento de Notas - ${classData?.name || 'Turma'}`}
+        title={`Lançamento de Notas - ${classData?.name || "Turma"}`}
         subtitle={`${classData?.gradeLevel} - Turma ${classData?.section}`}
         icon={FileText}
       />
 
       {/* Filters */}
       <Card className="mb-6 p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Select
             label="Disciplina *"
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
             options={[
-              { value: '', label: 'Selecione a disciplina' },
+              { value: "", label: "Selecione a disciplina" },
               ...subjects.map((s) => ({ value: s.id, label: s.name })),
             ]}
           />
@@ -307,7 +310,7 @@ export default function GradesPage() {
               if (type) setMaxScore(type.maxScore);
             }}
             options={[
-              { value: '', label: 'Selecione o tipo' },
+              { value: "", label: "Selecione o tipo" },
               ...assessmentTypes.map((t) => ({
                 value: t.id,
                 label: `${t.name} (Peso: ${t.weight})`,
@@ -316,7 +319,7 @@ export default function GradesPage() {
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Nota Máxima
             </label>
             <input
@@ -325,7 +328,7 @@ export default function GradesPage() {
               onChange={(e) => setMaxScore(Number(e.target.value))}
               min="0"
               step="0.1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -336,8 +339,8 @@ export default function GradesPage() {
             disabled={saving || !selectedSubject || !selectedAssessmentType}
             className="bg-green-600 hover:bg-green-700"
           >
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Salvando...' : 'Salvar Notas'}
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? "Salvando..." : "Salvar Notas"}
           </Button>
         </div>
       </Card>
@@ -347,67 +350,69 @@ export default function GradesPage() {
         <Card>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="border-b border-gray-200 bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                     Matrícula
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                     Aluno
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-center text-xs font-medium uppercase text-gray-500">
                     Nota (0-{maxScore})
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-center text-xs font-medium uppercase text-gray-500">
                     Conceito
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
                     Observações
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {students.map((student) => {
                   const entry = scores.find((s) => s.studentId === student.id);
-                  const score = entry?.score || '';
+                  const score = entry?.score || "";
                   const grade = calculateGrade(score);
 
                   return (
                     <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                         {student.studentId}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
                           {student.firstName} {student.lastName}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="whitespace-nowrap px-6 py-4">
                         <input
                           type="number"
                           value={score}
-                          onChange={(e) => updateScore(student.id, e.target.value)}
+                          onChange={(e) =>
+                            updateScore(student.id, e.target.value)
+                          }
                           min="0"
                           max={maxScore}
                           step="0.1"
                           placeholder="0.0"
-                          className="w-24 px-3 py-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-center focus:border-transparent focus:ring-2 focus:ring-blue-500"
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <td className="whitespace-nowrap px-6 py-4 text-center">
                         <span
-                          className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                            grade === 'A'
-                              ? 'bg-green-100 text-green-800'
-                              : grade === 'B'
-                              ? 'bg-blue-100 text-blue-800'
-                              : grade === 'C'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : grade === 'D'
-                              ? 'bg-orange-100 text-orange-800'
-                              : grade === 'F'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
+                          className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
+                            grade === "A"
+                              ? "bg-green-100 text-green-800"
+                              : grade === "B"
+                                ? "bg-blue-100 text-blue-800"
+                                : grade === "C"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : grade === "D"
+                                    ? "bg-orange-100 text-orange-800"
+                                    : grade === "F"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           {grade}
@@ -416,10 +421,12 @@ export default function GradesPage() {
                       <td className="px-6 py-4">
                         <input
                           type="text"
-                          value={entry?.remarks || ''}
-                          onChange={(e) => updateRemarks(student.id, e.target.value)}
+                          value={entry?.remarks || ""}
+                          onChange={(e) =>
+                            updateRemarks(student.id, e.target.value)
+                          }
                           placeholder="Observações..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500"
                         />
                       </td>
                     </tr>
@@ -430,22 +437,23 @@ export default function GradesPage() {
           </div>
 
           {/* Summary */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <div className="flex justify-between items-center">
+          <div className="border-t border-gray-200 bg-gray-50 px-6 py-4">
+            <div className="flex items-center justify-between">
               <div className="flex gap-6 text-sm">
                 <span className="text-gray-600">
-                  Total de Alunos: <span className="font-semibold">{students.length}</span>
+                  Total de Alunos:{" "}
+                  <span className="font-semibold">{students.length}</span>
                 </span>
                 <span className="text-blue-600">
-                  Notas Lançadas:{' '}
+                  Notas Lançadas:{" "}
                   <span className="font-semibold">
-                    {scores.filter((s) => s.score !== '').length}
+                    {scores.filter((s) => s.score !== "").length}
                   </span>
                 </span>
               </div>
               <div className="text-sm text-gray-600">
-                Média da Turma:{' '}
-                <span className="font-semibold text-lg text-gray-900">
+                Média da Turma:{" "}
+                <span className="text-lg font-semibold text-gray-900">
                   {calculateAverage()}
                 </span>
               </div>
@@ -454,13 +462,13 @@ export default function GradesPage() {
         </Card>
       ) : (
         <Card className="p-12 text-center">
-          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <FileText className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+          <h3 className="mb-2 text-lg font-semibold text-gray-900">
             Selecione os filtros acima
           </h3>
           <p className="text-gray-600">
-            Escolha a disciplina, bimestre e tipo de avaliação para começar a lançar as
-            notas
+            Escolha a disciplina, bimestre e tipo de avaliação para começar a
+            lançar as notas
           </p>
         </Card>
       )}

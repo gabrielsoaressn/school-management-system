@@ -9,6 +9,7 @@
 The current system creates one Class record for each subject-section combination, resulting in hundreds of redundant records. For example, "6º Ano A" has 10+ subjects, creating 10+ separate Class records ("6º Ano A - Matemática", "6º Ano A - Português", etc.).
 
 This creates confusion:
+
 - Student enrollment UI shows dozens of duplicate-looking classes
 - Database has ~270 Class records instead of ~27
 - Model doesn't match real-world school structure
@@ -28,6 +29,7 @@ Based on user input, the system should work as follows:
 ### Schema Changes
 
 **Class Model - BEFORE:**
+
 ```prisma
 model Class {
   id              String        @id @default(cuid())
@@ -49,6 +51,7 @@ model Class {
 ```
 
 **Class Model - AFTER:**
+
 ```prisma
 model Class {
   id              String        @id @default(cuid())
@@ -70,6 +73,7 @@ model Class {
 ```
 
 **Models that DON'T change:**
+
 - ✅ Subject (continues with gradeLevel)
 - ✅ TeacherSubject (already correct - teachers assigned to subjects)
 - ✅ Enrollment (continues linking students to classes)
@@ -88,29 +92,32 @@ Since the system is in development, we'll use a **complete reset**:
 ### API Changes
 
 **Class Creation API (`/api/admin/classes`):**
+
 - Remove references to `subjectId` and `teacherId`
 - Create ONE class per grade+section+year combination
 - Already receives correct fields: name, grade, section, academicYear, capacity, schedule, room
 
 **Class Listing API:**
+
 - Return simple classes (without subject/teacher in Class object)
 - To show class subjects: query all Subject where `gradeLevel` = class.gradeLevel
 - To show teachers: query via TeacherSubject
 
 **Example query to get class subjects and teachers:**
+
 ```typescript
 // Get class
 const turma = await prisma.class.findUnique({
   where: { id: turmaId },
-  include: { enrollments: { include: { student: true } } }
+  include: { enrollments: { include: { student: true } } },
 });
 
 // Get subjects for this grade
 const materias = await prisma.subject.findMany({
   where: { gradeLevel: turma.gradeLevel },
   include: {
-    teachers: { include: { teacher: { include: { employee: true } } } }
-  }
+    teachers: { include: { teacher: { include: { employee: true } } } },
+  },
 });
 ```
 
@@ -120,6 +127,7 @@ const materias = await prisma.subject.findMany({
 **AFTER:** Create 27 classes (9 grades × 3 sections)
 
 **Class creation example:**
+
 ```typescript
 await prisma.class.create({
   data: {
@@ -135,6 +143,7 @@ await prisma.class.create({
 ```
 
 **Enrollment example:**
+
 ```typescript
 // Student enrolled ONCE in their class
 await prisma.enrollment.create({
@@ -150,20 +159,24 @@ await prisma.enrollment.create({
 **Student Form (`/admin/students/new`):**
 
 BEFORE:
+
 - "Turma" dropdown showing "6º Ano A - Matemática", "6º Ano A - Português", etc. (confusing!)
 
 AFTER:
+
 - "Série/Ano" dropdown: "1º Ano", "2º Ano", ..., "9º Ano"
 - "Turma/Seção" dropdown: "A", "B", "C"
 - On save: find Class by (gradeLevel + section + academicYear)
 - Create ONE Enrollment linking student to class
 
 **Class Form (`/admin/classes/new`):**
+
 - Already mostly correct!
 - Remove "Professor Responsável" field (teachers are assigned to subjects, not classes)
 - Keep fields: name, grade, section, academicYear, room, schedule, capacity
 
 **Class Detail View:**
+
 - Show basic info: grade, section, room, schedule, capacity
 - List enrolled students
 - List grade subjects (query Subject where gradeLevel = class.gradeLevel)
@@ -189,24 +202,27 @@ const aluno = await prisma.student.findUnique({
 // Get all subjects for student's grade
 const materias = await prisma.subject.findMany({
   where: { gradeLevel: aluno.gradeLevel },
-  include: { teachers: { include: { teacher: true } } }
+  include: { teachers: { include: { teacher: true } } },
 });
 ```
 
 ### Edge Cases
 
 **If class doesn't exist for grade+section:**
+
 - Require admin to create class first (more control, avoids accidental classes)
 - Show error message in student form
 - Validation: check if class exists before creating enrollment
 
 **Student transferred to different class:**
+
 - Delete old Enrollment
 - Create new Enrollment in destination class
 - Update `gradeLevel` and `section` in Student record
 - Grades remain intact (linked to subject, not class)
 
 **Assigning teacher to a subject:**
+
 - Use TeacherSubject (already exists)
 - UI in `/admin/teachers` or `/admin/subjects`
 - One teacher can teach multiple subjects

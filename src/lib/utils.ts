@@ -13,13 +13,17 @@ export function cn(...inputs: ClassValue[]) {
 
 export function generateStudentId(): string {
   const year = new Date().getFullYear();
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0");
   return `STU${year}${random}`;
 }
 
 export function generateEmployeeId(): string {
   const year = new Date().getFullYear();
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0");
   return `EMP${year}${random}`;
 }
 

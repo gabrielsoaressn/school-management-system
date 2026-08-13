@@ -1,6 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/datetime";
 
@@ -12,7 +11,10 @@ const ATTENDANCE_LABELS: Record<
   PRESENT: { label: "Presente", className: "bg-green-100 text-green-800" },
   ABSENT: { label: "Falta", className: "bg-red-100 text-red-800" },
   LATE: { label: "Atraso", className: "bg-yellow-100 text-yellow-800" },
-  EXCUSED: { label: "Falta justificada", className: "bg-blue-100 text-blue-800" },
+  EXCUSED: {
+    label: "Falta justificada",
+    className: "bg-blue-100 text-blue-800",
+  },
 };
 
 export default async function StudentDashboard() {
@@ -82,18 +84,19 @@ export default async function StudentDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="rounded-sm border border-gray-200 bg-white p-6 shadow-sm">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
             Painel do Aluno
           </h1>
-          <p className="text-gray-600 mb-6">
-            Bem-vindo, {student ? `${student.firstName} ${student.lastName}` : user.email}!
+          <p className="mb-6 text-gray-600">
+            Bem-vindo,{" "}
+            {student ? `${student.firstName} ${student.lastName}` : user.email}!
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Class Card */}
-            <div className="bg-indigo-600 text-white rounded-sm p-6 border border-indigo-700">
-              <h3 className="text-lg font-semibold mb-2">Minha Turma</h3>
+            <div className="rounded-sm border border-indigo-700 bg-indigo-600 p-6 text-white">
+              <h3 className="mb-2 text-lg font-semibold">Minha Turma</h3>
               <p className="text-3xl font-bold">
                 {student?.enrollments && student.enrollments.length > 0
                   ? student.enrollments[0].class.name
@@ -108,8 +111,8 @@ export default async function StudentDashboard() {
             </div>
 
             {/* Attendance Card */}
-            <div className="bg-green-600 text-white rounded-sm p-6 border border-green-700">
-              <h3 className="text-lg font-semibold mb-2">Frequência</h3>
+            <div className="rounded-sm border border-green-700 bg-green-600 p-6 text-white">
+              <h3 className="mb-2 text-lg font-semibold">Frequência</h3>
               <p className="text-3xl font-bold">
                 {attendancePercentage.toFixed(1)}%
               </p>
@@ -119,8 +122,8 @@ export default async function StudentDashboard() {
             </div>
 
             {/* Average Grade Card */}
-            <div className="bg-purple-600 text-white rounded-sm p-6 border border-purple-700">
-              <h3 className="text-lg font-semibold mb-2">Média Geral</h3>
+            <div className="rounded-sm border border-purple-700 bg-purple-600 p-6 text-white">
+              <h3 className="mb-2 text-lg font-semibold">Média Geral</h3>
               <p className="text-3xl font-bold">{averageScore.toFixed(1)}</p>
               <p className="text-sm text-purple-100">
                 {assessments.length} avaliações
@@ -131,11 +134,11 @@ export default async function StudentDashboard() {
           {/* Student Info */}
           {student && (
             <div className="mt-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="mb-4 text-2xl font-bold text-gray-900">
                 Informações Pessoais
               </h2>
-              <div className="bg-gray-50 rounded-sm border border-gray-200 p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-sm border border-gray-200 bg-gray-50 p-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <p className="text-sm text-gray-600">Nome Completo</p>
                     <p className="text-lg font-semibold text-gray-900">
@@ -151,7 +154,9 @@ export default async function StudentDashboard() {
                   <div>
                     <p className="text-sm text-gray-600">Data de Nascimento</p>
                     <p className="text-lg font-semibold text-gray-900">
-                      {new Date(student.dateOfBirth).toLocaleDateString("pt-BR")}
+                      {new Date(student.dateOfBirth).toLocaleDateString(
+                        "pt-BR"
+                      )}
                     </p>
                   </div>
                   <div>
@@ -169,31 +174,31 @@ export default async function StudentDashboard() {
 
           {/* Recent Grades */}
           <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="mb-4 text-2xl font-bold text-gray-900">
               Notas Recentes
             </h2>
-            <div className="bg-gray-50 rounded-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-hidden rounded-sm border border-gray-200 bg-gray-50">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Matéria
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Nota
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Avaliação
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Bimestre
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Data
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 bg-white">
                   {assessments.map((assessment) => {
                     // Colour by percentage of the maximum, not by the raw score:
                     // a 7 out of 10 and a 70 out of 100 are the same result.
@@ -204,30 +209,31 @@ export default async function StudentDashboard() {
 
                     return (
                       <tr key={assessment.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                           {assessment.subject.name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                           <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
                               percentage >= 70
                                 ? "bg-green-100 text-green-800"
                                 : percentage >= 50
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {assessment.score.toFixed(1)} / {assessment.maxScore.toFixed(0)}
+                            {assessment.score.toFixed(1)} /{" "}
+                            {assessment.maxScore.toFixed(0)}
                             {assessment.grade ? ` (${assessment.grade})` : ""}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                           {assessment.assessmentType.name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                           {assessment.term}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                           {formatDate(assessment.assessmentDate)}
                         </td>
                       </tr>
@@ -250,30 +256,30 @@ export default async function StudentDashboard() {
 
           {/* Recent Attendance */}
           <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="mb-4 text-2xl font-bold text-gray-900">
               Frequência Recente
             </h2>
-            <div className="bg-gray-50 rounded-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-hidden rounded-sm border border-gray-200 bg-gray-50">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Data
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 bg-white">
                   {attendanceRecords.map((record) => (
                     <tr key={record.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                         {formatDate(record.date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="whitespace-nowrap px-6 py-4">
                         <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
                             ATTENDANCE_LABELS[record.status].className
                           }`}
                         >

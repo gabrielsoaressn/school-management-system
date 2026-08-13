@@ -1,217 +1,146 @@
-# 🏫 School Management System
+# D'Ávilla — Sistema de Gestão Escolar
 
-Sistema completo de gestão escolar com três portais distintos (Admin, Pais e Estudantes).
+Sistema de gestão para escola de ensino fundamental brasileira (1º ao 9º ano),
+com quatro portais — administração, professor, responsável e aluno — e um
+formulário público de matrícula.
 
-## 📋 Índice
-
-- [Tecnologias](#tecnologias)
-- [Instalação](#instalação)
-- [Configuração](#configuração)
-- [Executar](#executar)
-- [Contas de Teste](#contas-de-teste)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-
-## 🛠 Tecnologias
-
-- **Frontend:** Next.js 15, TypeScript, Tailwind CSS
-- **Backend:** Next.js API Routes
-- **Database:** PostgreSQL + Prisma ORM
-- **Autenticação:** NextAuth.js
-- **Pagamentos:** Stripe
-- **PDFs:** jsPDF
-
-## 📥 Instalação
-
-O projeto já está configurado! Os pacotes já foram instalados.
-
-## ⚙️ Configuração
-
-### 1. Configurar Banco de Dados
-
-Edite o arquivo `.env.local` e atualize a `DATABASE_URL`:
-
-```bash
-# Para PostgreSQL local
-DATABASE_URL="postgresql://postgres:suasenha@localhost:5432/school_management"
-
-# Para Neon (recomendado - grátis)
-# 1. Acesse https://neon.tech
-# 2. Crie uma conta e um projeto
-# 3. Copie a connection string
-DATABASE_URL="postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/school_management"
-```
-
-### 2. Opção A - Usando PostgreSQL Local
-
-```bash
-# Instalar PostgreSQL (se necessário)
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-
-# Criar banco de dados
-sudo -u postgres psql
-CREATE DATABASE school_management;
-\q
-```
-
-### 2. Opção B - Usando Neon (Recomendado - Mais Fácil)
-
-1. Acesse [neon.tech](https://neon.tech)
-2. Crie uma conta gratuita
-3. Crie um novo projeto
-4. Copie a "Connection String"
-5. Cole no `.env.local` na variável `DATABASE_URL`
-
-## 🚀 Executar
-
-### Método Rápido (Recomendado)
-
-```bash
-cd /home/gab/Projects/school-management-system
-
-# 1. Executar setup (apenas primeira vez)
-./setup.sh
-
-# 2. Iniciar servidor de desenvolvimento
-./run.sh
-```
-
-### Método Manual
-
-```bash
-cd /home/gab/Projects/school-management-system
-
-# Limpar variáveis do npm (importante!)
-unset npm_config_global npm_config_prefix
-
-# 1. Gerar Prisma Client
-npx prisma generate
-
-# 2. Criar tabelas no banco
-npx prisma migrate dev --name init
-
-# 3. Popular com dados de exemplo
-npx prisma db seed
-
-# 4. Iniciar servidor
-npm run dev
-```
-
-Acesse: **http://localhost:3000**
-
-## 🔐 Contas de Teste
-
-Após executar o seed, você pode fazer login com:
-
-| Tipo | Email | Senha |
-|------|-------|-------|
-| **Admin** | admin@school.com | password123 |
-| **Professor** | teacher1@school.com | password123 |
-| **Pai/Mãe** | parent1@example.com | password123 |
-| **Estudante** | student1_1@example.com | password123 |
-
-## 📂 Estrutura do Projeto
-
-```
-school-management-system/
-├── prisma/
-│   ├── schema.prisma      # Schema do banco de dados
-│   └── seed.ts            # Dados de exemplo
-├── src/
-│   ├── app/
-│   │   ├── api/           # API Routes
-│   │   ├── admin/         # Portal Admin (a implementar)
-│   │   ├── parent/        # Portal Pais (a implementar)
-│   │   ├── student/       # Portal Estudante (a implementar)
-│   │   ├── login/         # Página de login
-│   │   └── page.tsx       # Redirecionamento por role
-│   ├── components/        # Componentes React
-│   ├── lib/
-│   │   ├── prisma.ts      # Cliente Prisma
-│   │   ├── auth.ts        # Utilitários de auth
-│   │   ├── utils.ts       # Funções auxiliares
-│   │   └── constants.ts   # Constantes
-│   └── types/             # TypeScript types
-├── .env.local             # Variáveis de ambiente
-├── setup.sh               # Script de setup
-└── run.sh                 # Script para executar
-```
-
-## 🎯 Funcionalidades Implementadas
-
-### ✅ Concluído
-- [x] Setup do projeto
-- [x] Schema do banco completo (20+ models)
-- [x] Sistema de autenticação (NextAuth)
-- [x] Proteção de rotas (RBAC)
-- [x] Página de login
-- [x] Seed com dados de exemplo
-  - 1 Admin
-  - 5 Professores
-  - 10 Pais
-  - 20+ Estudantes
-  - 32 Classes
-  - Notas, Presenças, Pagamentos
-
-### 🚧 A Implementar
-- [ ] Portal Admin (Dashboard, CRUD completo)
-- [ ] Portal Pais (Performance, Pagamentos)
-- [ ] Portal Estudante (Notas, Horários)
-- [ ] Componentes compartilhados (Tabelas, Forms)
-- [ ] Integração Stripe
-- [ ] Geração de PDFs
-
-## 🔧 Comandos Úteis
-
-```bash
-# Visualizar banco de dados
-npx prisma studio
-
-# Resetar banco (apaga tudo e recria)
-npx prisma migrate reset
-
-# Criar nova migration
-npx prisma migrate dev --name nome_da_migration
-
-# Popular banco novamente
-npx prisma db seed
-
-# Ver logs do servidor
-npm run dev
-```
-
-## 🐛 Solução de Problemas
-
-### Erro: "Could not resolve @prisma/client"
-```bash
-unset npm_config_global npm_config_prefix
-npm install
-npx prisma generate
-```
-
-### Erro: "P1001: Can't reach database server"
-- Verifique se o PostgreSQL está rodando
-- Confirme as credenciais no `.env.local`
-- Teste a conexão: `psql $DATABASE_URL`
-
-### Erro: Migration falhou
-```bash
-npx prisma migrate reset  # Atenção: apaga todos os dados!
-./setup.sh
-```
-
-## 📚 Próximos Passos
-
-1. ✅ Testar login com as contas de exemplo
-2. 🚧 Implementar Dashboard Admin
-3. 🚧 Criar páginas de gestão (Estudantes, Professores)
-4. 🚧 Implementar Portal dos Pais
-5. 🚧 Implementar Portal do Estudante
-
-## 📄 Licença
-
-Este é um projeto educacional/demonstração.
+Next.js 15 (App Router) · TypeScript strict · PostgreSQL + Prisma · NextAuth.
 
 ---
 
-**Desenvolvido com ❤️ usando Next.js e Prisma**
+## Começando
+
+Requisitos: Node 22+, Docker (ou um PostgreSQL 16 acessível).
+
+```bash
+npm ci
+
+# Banco de desenvolvimento
+docker run -d --name davilla-postgres \
+  -e POSTGRES_USER=davilla -e POSTGRES_PASSWORD=davilla \
+  -e POSTGRES_DB=school_management -p 5434:5432 postgres:16
+
+cp .env.example .env
+# DATABASE_URL="postgresql://davilla:davilla@localhost:5434/school_management?schema=public"
+# NEXTAUTH_SECRET=$(openssl rand -base64 32)
+
+npx prisma migrate deploy   # aplica as migrations versionadas
+npx prisma db seed          # dados de exemplo (APAGA tudo antes)
+npm run dev
+```
+
+`http://localhost:3000`
+
+O Prisma CLI lê `.env`; o Next lê `.env` e `.env.local`. Ambos precisam do
+`DATABASE_URL` e estão no `.gitignore`.
+
+### Contas do seed
+
+Senha de todas: `password123`. Exibidas na tela de login **apenas** fora de
+produção.
+
+| Perfil        | E-mail                     | O que vê                                |
+| ------------- | -------------------------- | --------------------------------------- |
+| Administrador | `admin@davilla.com`        | tudo                                    |
+| Financeiro    | `staff3@davilla.com`       | cobranças, folha, salários              |
+| Secretaria    | `staff2@davilla.com`       | alunos, matrículas; **não** vê salários |
+| Coordenação   | `staff1@davilla.com`       | turmas, notas, ocorrências              |
+| Professor     | `professor1@davilla.com`   | apenas as turmas em que leciona         |
+| Responsável   | `responsavel1@davilla.com` | cobranças e boletim dos filhos          |
+| Aluno         | `aluno1@davilla.com`       | suas notas e frequência                 |
+
+## Comandos
+
+| Comando                           | O que faz                             |
+| --------------------------------- | ------------------------------------- |
+| `npm run dev`                     | servidor de desenvolvimento           |
+| `npm run build` / `npm start`     | build de produção / servir            |
+| `npm run typecheck`               | `tsc --noEmit`                        |
+| `npm run lint` / `lint:fix`       | ESLint                                |
+| `npm run format` / `format:check` | Prettier                              |
+| `npm test`                        | Vitest (parte dos testes exige banco) |
+| `npx prisma studio`               | inspecionar o banco                   |
+
+CI roda typecheck, lint, format:check, testes e build em cada push
+(`.github/workflows/ci.yml`).
+
+## Como o domínio funciona
+
+Quatro decisões explicam a maior parte do código:
+
+**O ano letivo é uma entidade.** `AcademicYear` tem exatamente um ano corrente,
+garantido por índice único parcial. Turma, matrícula, avaliação e chamada
+pertencem a um ano.
+
+**A série do aluno está na matrícula, não no aluno.** Um aluno está no 3º ano _em
+2026_ e no 4º _em 2027_. `Enrollment` guarda série, seção, situação
+(`ACTIVE`/`COMPLETED`/`RETAINED`/`TRANSFERRED`) e é única por aluno/ano. É isso
+que permite histórico e rematrícula.
+
+**A grade curricular autoriza o professor.** `ClassSubjectTeacher` diz quem
+leciona o quê em cada turma, e é a única coisa que permite lançar nota ou
+chamada — verificado no servidor, não só na interface.
+
+**Dinheiro é `Decimal`, data é São Paulo.** Todo valor monetário é
+`Decimal(10,2)` e toda aritmética passa por `src/lib/money.ts`. Todo "hoje",
+vencimento e dia de calendário passa por `src/lib/datetime.ts`, sempre em
+`America/Sao_Paulo`.
+
+## Estrutura
+
+```
+prisma/
+  schema.prisma            37 models; migrations versionadas em migrations/
+  seed.ts                  dados de exemplo
+  migrations-data/         migrações de dados pontuais, já aplicadas
+src/
+  app/                     rotas (App Router) e API
+  components/              UI, layout, formulários
+  lib/
+    permissions.ts         matriz de capacidades — a autoridade sobre acesso
+    api-auth.ts            withAuth: todo handler passa por aqui
+    api-response.ts        envelope { success, data, error, pagination? }
+    money.ts / datetime.ts dinheiro e datas
+    billing-rules.ts       multa, juros e recorrência
+    payments.ts            status da cobrança derivado dos recibos
+    academic-year.ts       ano corrente
+    enrollment.ts          único caminho de escrita de matrícula
+    teaching.ts            o que cada professor pode tocar
+    re-enrollment.ts       promoção de ano
+    report-card.ts         boletim calculado
+    notifications/         drivers de envio (console, smtp, whatsapp stub)
+    storage/               uploads (local, s3 previsto)
+docs/
+  AUDIT.md                 estado real do código — a fonte de verdade
+  BACKLOG.md               pendências conhecidas, com contexto
+  OPERATIONS.md            rotina diária, rate limit, env, migrations
+  DEPLOYMENT.md            deploy, rollback, backup
+  history/                 documentos de intenção de fases anteriores
+```
+
+## Segurança e LGPD
+
+- Autorização por matriz de capacidades (`src/lib/permissions.ts`), aplicada no
+  middleware, nas páginas e em **todos** os handlers via `withAuth`.
+- Folha de pagamento e salários: só `ADMIN` e `FINANCE`. Os campos são removidos
+  do payload para os outros perfis.
+- `AuditLog` registra operações financeiras, exclusões, mudanças de configuração
+  e acesso a listagens com CPF.
+- Soft delete em tudo que contém dado pessoal ou financeiro; uma extensão do
+  Prisma filtra os registros apagados automaticamente.
+- Consentimento na matrícula com data e versão do texto; `/privacidade` publica
+  finalidades, bases legais e prazos, com canal de solicitação do titular.
+- Documentos enviados na matrícula ficam fora de `public/` e só são lidos por
+  rota autenticada.
+
+## Estado do projeto
+
+`docs/AUDIT.md` é a fonte de verdade sobre o que existe e o que falta.
+Resumo do que **não** está pronto:
+
+- rematrícula e ano letivo funcionam por API, sem tela;
+- mensageria (`CommunicationThread`/`Message`) tem schema e dados, sem interface;
+- driver S3 e envio por WhatsApp não implementados (ambos falham de forma
+  explícita, não silenciosa);
+- integração com PSP brasileiro (boleto/PIX) especificada em `docs/BACKLOG.md`,
+  não implementada.

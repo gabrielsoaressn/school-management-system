@@ -123,7 +123,7 @@ export default function EmployeesTable() {
       } else {
         toast.error(data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao excluir funcionários");
     } finally {
       setIsDeleting(false);
@@ -150,7 +150,7 @@ export default function EmployeesTable() {
       } else {
         toast.error(data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao excluir funcionário");
     }
   };
@@ -182,7 +182,7 @@ export default function EmployeesTable() {
             setSelectedIds(new Set());
             setSelectAll(false);
           }}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="flex-1 rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         />
         <select
           value={typeFilter}
@@ -192,7 +192,7 @@ export default function EmployeesTable() {
             setSelectedIds(new Set());
             setSelectAll(false);
           }}
-          className="px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         >
           <option value="ALL">Todos os Tipos</option>
           <option value="TEACHER">Professor</option>
@@ -204,7 +204,7 @@ export default function EmployeesTable() {
           <button
             onClick={handleBulkDelete}
             disabled={isDeleting}
-            className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-semibold py-2 px-6 rounded-sm transition"
+            className="rounded-sm bg-red-600 px-6 py-2 font-semibold text-white transition hover:bg-red-700 disabled:bg-red-400"
           >
             {isDeleting ? "Excluindo..." : `Excluir (${selectedCount})`}
           </button>
@@ -212,22 +212,25 @@ export default function EmployeesTable() {
       </div>
 
       {/* Selection Banners */}
-      {selectedIds.size > 0 && !selectAll && selectedIds.size === employees.length && totalPages > 1 && (
-        <div className="mb-4 bg-gray-100 border border-gray-300 rounded-sm p-3 flex justify-between items-center">
-          <span className="text-sm text-gray-700">
-            {selectedIds.size} funcionário(s) selecionado(s) nesta página.
-          </span>
-          <button
-            onClick={handleSelectAllPages}
-            className="text-sm font-semibold text-gray-900 hover:underline"
-          >
-            Selecionar todos os {totalCount} funcionários
-          </button>
-        </div>
-      )}
+      {selectedIds.size > 0 &&
+        !selectAll &&
+        selectedIds.size === employees.length &&
+        totalPages > 1 && (
+          <div className="mb-4 flex items-center justify-between rounded-sm border border-gray-300 bg-gray-100 p-3">
+            <span className="text-sm text-gray-700">
+              {selectedIds.size} funcionário(s) selecionado(s) nesta página.
+            </span>
+            <button
+              onClick={handleSelectAllPages}
+              className="text-sm font-semibold text-gray-900 hover:underline"
+            >
+              Selecionar todos os {totalCount} funcionários
+            </button>
+          </div>
+        )}
 
       {selectAll && (
-        <div className="mb-4 bg-gray-900 text-white rounded-sm p-3 flex justify-between items-center">
+        <div className="mb-4 flex items-center justify-between rounded-sm bg-gray-900 p-3 text-white">
           <span className="text-sm">
             Todos os {totalCount} funcionários estão selecionados.
           </span>
@@ -245,21 +248,21 @@ export default function EmployeesTable() {
 
       {/* Table */}
       {error ? (
-        <div className="text-center py-12">
-          <p className="text-red-600 font-semibold">Erro: {error}</p>
+        <div className="py-12 text-center">
+          <p className="font-semibold text-red-600">Erro: {error}</p>
           <button
             onClick={() => fetchEmployees()}
-            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-sm"
+            className="mt-4 rounded-sm bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
           >
             Tentar Novamente
           </button>
         </div>
       ) : loading ? (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-gray-500">Carregando...</p>
         </div>
       ) : employees.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-gray-500">Nenhum funcionário encontrado</p>
         </div>
       ) : (
@@ -267,23 +270,42 @@ export default function EmployeesTable() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-100 border-b border-gray-200">
+                <tr className="border-b border-gray-200 bg-gray-100">
                   <th className="w-12 p-3">
                     <input
                       type="checkbox"
-                      checked={selectedIds.size === employees.length && employees.length > 0}
+                      checked={
+                        selectedIds.size === employees.length &&
+                        employees.length > 0
+                      }
                       onChange={handleSelectAll}
-                      className="w-4 h-4 cursor-pointer"
+                      className="h-4 w-4 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left p-3 font-semibold text-gray-700">ID</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Nome</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">CPF</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Cargo</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Tipo</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Salário</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Status</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Ações</th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    ID
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Nome
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    CPF
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Cargo
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Tipo
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Salário
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Status
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -291,7 +313,7 @@ export default function EmployeesTable() {
                   <tr
                     key={employee.id}
                     className={`border-b border-gray-200 hover:bg-gray-50 ${
-                      selectedIds.has(employee.id) ? 'bg-gray-50' : ''
+                      selectedIds.has(employee.id) ? "bg-gray-50" : ""
                     }`}
                   >
                     <td className="p-3">
@@ -299,7 +321,7 @@ export default function EmployeesTable() {
                         type="checkbox"
                         checked={selectedIds.has(employee.id)}
                         onChange={() => handleToggleSelect(employee.id)}
-                        className="w-4 h-4 cursor-pointer"
+                        className="h-4 w-4 cursor-pointer"
                       />
                     </td>
                     <td className="p-3 text-sm font-semibold text-gray-600">
@@ -315,7 +337,7 @@ export default function EmployeesTable() {
                       {employee.position}
                     </td>
                     <td className="p-3">
-                      <span className="px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-700">
+                      <span className="rounded bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
                         {getTypeLabel(employee.employeeType)}
                       </span>
                     </td>
@@ -324,7 +346,7 @@ export default function EmployeesTable() {
                     </td>
                     <td className="p-3">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${
+                        className={`rounded px-2 py-1 text-xs font-semibold ${
                           employee.user.isActive
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
@@ -337,13 +359,13 @@ export default function EmployeesTable() {
                       <div className="flex gap-2">
                         <Link
                           href={`/admin/financial/employees/${employee.id}`}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-semibold"
+                          className="text-sm font-semibold text-blue-600 hover:text-blue-800"
                         >
                           Ver
                         </Link>
                         <Link
                           href={`/admin/financial/employees/${employee.id}/edit`}
-                          className="text-gray-600 hover:text-gray-800 text-sm font-semibold"
+                          className="text-sm font-semibold text-gray-600 hover:text-gray-800"
                         >
                           Editar
                         </Link>
@@ -354,7 +376,7 @@ export default function EmployeesTable() {
                               `${employee.firstName} ${employee.lastName}`
                             )
                           }
-                          className="text-red-600 hover:text-red-800 text-sm font-semibold"
+                          className="text-sm font-semibold text-red-600 hover:text-red-800"
                         >
                           Excluir
                         </button>
@@ -372,7 +394,7 @@ export default function EmployeesTable() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                className="rounded-sm bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Anterior
               </button>
@@ -382,7 +404,7 @@ export default function EmployeesTable() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                className="rounded-sm bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Próxima
               </button>

@@ -37,17 +37,20 @@ export const PROCESSING_PURPOSES: ProcessingPurpose[] = [
   },
   {
     purpose: "Cobrança de mensalidades e emissão de documentos fiscais",
-    legalBasis: "Execução de contrato (art. 7º, V) e obrigação legal (art. 7º, II)",
+    legalBasis:
+      "Execução de contrato (art. 7º, V) e obrigação legal (art. 7º, II)",
     retention: "5 anos após a quitação, conforme prazos fiscais",
   },
   {
     purpose: "Comunicação com o responsável (avisos, ocorrências, lembretes)",
-    legalBasis: "Execução de contrato (art. 7º, V) e legítimo interesse (art. 7º, IX)",
+    legalBasis:
+      "Execução de contrato (art. 7º, V) e legítimo interesse (art. 7º, IX)",
     retention: "Durante o vínculo escolar",
   },
   {
     purpose: "Registro de auditoria de operações no sistema",
-    legalBasis: "Cumprimento de obrigação legal e segurança da informação (art. 7º, II e art. 37)",
+    legalBasis:
+      "Cumprimento de obrigação legal e segurança da informação (art. 7º, II e art. 37)",
     retention: "5 anos",
   },
 ];

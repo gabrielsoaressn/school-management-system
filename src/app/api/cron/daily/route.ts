@@ -92,7 +92,10 @@ export const POST = withoutAuth(async (request) => {
           await tx.billing.update({
             where: { id: billing.id },
             data: {
-              nextBillingDate: computeNextBillingDate(dueDate, billing.recurrence),
+              nextBillingDate: computeNextBillingDate(
+                dueDate,
+                billing.recurrence
+              ),
             },
           });
         });

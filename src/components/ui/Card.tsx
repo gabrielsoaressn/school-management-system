@@ -24,21 +24,11 @@ export function Card({
     lg: "p-8",
   };
 
-  const hoverClasses = hover
-    ? "transition-shadow hover:shadow-md"
-    : "";
+  const hoverClasses = hover ? "transition-shadow hover:shadow-md" : "";
 
   return (
     <div
-      className={`
-        bg-card
-        border border-border
-        rounded-lg
-        shadow-sm
-        ${paddingClasses[padding]}
-        ${hoverClasses}
-        ${className}
-      `}
+      className={`rounded-lg border border-border bg-card shadow-sm ${paddingClasses[padding]} ${hoverClasses} ${className} `}
     >
       {children}
     </div>

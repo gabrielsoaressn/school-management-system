@@ -3,8 +3,10 @@
 import { Search, X } from "lucide-react";
 import { InputHTMLAttributes, useState } from "react";
 
-interface SearchBarProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
+interface SearchBarProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "onChange" | "value"
+> {
   /** Controlled value. When provided, the caller owns the state. */
   value?: string;
   /** Fires on every keystroke (controlled mode). */
@@ -81,31 +83,21 @@ export function SearchBar({
 
   return (
     <div className={`relative ${className}`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <input
         type="text"
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className={`
-          w-full
-          pl-10 pr-10 py-2
-          bg-card
-          border border-input
-          rounded-lg
-          text-foreground
-          placeholder:text-muted-foreground
-          transition-colors
-          focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0
-        `}
+        className={`w-full rounded-lg border border-input bg-card py-2 pl-10 pr-10 text-foreground transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0`}
         {...props}
       />
       {value && (
         <button
           type="button"
           onClick={handleClear}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>

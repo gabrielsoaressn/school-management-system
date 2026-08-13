@@ -38,7 +38,10 @@ export function subtract(a: MoneyInput, b: MoneyInput): Prisma.Decimal {
 }
 
 /** Percentage of an amount, rounded to cents. `percent` is 0-100. */
-export function percentOf(value: MoneyInput, percent: MoneyInput): Prisma.Decimal {
+export function percentOf(
+  value: MoneyInput,
+  percent: MoneyInput
+): Prisma.Decimal {
   return toCents(toDecimal(value).times(toDecimal(percent)).dividedBy(100));
 }
 

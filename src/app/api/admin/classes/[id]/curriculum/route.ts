@@ -1,7 +1,13 @@
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/api-auth";
-import { fail, notFound, ok, serverError, validationFailed } from "@/lib/api-response";
+import {
+  fail,
+  notFound,
+  ok,
+  serverError,
+  validationFailed,
+} from "@/lib/api-response";
 import { recordAudit } from "@/lib/audit";
 
 const assignmentSchema = z.object({
@@ -178,7 +184,10 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(
         for (const assignment of wanted.values()) {
           await tx.classSubjectTeacher.upsert({
             where: {
-              classId_subjectId: { classId: id, subjectId: assignment.subjectId },
+              classId_subjectId: {
+                classId: id,
+                subjectId: assignment.subjectId,
+              },
             },
             update: {
               teacherId: assignment.teacherId,

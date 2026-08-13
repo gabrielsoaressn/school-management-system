@@ -1,6 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/datetime";
 import { formatCurrency, sum } from "@/lib/money";
@@ -8,15 +7,6 @@ import { Prisma } from "@prisma/client";
 import { computeAmountDue, loadLateChargeSettings } from "@/lib/billing-rules";
 import { subtract } from "@/lib/money";
 import Link from "next/link";
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Pendente",
-  PARTIALLY_PAID: "Pago em parte",
-  PAID: "Pago",
-  OVERDUE: "Atrasado",
-  RENEGOTIATED: "Renegociado",
-  CANCELLED: "Cancelado",
-};
 
 export default async function ParentDashboard() {
   const user = await getCurrentUser();
@@ -87,45 +77,47 @@ export default async function ParentDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-sm shadow-sm border border-gray-200 p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="rounded-sm border border-gray-200 bg-white p-6 shadow-sm">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
             Painel do Responsável
           </h1>
-          <p className="text-gray-600 mb-6">Bem-vindo, {user.email}!</p>
+          <p className="mb-6 text-gray-600">Bem-vindo, {user.email}!</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Students Card */}
-            <div className="bg-blue-600 text-white rounded-sm p-6 border border-blue-700">
-              <h3 className="text-lg font-semibold mb-2">Meus Filhos</h3>
+            <div className="rounded-sm border border-blue-700 bg-blue-600 p-6 text-white">
+              <h3 className="mb-2 text-lg font-semibold">Meus Filhos</h3>
               <p className="text-3xl font-bold">{studentsCount}</p>
               <p className="text-sm text-blue-100">Alunos cadastrados</p>
             </div>
 
             {/* Cobranças em aberto */}
-            <div className="bg-orange-600 text-white rounded-sm p-6 border border-orange-700">
-              <h3 className="text-lg font-semibold mb-2">Cobranças em Aberto</h3>
+            <div className="rounded-sm border border-orange-700 bg-orange-600 p-6 text-white">
+              <h3 className="mb-2 text-lg font-semibold">
+                Cobranças em Aberto
+              </h3>
               <p className="text-3xl font-bold">{openChargeCount}</p>
               <p className="text-sm text-orange-100">Aguardando pagamento</p>
             </div>
 
             {/* Total Due Card */}
-            <div className="bg-red-600 text-white rounded-sm p-6 border border-red-700">
-              <h3 className="text-lg font-semibold mb-2">Total a Pagar</h3>
-              <p className="text-3xl font-bold">
-                {formatCurrency(totalDue)}
-              </p>
+            <div className="rounded-sm border border-red-700 bg-red-600 p-6 text-white">
+              <h3 className="mb-2 text-lg font-semibold">Total a Pagar</h3>
+              <p className="text-3xl font-bold">{formatCurrency(totalDue)}</p>
               <p className="text-sm text-red-100">Valor pendente</p>
             </div>
           </div>
 
           {/* Students List */}
           <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Meus Filhos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h2 className="mb-4 text-2xl font-bold text-gray-900">
+              Meus Filhos
+            </h2>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {parent?.students.map((student) => (
                 <div
                   key={student.id}
-                  className="bg-gray-50 rounded-sm border border-gray-200 p-4"
+                  className="rounded-sm border border-gray-200 bg-gray-50 p-4"
                 >
                   <h3 className="text-lg font-semibold text-gray-900">
                     {student.firstName} {student.lastName}
@@ -147,7 +139,7 @@ export default async function ParentDashboard() {
                 </div>
               ))}
               {studentsCount === 0 && (
-                <div className="col-span-2 text-center py-8 text-gray-500">
+                <div className="col-span-2 py-8 text-center text-gray-500">
                   Nenhum aluno cadastrado
                 </div>
               )}
@@ -156,37 +148,37 @@ export default async function ParentDashboard() {
 
           {/* Cobranças recentes */}
           <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="mb-4 text-2xl font-bold text-gray-900">
               Cobranças Recentes
             </h2>
-            <div className="bg-gray-50 rounded-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-hidden rounded-sm border border-gray-200 bg-gray-50">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Fatura
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Vencimento
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Valor
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 bg-white">
                   {charges.map((charge) => (
                     <tr key={charge.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                         {charge.invoiceNumber}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                         {formatDate(charge.dueDate)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                         <span className="font-medium">
                           {formatCurrency(charge.outstanding)}
                         </span>
@@ -199,21 +191,21 @@ export default async function ParentDashboard() {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="whitespace-nowrap px-6 py-4">
                         <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
                             charge.status === "PAID"
                               ? "bg-green-100 text-green-800"
                               : charge.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-red-100 text-red-800"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-red-100 text-red-800"
                           }`}
                         >
                           {charge.status === "PAID"
                             ? "Pago"
                             : charge.status === "PENDING"
-                            ? "Pendente"
-                            : "Atrasado"}
+                              ? "Pendente"
+                              : "Atrasado"}
                         </span>
                       </td>
                     </tr>

@@ -1,6 +1,18 @@
 import { Prisma } from "@prisma/client";
-import { ZERO, percentOf, subtract, toCents, toDecimal, type MoneyInput } from "@/lib/money";
-import { addMonths, currentSchoolMonth, schoolDate, startOfToday } from "@/lib/datetime";
+import {
+  ZERO,
+  percentOf,
+  subtract,
+  toCents,
+  toDecimal,
+  type MoneyInput,
+} from "@/lib/money";
+import {
+  addMonths,
+  currentSchoolMonth,
+  schoolDate,
+  startOfToday,
+} from "@/lib/datetime";
 import { computeNextBillingDate } from "@/lib/billing-rules";
 
 /**
@@ -89,10 +101,13 @@ export function resolveFirstDueDate(dueDay: number, referenceDate: Date): Date {
 }
 
 /** Note recorded on the charge, so the approval screen shows why the value differs. */
-export function tuitionChargeNote(charge: TuitionCharge, discount?: {
-  type: DiscountKind;
-  value: MoneyInput;
-} | null): string {
+export function tuitionChargeNote(
+  charge: TuitionCharge,
+  discount?: {
+    type: DiscountKind;
+    value: MoneyInput;
+  } | null
+): string {
   const pending = "Aguardando aprovação do administrador";
 
   if (!discount || charge.discountApplied.isZero()) {

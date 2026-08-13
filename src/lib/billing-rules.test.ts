@@ -111,9 +111,9 @@ describe("isOverdue", () => {
   });
 
   it("only applies to pending charges", () => {
-    expect(isOverdue({ dueDate: due, status: "PAID" }, schoolDate(2027, 1, 1))).toBe(
-      false
-    );
+    expect(
+      isOverdue({ dueDate: due, status: "PAID" }, schoolDate(2027, 1, 1))
+    ).toBe(false);
   });
 });
 

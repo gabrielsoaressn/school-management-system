@@ -1,5 +1,15 @@
-import { Prisma, type PaymentStatus, type RecurrenceType } from "@prisma/client";
-import { ZERO, percentOf, toCents, toDecimal, type MoneyInput } from "@/lib/money";
+import {
+  Prisma,
+  type PaymentStatus,
+  type RecurrenceType,
+} from "@prisma/client";
+import {
+  ZERO,
+  percentOf,
+  toCents,
+  toDecimal,
+  type MoneyInput,
+} from "@/lib/money";
 import { addMonths, addYears, daysOverdue, startOfToday } from "@/lib/datetime";
 import { getSettingAsNumber } from "@/lib/settings";
 
@@ -69,13 +79,25 @@ export function computeAmountDue(
   const principal = toCents(charge.amount);
 
   if (SETTLED.includes(charge.status)) {
-    return { principal, fine: ZERO, interest: ZERO, total: principal, daysLate: 0 };
+    return {
+      principal,
+      fine: ZERO,
+      interest: ZERO,
+      total: principal,
+      daysLate: 0,
+    };
   }
 
   const daysLate = daysOverdue(charge.dueDate, referenceDate);
 
   if (daysLate <= 0) {
-    return { principal, fine: ZERO, interest: ZERO, total: principal, daysLate: 0 };
+    return {
+      principal,
+      fine: ZERO,
+      interest: ZERO,
+      total: principal,
+      daysLate: 0,
+    };
   }
 
   const fine = percentOf(principal, settings.finePercentage);
@@ -102,7 +124,9 @@ export function isOverdue(
   referenceDate: Date = new Date()
 ): boolean {
   if (charge.status !== "PENDING") return false;
-  return startOfToday(referenceDate).getTime() > new Date(charge.dueDate).getTime();
+  return (
+    startOfToday(referenceDate).getTime() > new Date(charge.dueDate).getTime()
+  );
 }
 
 /**
