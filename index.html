@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>D'Ávilla — Sistema de Gestão Escolar</title>
+    <meta
+      name="description"
+      content="Sistema de gestão para escola de ensino fundamental brasileira: quatro portais, controle de acesso por capacidades, financeiro em Decimal e datas em America/Sao_Paulo."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>"
+    />
+    <style>
+      :root {
+        --bg: #fbfaf8;
+        --surface: #ffffff;
+        --border: #e6e2dc;
+        --text: #1c1a17;
+        --muted: #6b655c;
+        --accent: #7c3f2e;
+        --accent-soft: #f4ece8;
+        --code-bg: #1e1b18;
+        --code-text: #ece7e0;
+        --ok: #2f6b46;
+        --warn: #8a6410;
+        --radius: 10px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #17150f;
+          --surface: #1f1d17;
+          --border: #332f26;
+          --text: #f0ece4;
+          --muted: #a49c8e;
+          --accent: #e0a08a;
+          --accent-soft: #2a2219;
+          --code-bg: #100e0a;
+          --code-text: #ece7e0;
+          --ok: #7ec49b;
+          --warn: #d9b169;
+        }
+      }
+
+      :root[data-theme="dark"] {
+        --bg: #17150f;
+        --surface: #1f1d17;
+        --border: #332f26;
+        --text: #f0ece4;
+        --muted: #a49c8e;
+        --accent: #e0a08a;
+        --accent-soft: #2a2219;
+        --code-bg: #100e0a;
+        --code-text: #ece7e0;
+        --ok: #7ec49b;
+        --warn: #d9b169;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.65 ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .wrap {
+        max-width: 62rem;
+        margin: 0 auto;
+        padding: 0 1.25rem;
+      }
+
+      header.hero {
+        border-bottom: 1px solid var(--border);
+        background:
+          radial-gradient(
+            120% 90% at 88% -10%,
+            var(--accent-soft) 0%,
+            transparent 60%
+          ),
+          var(--surface);
+      }
+
+      .hero-inner {
+        padding: 3.5rem 0 3rem;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 650;
+        margin: 0 0 0.9rem;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin: 0 0 0.85rem;
+      }
+
+      .lede {
+        font-size: clamp(1.05rem, 2.2vw, 1.2rem);
+        color: var(--muted);
+        max-width: 42rem;
+        margin: 0 0 1.75rem;
+      }
+
+      .stack {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0 0 1.75rem;
+        padding: 0;
+        list-style: none;
+      }
+
+      .stack li {
+        font-size: 0.82rem;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.2rem 0.7rem;
+        background: var(--bg);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+      }
+
+      .btn {
+        display: inline-block;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.62rem 1.1rem;
+        border-radius: var(--radius);
+        border: 1px solid var(--accent);
+        background: var(--accent);
+        color: var(--surface);
+        transition:
+          transform 0.12s ease,
+          opacity 0.12s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        opacity: 0.92;
+      }
+
+      .btn.ghost {
+        background: transparent;
+        color: var(--text);
+        border-color: var(--border);
+      }
+
+      nav.toc {
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        overflow-x: auto;
+      }
+
+      nav.toc ul {
+        display: flex;
+        gap: 1.25rem;
+        list-style: none;
+        margin: 0;
+        padding: 0.8rem 0;
+        white-space: nowrap;
+      }
+
+      nav.toc a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+
+      nav.toc a:hover {
+        color: var(--accent);
+      }
+
+      section {
+        padding: 3rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      section:last-of-type {
+        border-bottom: 0;
+      }
+
+      h2 {
+        font-size: clamp(1.35rem, 3vw, 1.7rem);
+        letter-spacing: -0.01em;
+        margin: 0 0 0.35rem;
+      }
+
+      h2 + .sub {
+        color: var(--muted);
+        margin: 0 0 1.75rem;
+        max-width: 44rem;
+      }
+
+      h3 {
+        font-size: 1.02rem;
+        margin: 0 0 0.35rem;
+      }
+
+      .grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.15rem 1.25rem;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .card .role {
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent);
+        font-weight: 650;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--surface);
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.92rem;
+        min-width: 34rem;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 0.7rem 0.95rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      th {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: 0;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.88em;
+        background: var(--accent-soft);
+        color: var(--text);
+        padding: 0.1rem 0.35rem;
+        border-radius: 5px;
+      }
+
+      .code {
+        position: relative;
+        background: var(--code-bg);
+        color: var(--code-text);
+        border-radius: var(--radius);
+        margin: 0 0 1rem;
+        overflow: hidden;
+      }
+
+      .code pre {
+        margin: 0;
+        padding: 1.1rem 1.2rem;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.86rem;
+        line-height: 1.7;
+      }
+
+      .code .cmt {
+        color: #9a9384;
+      }
+
+      .copy {
+        position: absolute;
+        top: 0.55rem;
+        right: 0.55rem;
+        font: inherit;
+        font-size: 0.76rem;
+        padding: 0.28rem 0.6rem;
+        border-radius: 6px;
+        border: 1px solid #ffffff2e;
+        background: #ffffff14;
+        color: var(--code-text);
+        cursor: pointer;
+      }
+
+      .copy:hover {
+        background: #ffffff26;
+      }
+
+      ol.steps {
+        counter-reset: s;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      ol.steps > li {
+        margin-bottom: 1.9rem;
+      }
+
+      ol.steps > li > h3::before {
+        counter-increment: s;
+        content: counter(s);
+        display: inline-grid;
+        place-items: center;
+        width: 1.4rem;
+        height: 1.4rem;
+        margin-right: 0.55rem;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 0.8rem;
+        font-weight: 700;
+        vertical-align: 0.05rem;
+      }
+
+      .note {
+        border-left: 3px solid var(--accent);
+        background: var(--surface);
+        border-radius: 0 var(--radius) var(--radius) 0;
+        padding: 0.9rem 1.1rem;
+        color: var(--muted);
+        font-size: 0.93rem;
+        margin: 1.25rem 0 0;
+      }
+
+      .note strong {
+        color: var(--text);
+      }
+
+      ul.plain {
+        margin: 0;
+        padding-left: 1.1rem;
+        color: var(--muted);
+      }
+
+      ul.plain li {
+        margin-bottom: 0.4rem;
+      }
+
+      ul.plain li strong {
+        color: var(--text);
+      }
+
+      .status {
+        display: inline-block;
+        font-size: 0.74rem;
+        font-weight: 650;
+        padding: 0.12rem 0.5rem;
+        border-radius: 999px;
+        border: 1px solid currentColor;
+      }
+
+      .status.ok {
+        color: var(--ok);
+      }
+
+      .status.warn {
+        color: var(--warn);
+      }
+
+      footer {
+        padding: 2.5rem 0 3.5rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      footer a {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="wrap hero-inner">
+        <p class="eyebrow">🎓 Projeto de código aberto</p>
+        <h1>D'Ávilla — Sistema de Gestão Escolar</h1>
+        <p class="lede">
+          Gestão completa para uma escola de ensino fundamental brasileira, do 1º
+          ao 9º ano: matrícula, turmas, notas, frequência, cobranças e folha de
+          pagamento — com quatro portais e um controle de acesso que vale no
+          servidor, não só na tela.
+        </p>
+        <ul class="stack">
+          <li>Next.js 15 · App Router</li>
+          <li>TypeScript strict</li>
+          <li>PostgreSQL + Prisma</li>
+          <li>NextAuth</li>
+          <li>Tailwind</li>
+        </ul>
+        <div class="actions">
+          <a class="btn" href="#instalar">Rodar na sua máquina</a>
+          <a
+            class="btn ghost"
+            href="https://github.com/gabrielsoaressn/school-management-system"
+            >Ver o código no GitHub</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <nav class="toc">
+      <div class="wrap">
+        <ul>
+          <li><a href="#portais">Portais</a></li>
+          <li><a href="#instalar">Como rodar</a></li>
+          <li><a href="#contas">Contas de teste</a></li>
+          <li><a href="#dominio">Como o domínio funciona</a></li>
+          <li><a href="#seguranca">Segurança e LGPD</a></li>
+          <li><a href="#estado">Estado do projeto</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main>
+      <section id="portais">
+        <div class="wrap">
+          <h2>Quatro portais, um sistema</h2>
+          <p class="sub">
+            Cada perfil entra pela mesma porta e cai no seu próprio painel. O que
+            aparece no menu é filtrado pela mesma matriz de permissões que a API
+            usa para responder — a interface não é a única guarda.
+          </p>
+          <div class="grid">
+            <div class="card">
+              <span class="role">Administração</span>
+              <h3>Secretaria, coordenação e financeiro</h3>
+              <p>
+                Alunos, matrículas, turmas, grade curricular, ocorrências,
+                cobranças, folha de pagamento e relatórios. Folha e salários só
+                para administrador e financeiro — para os outros perfis os campos
+                nem saem do servidor.
+              </p>
+            </div>
+            <div class="card">
+              <span class="role">Professor</span>
+              <h3>Só as turmas em que leciona</h3>
+              <p>
+                Chamada, lançamento de notas e boletim das próprias turmas. Quem
+                leciona o quê vem da grade curricular, e é ela que autoriza a
+                escrita.
+              </p>
+            </div>
+            <div class="card">
+              <span class="role">Responsável</span>
+              <h3>Cobranças e boletim dos filhos</h3>
+              <p>
+                Faturas em aberto com multa e juros calculados, histórico de
+                pagamentos e o boletim de cada filho — e de mais ninguém.
+              </p>
+            </div>
+            <div class="card">
+              <span class="role">Aluno</span>
+              <h3>Notas e frequência</h3>
+              <p>
+                Painel com o próprio desempenho por disciplina e a frequência do
+                ano corrente.
+              </p>
+            </div>
+            <div class="card">
+              <span class="role">Público</span>
+              <h3>Matrícula on-line</h3>
+              <p>
+                Formulário em etapas para a família preencher, com envio de
+                documentos e consentimento registrado com data e versão do texto.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="instalar">
+        <div class="wrap">
+          <h2>Rodar na sua máquina</h2>
+          <p class="sub">
+            Precisa de Node 22+ e Docker (ou um PostgreSQL 16 acessível). São
+            cinco passos e uns poucos minutos — no fim você entra com qualquer um
+            dos perfis e navega pelo sistema com dados de exemplo.
+          </p>
+
+          <ol class="steps">
+            <li>
+              <h3>Clonar o repositório</h3>
+              <div class="code">
+                <button class="copy" type="button">Copiar</button>
+                <pre>
+git clone https://github.com/gabrielsoaressn/school-management-system.git
+cd school-management-system
+npm ci</pre
+                >
+              </div>
+            </li>
+
+            <li>
+              <h3>Subir o banco</h3>
+              <div class="code">
+                <button class="copy" type="button">Copiar</button>
+                <pre>
+docker run -d --name davilla-postgres \
+  -e POSTGRES_USER=davilla -e POSTGRES_PASSWORD=davilla \
+  -e POSTGRES_DB=school_management -p 5434:5432 postgres:16</pre
+                >
+              </div>
+            </li>
+
+            <li>
+              <h3>Configurar o ambiente</h3>
+              <div class="code">
+                <button class="copy" type="button">Copiar</button>
+                <pre>
+cp .env.example .env
+<span class="cmt"># edite o .env:</span>
+<span class="cmt"># DATABASE_URL="postgresql://davilla:davilla@localhost:5434/school_management?schema=public"</span>
+<span class="cmt"># NEXTAUTH_URL="http://localhost:3000"</span>
+<span class="cmt"># NEXTAUTH_SECRET= o resultado do comando abaixo</span>
+openssl rand -base64 32</pre
+                >
+              </div>
+            </li>
+
+            <li>
+              <h3>Criar as tabelas e os dados de exemplo</h3>
+              <div class="code">
+                <button class="copy" type="button">Copiar</button>
+                <pre>
+npx prisma migrate deploy   <span class="cmt"># aplica as migrations versionadas</span>
+npx prisma db seed          <span class="cmt"># dados de exemplo — APAGA tudo antes</span></pre
+                >
+              </div>
+            </li>
+
+            <li>
+              <h3>Iniciar</h3>
+              <div class="code">
+                <button class="copy" type="button">Copiar</button>
+                <pre>
+npm run dev
+<span class="cmt"># http://localhost:3000</span></pre
+                >
+              </div>
+            </li>
+          </ol>
+
+          <p class="note">
+            <strong>Por que não há demonstração on-line aqui.</strong> Esta página
+            é estática, e o sistema não é: ele precisa de um servidor Node e de um
+            PostgreSQL para autenticar, calcular juros e gravar chamada. Publicar
+            um ambiente de demonstração de verdade exige uma hospedagem com banco
+            (Vercel, Railway, Fly.io ou uma VPS) — o passo a passo de produção
+            está em <code>docs/DEPLOYMENT.md</code>.
+          </p>
+        </div>
+      </section>
+
+      <section id="contas">
+        <div class="wrap">
+          <h2>Contas de teste</h2>
+          <p class="sub">
+            Criadas pelo <code>prisma db seed</code>, todas com a senha
+            <code>password123</code>. São dados fictícios em banco local; a tela
+            de login só exibe essas credenciais fora de produção.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Perfil</th>
+                  <th>E-mail</th>
+                  <th>O que enxerga</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Administrador</td>
+                  <td><code>admin@davilla.com</code></td>
+                  <td>tudo</td>
+                </tr>
+                <tr>
+                  <td>Financeiro</td>
+                  <td><code>staff3@davilla.com</code></td>
+                  <td>cobranças, folha de pagamento, salários</td>
+                </tr>
+                <tr>
+                  <td>Secretaria</td>
+                  <td><code>staff2@davilla.com</code></td>
+                  <td>alunos e matrículas; <strong>não</strong> vê salários</td>
+                </tr>
+                <tr>
+                  <td>Coordenação</td>
+                  <td><code>staff1@davilla.com</code></td>
+                  <td>turmas, notas, ocorrências</td>
+                </tr>
+                <tr>
+                  <td>Professor</td>
+                  <td><code>professor1@davilla.com</code></td>
+                  <td>apenas as turmas em que leciona</td>
+                </tr>
+                <tr>
+                  <td>Responsável</td>
+                  <td><code>responsavel1@davilla.com</code></td>
+                  <td>cobranças e boletim dos filhos</td>
+                </tr>
+                <tr>
+                  <td>Aluno</td>
+                  <td><code>aluno1@davilla.com</code></td>
+                  <td>suas notas e frequência</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">
+            Entre com a secretaria e tente abrir
+            <code>/admin/financial/payroll</code>: o sistema devolve você para o
+            seu painel. A separação de acesso é testada de ponta a ponta, não
+            prometida.
+          </p>
+        </div>
+      </section>
+
+      <section id="dominio">
+        <div class="wrap">
+          <h2>Como o domínio funciona</h2>
+          <p class="sub">
+            Quatro decisões explicam a maior parte do código — e evitam os erros
+            típicos de sistema escolar.
+          </p>
+          <div class="grid">
+            <div class="card">
+              <h3>O ano letivo é uma entidade</h3>
+              <p>
+                Existe exatamente um ano corrente, garantido por índice único
+                parcial no banco. Turma, matrícula, avaliação e chamada pertencem
+                a um ano.
+              </p>
+            </div>
+            <div class="card">
+              <h3>A série está na matrícula, não no aluno</h3>
+              <p>
+                O aluno está no 3º ano <em>em 2026</em> e no 4º <em>em 2027</em>.
+                É isso que permite histórico escolar e rematrícula com promoção,
+                retenção e transferência.
+              </p>
+            </div>
+            <div class="card">
+              <h3>A grade curricular autoriza o professor</h3>
+              <p>
+                Quem leciona o quê em cada turma é a única coisa que libera
+                lançar nota ou chamada — verificado no servidor a cada
+                requisição.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Dinheiro é Decimal, data é São Paulo</h3>
+              <p>
+                Todo valor é <code>Decimal(10,2)</code>, nunca ponto flutuante.
+                Todo “hoje”, vencimento e dia de calendário passa por
+                <code>America/Sao_Paulo</code> explicitamente — inclusive nos
+                testes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="seguranca">
+        <div class="wrap">
+          <h2>Segurança e LGPD</h2>
+          <p class="sub">
+            Sistema escolar guarda CPF de menor de idade, endereço, laudo médico e
+            dado financeiro de família. O tratamento disso é parte do produto.
+          </p>
+          <ul class="plain">
+            <li>
+              <strong>Autorização por matriz de capacidades</strong>, aplicada no
+              middleware, nas páginas e em <em>todos</em> os handlers de API — a
+              mesma fonte de verdade nos três lugares.
+            </li>
+            <li>
+              <strong>Folha de pagamento e salários</strong> restritos a
+              administrador e financeiro; os campos são removidos do payload para
+              os outros perfis.
+            </li>
+            <li>
+              <strong>Trilha de auditoria</strong> das operações financeiras,
+              exclusões, mudanças de configuração e acessos a listagens com CPF.
+            </li>
+            <li>
+              <strong>Exclusão lógica</strong> em tudo que contém dado pessoal ou
+              financeiro, com filtro automático no acesso ao banco; exclusão
+              definitiva só por rotina administrativa explícita.
+            </li>
+            <li>
+              <strong>Consentimento versionado</strong> na matrícula, e a página
+              <code>/privacidade</code> publica finalidades, bases legais, prazos
+              de retenção e o canal de solicitação do titular.
+            </li>
+            <li>
+              <strong>Documentos fora da pasta pública</strong>: os arquivos
+              enviados na matrícula só são lidos por rota autenticada.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="estado">
+        <div class="wrap">
+          <h2>Estado do projeto</h2>
+          <p class="sub">
+            Pré-lançamento, sem dados reais. Em vez de prometer completude, o
+            repositório mantém <code>docs/AUDIT.md</code> com o que existe de
+            fato e <code>docs/BACKLOG.md</code> com o que falta, cada pendência
+            com contexto suficiente para alguém retomar.
+          </p>
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Verificação</th>
+                  <th>Situação</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Type-check (<code>tsc --noEmit</code>), modo strict</td>
+                  <td><span class="status ok">0 erros</span></td>
+                </tr>
+                <tr>
+                  <td>Testes unitários (dinheiro, permissões, datas, ids)</td>
+                  <td><span class="status ok">56 passando</span></td>
+                </tr>
+                <tr>
+                  <td>Smoke de ponta a ponta nos quatro portais</td>
+                  <td><span class="status ok">11 passando</span></td>
+                </tr>
+                <tr>
+                  <td>Build de produção</td>
+                  <td><span class="status ok">71 páginas</span></td>
+                </tr>
+                <tr>
+                  <td>Schema e banco em sincronia (migrations versionadas)</td>
+                  <td><span class="status ok">sem divergência</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p class="sub" style="margin: 1.75rem 0 0.75rem">
+            O que ainda <strong>não</strong> está pronto:
+          </p>
+          <ul class="plain">
+            <li>
+              rematrícula e gestão do ano letivo funcionam por API, ainda sem
+              tela;
+            </li>
+            <li>mensageria entre escola e responsáveis tem schema, sem interface;</li>
+            <li>
+              envio por WhatsApp e armazenamento em S3 não implementados — ambos
+              falham de forma explícita, nunca em silêncio;
+            </li>
+            <li>
+              integração com PSP brasileiro (boleto e PIX) especificada, não
+              implementada. <em>Não</em> usa Stripe, por decisão de projeto.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <p>
+          Código em
+          <a href="https://github.com/gabrielsoaressn/school-management-system"
+            >github.com/gabrielsoaressn/school-management-system</a
+          >. Documentação técnica na pasta <code>docs/</code> do repositório.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      document.querySelectorAll(".copy").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const code = button.parentElement.querySelector("pre");
+          try {
+            await navigator.clipboard.writeText(code.innerText.trim());
+            button.textContent = "Copiado";
+          } catch {
+            // Clipboard access can be denied; selecting the text still helps.
+            const range = document.createRange();
+            range.selectNodeContents(code);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            button.textContent = "Selecionado";
+          }
+          setTimeout(() => (button.textContent = "Copiar"), 1600);
+        });
+      });
+    </script>
+  </body>
+</html>
