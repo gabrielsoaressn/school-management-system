@@ -1,91 +1,83 @@
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
-export async function DELETE(request: Request) {
-  try {
-    const user = await getCurrentUser();
+/**
+ * Soft delete: the guardian record and its login are deactivated, never
+ * removed. Billing history, guardianship links and the audit trail all point at
+ * these rows, and financial records must survive an accidental "select all".
+ */
+export const DELETE = withAuth(
+  async (request, { user }) => {
+    try {
+      const { ids, deleteAll, search } = await request.json();
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+      let targets: { id: string; userId: string }[];
 
-    const { ids, deleteAll, search } = await request.json();
+      if (deleteAll) {
+        const whereClause: any = {};
 
-    let deletedCount = 0;
+        if (search) {
+          whereClause.OR = [
+            { firstName: { contains: search, mode: "insensitive" } },
+            { lastName: { contains: search, mode: "insensitive" } },
+            { cpf: { contains: search, mode: "insensitive" } },
+            { phoneNumber: { contains: search, mode: "insensitive" } },
+          ];
+        }
 
-    if (deleteAll) {
-      // Build where clause for search
-      const whereClause: any = {};
-
-      if (search) {
-        whereClause.OR = [
-          { firstName: { contains: search, mode: "insensitive" } },
-          { lastName: { contains: search, mode: "insensitive" } },
-          { cpf: { contains: search, mode: "insensitive" } },
-          { phoneNumber: { contains: search, mode: "insensitive" } },
-        ];
-      }
-
-      // Get all parent IDs matching the search
-      const parentsToDelete = await prisma.parent.findMany({
-        where: whereClause,
-        select: { id: true, userId: true },
-      });
-
-      // Delete in transaction
-      const result = await prisma.$transaction(async (tx) => {
-        // Delete parents
-        await tx.parent.deleteMany({
-          where: { id: { in: parentsToDelete.map(p => p.id) } },
+        targets = await prisma.parent.findMany({
+          where: whereClause,
+          select: { id: true, userId: true },
         });
+      } else {
+        if (!ids || ids.length === 0) {
+          return fail("Nenhum ID fornecido", 400);
+        }
 
-        // Delete users
-        await tx.user.deleteMany({
-          where: { id: { in: parentsToDelete.map(p => p.userId) } },
-        });
-
-        return parentsToDelete.length;
-      });
-
-      deletedCount = result;
-    } else {
-      // Delete specific IDs
-      if (!ids || ids.length === 0) {
-        return NextResponse.json(
-          { message: "Nenhum ID fornecido" },
-          { status: 400 }
-        );
-      }
-
-      // Get user IDs
-      const parents = await prisma.parent.findMany({
-        where: { id: { in: ids } },
-        select: { userId: true },
-      });
-
-      // Delete in transaction
-      await prisma.$transaction(async (tx) => {
-        await tx.parent.deleteMany({
+        targets = await prisma.parent.findMany({
           where: { id: { in: ids } },
+          select: { id: true, userId: true },
         });
+      }
 
-        await tx.user.deleteMany({
-          where: { id: { in: parents.map(p => p.userId) } },
-        });
+      if (targets.length === 0) {
+        return fail("Nenhum responsável encontrado para excluir", 404);
+      }
+
+      const deletedAt = new Date();
+
+      await prisma.$transaction([
+        prisma.parent.updateMany({
+          where: { id: { in: targets.map((p) => p.id) } },
+          data: { deletedAt },
+        }),
+        // The login goes inactive so the guardian can no longer sign in.
+        prisma.user.updateMany({
+          where: { id: { in: targets.map((p) => p.userId) } },
+          data: { isActive: false },
+        }),
+      ]);
+
+      await recordAudit({
+        action: "parent.delete",
+        entity: "Parent",
+        actor: user,
+        request,
+        after: {
+          ids: targets.map((p) => p.id),
+          deletedAt,
+          deleteAll: !!deleteAll,
+        },
       });
 
-      deletedCount = ids.length;
+      return ok(null, {
+        message: `${targets.length} responsável(is) excluído(s) com sucesso`,
+      });
+    } catch (error: any) {
+      return serverError(error, "Erro ao excluir responsáveis");
     }
-
-    return NextResponse.json({
-      message: `${deletedCount} responsável(is) excluído(s) com sucesso`,
-    });
-  } catch (error: any) {
-    console.error("Error bulk deleting parents:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir responsáveis" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { permission: "parent:delete" }
+);

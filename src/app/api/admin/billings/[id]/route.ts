@@ -1,207 +1,175 @@
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // GET - Get single billing
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await getCurrentUser();
+export const GET = withAuth<{ params: Promise<{ id: string }> }>(
+  async (request, { params }) => {
+    try {
+      const { id } = await params;
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const billing = await prisma.billing.findUnique({
-      where: { id: params.id },
-      include: {
-        parent: {
-          include: {
-            user: {
-              select: {
-                email: true,
+      const billing = await prisma.billing.findUnique({
+        where: { id: id },
+        include: {
+          parent: {
+            include: {
+              user: {
+                select: {
+                  email: true,
+                },
               },
-            },
-            students: {
-              select: {
-                firstName: true,
-                lastName: true,
-                studentId: true,
+              students: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  studentId: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      });
 
-    if (!billing) {
-      return NextResponse.json(
-        { message: "Cobrança não encontrada" },
-        { status: 404 }
-      );
+      if (!billing) {
+        return fail("Cobrança não encontrada", 404);
+      }
+
+      return ok(billing);
+    } catch (error: any) {
+      return serverError(error, "Erro ao buscar cobrança");
     }
-
-    return NextResponse.json({ data: billing });
-  } catch (error: any) {
-    console.error("Error fetching billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar cobrança" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { permission: "billing:read" }
+);
 
 // PUT - Update billing
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await getCurrentUser();
+export const PUT = withAuth<{ params: Promise<{ id: string }> }>(
+  async (request, { params }) => {
+    try {
+      const { id } = await params;
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const {
-      type,
-      description,
-      amount,
-      dueDate,
-      status,
-      paidDate,
-      paymentMethod,
-      transactionId,
-      isRecurring,
-      recurrence,
-      notes,
-    } = body;
-
-    // Check if billing exists
-    const existingBilling = await prisma.billing.findUnique({
-      where: { id: params.id },
-    });
-
-    if (!existingBilling) {
-      return NextResponse.json(
-        { message: "Cobrança não encontrada" },
-        { status: 404 }
-      );
-    }
-
-    // Calculate next billing date if recurring settings changed
-    let nextBillingDate = existingBilling.nextBillingDate;
-    if (isRecurring && recurrence !== "NONE" && dueDate) {
-      const dueDateObj = new Date(dueDate);
-      switch (recurrence) {
-        case "MONTHLY":
-          nextBillingDate = new Date(dueDateObj);
-          nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-          break;
-        case "QUARTERLY":
-          nextBillingDate = new Date(dueDateObj);
-          nextBillingDate.setMonth(nextBillingDate.getMonth() + 3);
-          break;
-        case "ANNUALLY":
-          nextBillingDate = new Date(dueDateObj);
-          nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
-          break;
-      }
-    } else if (!isRecurring) {
-      nextBillingDate = null;
-    }
-
-    // Update billing
-    const updatedBilling = await prisma.billing.update({
-      where: { id: params.id },
-      data: {
+      const body = await request.json();
+      const {
         type,
         description,
-        amount: amount ? parseFloat(amount) : undefined,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
+        amount,
+        dueDate,
         status,
-        paidDate: paidDate ? new Date(paidDate) : undefined,
+        paidDate,
         paymentMethod,
         transactionId,
         isRecurring,
         recurrence,
-        nextBillingDate,
         notes,
-      },
-      include: {
-        parent: {
-          select: {
-            firstName: true,
-            lastName: true,
+      } = body;
+
+      // Check if billing exists
+      const existingBilling = await prisma.billing.findUnique({
+        where: { id: id },
+      });
+
+      if (!existingBilling) {
+        return fail("Cobrança não encontrada", 404);
+      }
+
+      // Calculate next billing date if recurring settings changed
+      let nextBillingDate = existingBilling.nextBillingDate;
+      if (isRecurring && recurrence !== "NONE" && dueDate) {
+        const dueDateObj = new Date(dueDate);
+        switch (recurrence) {
+          case "MONTHLY":
+            nextBillingDate = new Date(dueDateObj);
+            nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+            break;
+          case "QUARTERLY":
+            nextBillingDate = new Date(dueDateObj);
+            nextBillingDate.setMonth(nextBillingDate.getMonth() + 3);
+            break;
+          case "ANNUALLY":
+            nextBillingDate = new Date(dueDateObj);
+            nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
+            break;
+        }
+      } else if (!isRecurring) {
+        nextBillingDate = null;
+      }
+
+      // Update billing
+      const updatedBilling = await prisma.billing.update({
+        where: { id: id },
+        data: {
+          type,
+          description,
+          amount: amount ? parseFloat(amount) : undefined,
+          dueDate: dueDate ? new Date(dueDate) : undefined,
+          status,
+          paidDate: paidDate ? new Date(paidDate) : undefined,
+          paymentMethod,
+          transactionId,
+          isRecurring,
+          recurrence,
+          nextBillingDate,
+          notes,
+        },
+        include: {
+          parent: {
+            select: {
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    return NextResponse.json({
-      message: "Cobrança atualizada com sucesso",
-      data: updatedBilling,
-    });
-  } catch (error: any) {
-    console.error("Error updating billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao atualizar cobrança" },
-      { status: 500 }
-    );
-  }
-}
+      return ok(updatedBilling, { message: "Cobrança atualizada com sucesso" });
+    } catch (error: any) {
+      return serverError(error, "Erro ao atualizar cobrança");
+    }
+  },
+  { permission: "billing:write" }
+);
 
 // DELETE - Delete billing
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await getCurrentUser();
+export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(
+  async (request, { params, user }) => {
+    try {
+      const { id } = await params;
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      // Check if billing exists
+      const billing = await prisma.billing.findUnique({
+        where: { id: id },
+      });
+
+      if (!billing) {
+        return fail("Cobrança não encontrada", 404);
+      }
+
+      // Don't allow deletion of paid billings
+      if (billing.status === "PAID") {
+        return fail(
+          "Não é possível excluir uma cobrança que já foi paga. Considere cancelá-la.",
+          400
+        );
+      }
+
+      const deletedAt = new Date();
+      await prisma.billing.update({ where: { id }, data: { deletedAt } });
+
+      await recordAudit({
+        action: "billing.delete",
+        entity: "Billing",
+        entityId: id,
+        actor: user,
+        request,
+        before: billing,
+        after: { deletedAt },
+      });
+
+      return ok(null, { message: "Cobrança excluída com sucesso" });
+    } catch (error: any) {
+      return serverError(error, "Erro ao excluir cobrança");
     }
-
-    // Check if billing exists
-    const billing = await prisma.billing.findUnique({
-      where: { id: params.id },
-    });
-
-    if (!billing) {
-      return NextResponse.json(
-        { message: "Cobrança não encontrada" },
-        { status: 404 }
-      );
-    }
-
-    // Don't allow deletion of paid billings
-    if (billing.status === "PAID") {
-      return NextResponse.json(
-        {
-          message:
-            "Não é possível excluir uma cobrança que já foi paga. Considere cancelá-la.",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Delete billing
-    await prisma.billing.delete({
-      where: { id: params.id },
-    });
-
-    return NextResponse.json({
-      message: "Cobrança excluída com sucesso",
-    });
-  } catch (error: any) {
-    console.error("Error deleting billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir cobrança" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { permission: "billing:write" }
+);

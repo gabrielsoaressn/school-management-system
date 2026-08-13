@@ -20,7 +20,7 @@ interface PaginationProps {
  *   onPageChange={(page) => setPage(page)}
  * />
  */
-export default function Pagination({
+export function Pagination({
   currentPage,
   totalPages,
   onPageChange,
@@ -58,11 +58,11 @@ export default function Pagination({
       </Button>
 
       <div className="flex items-center gap-2 px-4">
-        <span className="text-sm text-foreground font-medium">
+        <span className="text-sm font-medium text-foreground">
           Página {currentPage}
         </span>
         <span className="text-sm text-muted-foreground">de</span>
-        <span className="text-sm text-foreground font-medium">
+        <span className="text-sm font-medium text-foreground">
           {totalPages}
         </span>
       </div>
@@ -79,3 +79,5 @@ export default function Pagination({
     </div>
   );
 }
+
+export default Pagination;

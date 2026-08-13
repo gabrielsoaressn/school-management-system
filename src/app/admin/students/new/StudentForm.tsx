@@ -27,18 +27,6 @@ const formatPhone = (value: string) => {
   return value;
 };
 
-const formatCNPJ = (value: string) => {
-  const numbers = value.replace(/\D/g, "");
-  if (numbers.length <= 14) {
-    return numbers
-      .replace(/(\d{2})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1.$2")
-      .replace(/(\d{3})(\d)/, "$1/$2")
-      .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
-  }
-  return value;
-};
-
 interface Parent {
   id: string;
   firstName: string;
@@ -154,7 +142,7 @@ export default function StudentForm({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Erro ao criar aluno");
+        throw new Error(error.error || "Erro ao criar aluno");
       }
 
       const result = await response.json();
@@ -191,12 +179,12 @@ export default function StudentForm({
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Student Information */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <h2 className="mb-4 text-2xl font-bold text-gray-900">
           Dados do Aluno
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Nome *
             </label>
             <input
@@ -205,12 +193,12 @@ export default function StudentForm({
               required
               value={formData.firstName}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Sobrenome *
             </label>
             <input
@@ -219,12 +207,12 @@ export default function StudentForm({
               required
               value={formData.lastName}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Email *
             </label>
             <input
@@ -233,12 +221,12 @@ export default function StudentForm({
               required
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Senha *
             </label>
             <input
@@ -248,12 +236,12 @@ export default function StudentForm({
               minLength={6}
               value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Data de Nascimento *
             </label>
             <input
@@ -262,12 +250,12 @@ export default function StudentForm({
               required
               value={formData.dateOfBirth}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Gênero *
             </label>
             <select
@@ -275,7 +263,7 @@ export default function StudentForm({
               required
               value={formData.gender}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             >
               <option value="">Selecione</option>
               <option value="MALE">Masculino</option>
@@ -285,7 +273,7 @@ export default function StudentForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Série *
             </label>
             <select
@@ -293,7 +281,7 @@ export default function StudentForm({
               required
               value={formData.gradeLevel}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             >
               <option value="">Selecione</option>
               {gradeLevels.map((grade) => (
@@ -305,7 +293,7 @@ export default function StudentForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Turma *
             </label>
             <select
@@ -313,7 +301,7 @@ export default function StudentForm({
               required
               value={formData.section}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             >
               <option value="">Selecione</option>
               {sections.map((section) => (
@@ -325,7 +313,7 @@ export default function StudentForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Endereço
             </label>
             <input
@@ -333,12 +321,12 @@ export default function StudentForm({
               name="address"
               value={formData.address}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Telefone
             </label>
             <input
@@ -348,7 +336,7 @@ export default function StudentForm({
               onChange={handleChange}
               placeholder="(00) 00000-0000"
               maxLength={15}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             />
           </div>
         </div>
@@ -356,7 +344,7 @@ export default function StudentForm({
 
       {/* Parent Information */}
       <div className="border-t border-gray-200 pt-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <h2 className="mb-4 text-2xl font-bold text-gray-900">
           Dados do Responsável
         </h2>
 
@@ -376,7 +364,7 @@ export default function StudentForm({
 
         {useExistingParent ? (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Selecionar Responsável *
             </label>
             <select
@@ -384,7 +372,7 @@ export default function StudentForm({
               required
               value={formData.parentId}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             >
               <option value="">Selecione um responsável</option>
               {parents.map((parent) => (
@@ -395,9 +383,9 @@ export default function StudentForm({
             </select>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Nome *
               </label>
               <input
@@ -406,12 +394,12 @@ export default function StudentForm({
                 required={!useExistingParent}
                 value={formData.parentFirstName}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Sobrenome *
               </label>
               <input
@@ -420,12 +408,12 @@ export default function StudentForm({
                 required={!useExistingParent}
                 value={formData.parentLastName}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Email *
               </label>
               <input
@@ -434,12 +422,12 @@ export default function StudentForm({
                 required={!useExistingParent}
                 value={formData.parentEmail}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Senha *
               </label>
               <input
@@ -449,12 +437,12 @@ export default function StudentForm({
                 minLength={6}
                 value={formData.parentPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Telefone *
               </label>
               <input
@@ -465,12 +453,12 @@ export default function StudentForm({
                 onChange={handleChange}
                 placeholder="(00) 00000-0000"
                 maxLength={15}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 CPF
               </label>
               <input
@@ -480,12 +468,12 @@ export default function StudentForm({
                 onChange={handleChange}
                 placeholder="000.000.000-00"
                 maxLength={14}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Endereço
               </label>
               <input
@@ -493,12 +481,12 @@ export default function StudentForm({
                 name="parentAddress"
                 value={formData.parentAddress}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Profissão
               </label>
               <input
@@ -506,7 +494,7 @@ export default function StudentForm({
                 name="parentOccupation"
                 value={formData.parentOccupation}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
             </div>
           </div>
@@ -515,13 +503,11 @@ export default function StudentForm({
 
       {/* Billing Information */}
       <div className="border-t border-gray-200 pt-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          Mensalidade
-        </h2>
+        <h2 className="mb-4 text-2xl font-bold text-gray-900">Mensalidade</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Valor da Mensalidade (R$)
             </label>
             <input
@@ -531,15 +517,15 @@ export default function StudentForm({
               value={formData.tuitionAmount}
               onChange={handleChange}
               placeholder={settings.default_tuition_monthly || "1500"}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="mt-1 text-xs text-gray-500">
               Padrão: R$ {settings.default_tuition_monthly || "1500"}
             </p>
           </div>
 
           <div>
-            <label className="flex items-center mb-4 mt-8">
+            <label className="mb-4 mt-8 flex items-center">
               <input
                 type="checkbox"
                 checked={applyDiscount}
@@ -554,16 +540,16 @@ export default function StudentForm({
         </div>
 
         {applyDiscount && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Tipo de Desconto
               </label>
               <select
                 name="discountType"
                 value={formData.discountType}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               >
                 <option value="PERCENTAGE">Porcentagem (%)</option>
                 <option value="FIXED_AMOUNT">Valor Fixo (R$)</option>
@@ -571,7 +557,7 @@ export default function StudentForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 Valor do Desconto
               </label>
               <input
@@ -580,10 +566,12 @@ export default function StudentForm({
                 name="discountValue"
                 value={formData.discountValue}
                 onChange={handleChange}
-                placeholder={formData.discountType === "PERCENTAGE" ? "10" : "150"}
-                className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                placeholder={
+                  formData.discountType === "PERCENTAGE" ? "10" : "150"
+                }
+                className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-gray-900"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 text-xs text-gray-500">
                 {formData.discountType === "PERCENTAGE"
                   ? "Desconto em %"
                   : "Desconto em R$"}
@@ -593,7 +581,7 @@ export default function StudentForm({
         )}
 
         {settings.auto_generate_billing === "true" && (
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-sm p-4">
+          <div className="mt-4 rounded-sm border border-blue-200 bg-blue-50 p-4">
             <p className="text-sm text-blue-800">
               ℹ️ A mensalidade será gerada automaticamente com vencimento no dia{" "}
               {settings.billing_due_day || "10"} de cada mês.
@@ -603,11 +591,11 @@ export default function StudentForm({
       </div>
 
       {/* Submit Button */}
-      <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+      <div className="flex justify-end space-x-4 border-t border-gray-200 pt-6">
         <button
           type="button"
           onClick={() => router.back()}
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-sm transition"
+          className="rounded-sm bg-gray-200 px-6 py-2 font-semibold text-gray-800 transition hover:bg-gray-300"
           disabled={loading}
         >
           Cancelar
@@ -615,7 +603,7 @@ export default function StudentForm({
         <button
           type="submit"
           disabled={loading}
-          className="bg-gray-900 hover:bg-black text-white font-semibold py-2 px-6 rounded-sm transition disabled:opacity-50"
+          className="rounded-sm bg-gray-900 px-6 py-2 font-semibold text-white transition hover:bg-black disabled:opacity-50"
         >
           {loading ? "Criando..." : "Criar Aluno"}
         </button>

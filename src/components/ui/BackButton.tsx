@@ -20,7 +20,7 @@ interface BackButtonProps {
  * - Com router.back(): <BackButton /> (padrão)
  * - Com ação customizada: <BackButton onClick={() => {...}} />
  */
-export default function BackButton({
+export function BackButton({
   href,
   label = "Voltar",
   onClick,
@@ -63,3 +63,5 @@ export default function BackButton({
     </button>
   );
 }
+
+export default BackButton;

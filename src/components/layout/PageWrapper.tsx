@@ -10,7 +10,7 @@ interface PageWrapperProps {
  * PageWrapper - Container padronizado para conteúdo de páginas
  * Fornece spacing consistente e responsividade
  */
-export default function PageWrapper({
+export function PageWrapper({
   children,
   maxWidth = "2xl",
   className = "",
@@ -24,11 +24,13 @@ export default function PageWrapper({
     full: "max-w-full",
   };
 
+  // No background or min-height: AppShell owns the page frame. This is only a
+  // width constraint, so it can nest without doubling padding.
   return (
-    <div className="min-h-screen bg-background">
-      <main className={`container mx-auto px-4 lg:px-6 py-6 lg:py-8 ${maxWidthClasses[maxWidth]} ${className}`}>
-        {children}
-      </main>
+    <div className={`mx-auto w-full ${maxWidthClasses[maxWidth]} ${className}`}>
+      {children}
     </div>
   );
 }
+
+export default PageWrapper;

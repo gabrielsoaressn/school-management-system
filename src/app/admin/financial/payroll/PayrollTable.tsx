@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { formatCurrency } from "@/lib/money";
 
 interface Payroll {
   id: string;
@@ -29,8 +30,12 @@ export default function PayrollTable() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [monthFilter, setMonthFilter] = useState(String(new Date().getMonth() + 1));
-  const [yearFilter, setYearFilter] = useState(String(new Date().getFullYear()));
+  const [monthFilter, setMonthFilter] = useState(
+    String(new Date().getMonth() + 1)
+  );
+  const [yearFilter, setYearFilter] = useState(
+    String(new Date().getFullYear())
+  );
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -46,9 +51,9 @@ export default function PayrollTable() {
         setPayrolls(data.data);
         setTotalPages(data.pagination.totalPages);
       } else {
-        toast.error(data.message || "Erro ao carregar folha de pagamento");
+        toast.error(data.error || "Erro ao carregar folha de pagamento");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao carregar folha de pagamento");
     } finally {
       setLoading(false);
@@ -86,14 +91,24 @@ export default function PayrollTable() {
   };
 
   const monthNames = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
   ];
 
   return (
     <div>
       {/* Filters */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
         <input
           type="text"
           placeholder="Buscar por funcionário..."
@@ -102,7 +117,7 @@ export default function PayrollTable() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          className="px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         />
         <select
           value={monthFilter}
@@ -110,7 +125,7 @@ export default function PayrollTable() {
             setMonthFilter(e.target.value);
             setPage(1);
           }}
-          className="px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         >
           {monthNames.map((month, index) => (
             <option key={index} value={index + 1}>
@@ -124,7 +139,7 @@ export default function PayrollTable() {
             setYearFilter(e.target.value);
             setPage(1);
           }}
-          className="px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         >
           {[2024, 2025, 2026].map((year) => (
             <option key={year} value={year}>
@@ -138,7 +153,7 @@ export default function PayrollTable() {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          className="px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         >
           <option value="ALL">Todos os Status</option>
           <option value="SCHEDULED">Programado</option>
@@ -149,11 +164,11 @@ export default function PayrollTable() {
 
       {/* Table */}
       {loading ? (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-gray-500">Carregando...</p>
         </div>
       ) : payrolls.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <p className="text-gray-500">Nenhum pagamento encontrado</p>
         </div>
       ) : (
@@ -161,37 +176,61 @@ export default function PayrollTable() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-100 border-b border-gray-200">
-                  <th className="text-left p-3 font-semibold text-gray-700">ID Pagamento</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Funcionário</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Cargo</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Período</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Salário Base</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Total</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Status</th>
-                  <th className="text-left p-3 font-semibold text-gray-700">Ações</th>
+                <tr className="border-b border-gray-200 bg-gray-100">
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    ID Pagamento
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Funcionário
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Cargo
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Período
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Salário Base
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Total
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Status
+                  </th>
+                  <th className="p-3 text-left font-semibold text-gray-700">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {payrolls.map((payroll) => (
-                  <tr key={payroll.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="p-3 font-semibold text-sm">{payroll.paymentId}</td>
+                  <tr
+                    key={payroll.id}
+                    className="border-b border-gray-200 hover:bg-gray-50"
+                  >
+                    <td className="p-3 text-sm font-semibold">
+                      {payroll.paymentId}
+                    </td>
                     <td className="p-3">
                       {payroll.employee.firstName} {payroll.employee.lastName}
                     </td>
-                    <td className="p-3 text-sm text-gray-600">{payroll.employee.position}</td>
                     <td className="p-3 text-sm text-gray-600">
-                      {monthNames[payroll.referenceMonth - 1]}/{payroll.referenceYear}
+                      {payroll.employee.position}
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      R$ {payroll.baseSalary.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      {monthNames[payroll.referenceMonth - 1]}/
+                      {payroll.referenceYear}
+                    </td>
+                    <td className="p-3 text-sm text-gray-600">
+                      {formatCurrency(payroll.baseSalary)}
                     </td>
                     <td className="p-3 font-semibold text-green-700">
-                      R$ {payroll.totalAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      {formatCurrency(payroll.totalAmount)}
                     </td>
                     <td className="p-3">
                       <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${getStatusColor(
+                        className={`rounded px-2 py-1 text-xs font-semibold ${getStatusColor(
                           payroll.status
                         )}`}
                       >
@@ -201,7 +240,7 @@ export default function PayrollTable() {
                     <td className="p-3">
                       <Link
                         href={`/admin/financial/payroll/${payroll.id}`}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-semibold"
+                        className="text-sm font-semibold text-blue-600 hover:text-blue-800"
                       >
                         Ver Detalhes
                       </Link>
@@ -218,7 +257,7 @@ export default function PayrollTable() {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                className="rounded-sm bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Anterior
               </button>
@@ -228,7 +267,7 @@ export default function PayrollTable() {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+                className="rounded-sm bg-gray-200 px-4 py-2 text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Próxima
               </button>

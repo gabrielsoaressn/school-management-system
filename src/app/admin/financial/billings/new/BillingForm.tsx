@@ -31,7 +31,9 @@ export default function BillingForm({ parents }: BillingFormProps) {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value, type } = e.target;
 
@@ -40,7 +42,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
       setFormData({
         ...formData,
         [name]: checked,
-        recurrence: checked ? "MONTHLY" : "NONE"
+        recurrence: checked ? "MONTHLY" : "NONE",
       });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -66,9 +68,9 @@ export default function BillingForm({ parents }: BillingFormProps) {
         toast.success(data.message);
         router.push("/admin/financial/billings");
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao criar cobrança");
     } finally {
       setLoading(false);
@@ -79,7 +81,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Parent Selection */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-semibold text-gray-700">
           Responsável Financeiro *
         </label>
         <select
@@ -87,7 +89,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
           value={formData.parentId}
           onChange={handleChange}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         >
           <option value="">Selecione um responsável</option>
           {parents.map((parent) => (
@@ -101,7 +103,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
 
       {/* Billing Type */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-semibold text-gray-700">
           Tipo de Cobrança *
         </label>
         <select
@@ -109,7 +111,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
           value={formData.type}
           onChange={handleChange}
           required
-          className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         >
           <option value="">Selecione o tipo</option>
           <option value="TUITION">Mensalidade</option>
@@ -121,7 +123,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-semibold text-gray-700">
           Descrição *
         </label>
         <textarea
@@ -131,14 +133,14 @@ export default function BillingForm({ parents }: BillingFormProps) {
           required
           rows={3}
           placeholder="Descrição da cobrança..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         />
       </div>
 
       {/* Amount and Due Date */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-gray-700">
             Valor (R$) *
           </label>
           <input
@@ -150,12 +152,12 @@ export default function BillingForm({ parents }: BillingFormProps) {
             step="0.01"
             min="0"
             placeholder="0.00"
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-gray-700">
             Data de Vencimento *
           </label>
           <input
@@ -164,20 +166,20 @@ export default function BillingForm({ parents }: BillingFormProps) {
             value={formData.dueDate}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
           />
         </div>
       </div>
 
       {/* Recurring Billing */}
-      <div className="border border-gray-300 rounded-sm p-4">
-        <div className="flex items-center mb-3">
+      <div className="rounded-sm border border-gray-300 p-4">
+        <div className="mb-3 flex items-center">
           <input
             type="checkbox"
             name="isRecurring"
             checked={formData.isRecurring}
             onChange={handleChange}
-            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+            className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
           />
           <label className="ml-2 text-sm font-semibold text-gray-700">
             Cobrança Recorrente
@@ -186,21 +188,22 @@ export default function BillingForm({ parents }: BillingFormProps) {
 
         {formData.isRecurring && (
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Periodicidade
             </label>
             <select
               name="recurrence"
               value={formData.recurrence}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             >
               <option value="MONTHLY">Mensal</option>
               <option value="QUARTERLY">Trimestral</option>
               <option value="ANNUALLY">Anual</option>
             </select>
             <p className="mt-2 text-xs text-gray-500">
-              A próxima cobrança será gerada automaticamente após o vencimento desta.
+              A próxima cobrança será gerada automaticamente após o vencimento
+              desta.
             </p>
           </div>
         )}
@@ -208,7 +211,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-semibold text-gray-700">
           Observações
         </label>
         <textarea
@@ -217,7 +220,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
           onChange={handleChange}
           rows={3}
           placeholder="Observações adicionais..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
         />
       </div>
 
@@ -226,13 +229,13 @@ export default function BillingForm({ parents }: BillingFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-sm bg-green-600 px-6 py-2 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Criando..." : "Criar Cobrança"}
         </button>
         <Link
           href="/admin/financial/billings"
-          className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-sm transition"
+          className="rounded-sm bg-gray-200 px-6 py-2 font-semibold text-gray-700 transition hover:bg-gray-300"
         >
           Cancelar
         </Link>

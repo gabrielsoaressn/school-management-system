@@ -28,6 +28,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# uploads (nunca versionados: contêm documentos pessoais)
+storage/
+
 # logs
 logs/
 
@@ -37,3 +40,7 @@ logs/
 
 # claude
 .claude/settings.local.json
+
+# playwright
+playwright-report/
+test-results/

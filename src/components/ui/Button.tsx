@@ -3,7 +3,8 @@ import { Loader2 } from "lucide-react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "destructive" | "success";
+  variant?:
+    "primary" | "secondary" | "outline" | "ghost" | "destructive" | "success";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   fullWidth?: boolean;
@@ -22,7 +23,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  *
  * Regra UX: Apenas 1 botão primary por tela!
  */
-export default function Button({
+export function Button({
   children,
   variant = "primary",
   size = "md",
@@ -82,13 +83,7 @@ export default function Button({
 
   return (
     <button
-      className={`
-        ${baseClasses}
-        ${variantClasses[variant]}
-        ${sizeClasses[size]}
-        ${widthClass}
-        ${className}
-      `}
+      className={` ${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${widthClass} ${className} `}
       disabled={disabled || loading}
       {...props}
     >
@@ -97,3 +92,5 @@ export default function Button({
     </button>
   );
 }
+
+export default Button;

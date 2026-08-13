@@ -11,7 +11,7 @@ interface CardProps {
  * Card - Container moderno com sombra sutil
  * Segue o design system: fundo branco, borda sutil, sombra leve
  */
-export default function Card({
+export function Card({
   children,
   className = "",
   padding = "md",
@@ -24,23 +24,15 @@ export default function Card({
     lg: "p-8",
   };
 
-  const hoverClasses = hover
-    ? "transition-shadow hover:shadow-md"
-    : "";
+  const hoverClasses = hover ? "transition-shadow hover:shadow-md" : "";
 
   return (
     <div
-      className={`
-        bg-card
-        border border-border
-        rounded-lg
-        shadow-sm
-        ${paddingClasses[padding]}
-        ${hoverClasses}
-        ${className}
-      `}
+      className={`rounded-lg border border-border bg-card shadow-sm ${paddingClasses[padding]} ${hoverClasses} ${className} `}
     >
       {children}
     </div>
   );
 }
+
+export default Card;

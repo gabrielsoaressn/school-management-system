@@ -7,11 +7,11 @@ interface LogoProps {
   href?: string;
 }
 
-export default function Logo({
+export function Logo({
   className = "",
   showText = true,
   size = "md",
-  href = "/admin/dashboard"
+  href = "/admin/dashboard",
 }: LogoProps) {
   const sizes = {
     sm: { width: 32, height: 32, text: "text-xl" },
@@ -72,15 +72,18 @@ export default function Logo({
 
   if (href) {
     return (
-      <Link href={href} className={`flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer ${className}`}>
+      <Link
+        href={href}
+        className={`flex cursor-pointer items-center gap-3 transition-opacity hover:opacity-80 ${className}`}
+      >
         {logoContent}
       </Link>
     );
   }
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      {logoContent}
-    </div>
+    <div className={`flex items-center gap-3 ${className}`}>{logoContent}</div>
   );
 }
+
+export default Logo;

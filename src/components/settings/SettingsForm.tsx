@@ -16,13 +16,16 @@ interface SettingsFormProps {
   settings: Setting[];
 }
 
-export default function SettingsForm({ settings }: SettingsFormProps) {
+export function SettingsForm({ settings }: SettingsFormProps) {
   const router = useRouter();
   const [values, setValues] = useState<Record<string, string>>(
-    settings.reduce((acc, setting) => {
-      acc[setting.key] = setting.value;
-      return acc;
-    }, {} as Record<string, string>)
+    settings.reduce(
+      (acc, setting) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      },
+      {} as Record<string, string>
+    )
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -101,16 +104,17 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {settings.map((setting) => (
           <div key={setting.id} className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">
               {formatLabel(setting.label)}
             </label>
             {renderInput(setting)}
-            {setting.type === "number" && setting.key.includes("percentage") && (
-              <p className="text-xs text-gray-500">Valor em porcentagem</p>
-            )}
+            {setting.type === "number" &&
+              setting.key.includes("percentage") && (
+                <p className="text-xs text-gray-500">Valor em porcentagem</p>
+              )}
             {setting.type === "number" && setting.key.includes("rate") && (
               <p className="text-xs text-gray-500">Valor em reais (R$)</p>
             )}
@@ -118,11 +122,11 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
         ))}
       </div>
 
-      <div className="flex justify-end pt-4 border-t border-gray-200">
+      <div className="flex justify-end border-t border-gray-200 pt-4">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-sm bg-blue-600 px-6 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting ? "Salvando..." : "Salvar Configurações"}
         </button>
@@ -130,3 +134,5 @@ export default function SettingsForm({ settings }: SettingsFormProps) {
     </form>
   );
 }
+
+export default SettingsForm;

@@ -1,202 +1,177 @@
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // GET - Get single parent
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await getCurrentUser();
+export const GET = withAuth<{ params: Promise<{ id: string }> }>(
+  async (request, { params }) => {
+    try {
+      const { id } = await params;
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-
-    const parent = await prisma.parent.findUnique({
-      where: { id: params.id },
-      include: {
-        user: {
-          select: {
-            email: true,
-            isActive: true,
+      const parent = await prisma.parent.findUnique({
+        where: { id: id },
+        include: {
+          user: {
+            select: {
+              email: true,
+              isActive: true,
+            },
           },
-        },
-        students: {
-          include: {
-            enrollments: {
-              include: {
-                class: true,
+          students: {
+            include: {
+              enrollments: {
+                include: {
+                  class: true,
+                },
               },
             },
           },
-        },
-        billings: {
-          orderBy: {
-            dueDate: "desc",
+          billings: {
+            orderBy: {
+              dueDate: "desc",
+            },
+            take: 10,
           },
-          take: 10,
         },
-      },
-    });
+      });
 
-    if (!parent) {
-      return NextResponse.json(
-        { message: "Responsável não encontrado" },
-        { status: 404 }
-      );
+      if (!parent) {
+        return fail("Responsável não encontrado", 404);
+      }
+
+      return ok(parent);
+    } catch (error: any) {
+      return serverError(error, "Erro ao buscar responsável");
     }
-
-    return NextResponse.json({ data: parent });
-  } catch (error: any) {
-    console.error("Error fetching parent:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar responsável" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { permission: "parent:read" }
+);
 
 // PUT - Update parent
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await getCurrentUser();
+export const PUT = withAuth<{ params: Promise<{ id: string }> }>(
+  async (request, { params }) => {
+    try {
+      const { id } = await params;
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+      const body = await request.json();
+      const {
+        firstName,
+        lastName,
+        phoneNumber,
+        address,
+        occupation,
+        cpf,
+        additionalEmail,
+        isActive,
+      } = body;
 
-    const body = await request.json();
-    const {
-      firstName,
-      lastName,
-      phoneNumber,
-      address,
-      occupation,
-      cpf,
-      additionalEmail,
-      isActive,
-    } = body;
-
-    // Check if parent exists
-    const existingParent = await prisma.parent.findUnique({
-      where: { id: params.id },
-      include: { user: true },
-    });
-
-    if (!existingParent) {
-      return NextResponse.json(
-        { message: "Responsável não encontrado" },
-        { status: 404 }
-      );
-    }
-
-    // Check if CPF is being changed and if it's already in use
-    if (cpf && cpf !== existingParent.cpf) {
-      const existingCpf = await prisma.parent.findUnique({
-        where: { cpf },
+      // Check if parent exists
+      const existingParent = await prisma.parent.findUnique({
+        where: { id: id },
+        include: { user: true },
       });
 
-      if (existingCpf) {
-        return NextResponse.json(
-          { message: "CPF já está cadastrado" },
-          { status: 400 }
-        );
+      if (!existingParent) {
+        return fail("Responsável não encontrado", 404);
       }
-    }
 
-    // Update parent and user in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Update parent
-      const updatedParent = await tx.parent.update({
-        where: { id: params.id },
-        data: {
-          firstName,
-          lastName,
-          phoneNumber,
-          address,
-          occupation,
-          cpf,
-          email: additionalEmail,
+      // Check if CPF is being changed and if it's already in use
+      if (cpf && cpf !== existingParent.cpf) {
+        const existingCpf = await prisma.parent.findUnique({
+          where: { cpf },
+        });
+
+        if (existingCpf) {
+          return fail("CPF já está cadastrado", 400);
+        }
+      }
+
+      // Update parent and user in a transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // Update parent
+        const updatedParent = await tx.parent.update({
+          where: { id: id },
+          data: {
+            firstName,
+            lastName,
+            phoneNumber,
+            address,
+            occupation,
+            cpf,
+            email: additionalEmail,
+          },
+        });
+
+        // Update user status if provided
+        if (typeof isActive !== "undefined") {
+          await tx.user.update({
+            where: { id: existingParent.userId },
+            data: { isActive },
+          });
+        }
+
+        return updatedParent;
+      });
+
+      return ok(result, { message: "Responsável atualizado com sucesso" });
+    } catch (error: any) {
+      return serverError(error, "Erro ao atualizar responsável");
+    }
+  },
+  { permission: "parent:write" }
+);
+
+// DELETE - Delete parent
+export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(
+  async (request, { params, user }) => {
+    try {
+      const { id } = await params;
+
+      // Check if parent exists and has students
+      const parent = await prisma.parent.findUnique({
+        where: { id: id },
+        include: {
+          students: true,
+          user: true,
         },
       });
 
-      // Update user status if provided
-      if (typeof isActive !== "undefined") {
-        await tx.user.update({
-          where: { id: existingParent.userId },
-          data: { isActive },
-        });
+      if (!parent) {
+        return fail("Responsável não encontrado", 404);
       }
 
-      return updatedParent;
-    });
+      if (parent.students.length > 0) {
+        return fail(
+          "Não é possível excluir um responsável com alunos vinculados",
+          400
+        );
+      }
 
-    return NextResponse.json({
-      message: "Responsável atualizado com sucesso",
-      data: result,
-    });
-  } catch (error: any) {
-    console.error("Error updating parent:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao atualizar responsável" },
-      { status: 500 }
-    );
-  }
-}
+      // Soft delete, and the login goes inactive.
+      const deletedAt = new Date();
+      await prisma.$transaction([
+        prisma.parent.update({ where: { id }, data: { deletedAt } }),
+        prisma.user.update({
+          where: { id: parent.userId },
+          data: { isActive: false },
+        }),
+      ]);
 
-// DELETE - Delete parent
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await getCurrentUser();
+      await recordAudit({
+        action: "parent.delete",
+        entity: "Parent",
+        entityId: id,
+        actor: user,
+        request,
+        before: parent,
+        after: { deletedAt },
+      });
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return ok(null, { message: "Responsável excluído com sucesso" });
+    } catch (error: any) {
+      return serverError(error, "Erro ao excluir responsável");
     }
-
-    // Check if parent exists and has students
-    const parent = await prisma.parent.findUnique({
-      where: { id: params.id },
-      include: {
-        students: true,
-        user: true,
-      },
-    });
-
-    if (!parent) {
-      return NextResponse.json(
-        { message: "Responsável não encontrado" },
-        { status: 404 }
-      );
-    }
-
-    if (parent.students.length > 0) {
-      return NextResponse.json(
-        { message: "Não é possível excluir um responsável com alunos vinculados" },
-        { status: 400 }
-      );
-    }
-
-    // Delete parent (user will be deleted by cascade)
-    await prisma.user.delete({
-      where: { id: parent.userId },
-    });
-
-    return NextResponse.json({
-      message: "Responsável excluído com sucesso",
-    });
-  } catch (error: any) {
-    console.error("Error deleting parent:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir responsável" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { permission: "parent:delete" }
+);

@@ -1,7 +1,5 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Link from "next/link";
-import PageHeader from "@/components/layout/PageHeader";
 import PageWrapper from "@/components/layout/PageWrapper";
 import BackButton from "@/components/ui/BackButton";
 import Button from "@/components/ui/Button";
@@ -10,22 +8,12 @@ import EmployeesTable from "./EmployeesTable";
 import { UserPlus } from "lucide-react";
 
 export default async function EmployeesPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  await requirePermission("employee:read");
 
   return (
     <>
-      <PageHeader />
-
       <PageWrapper>
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <BackButton href="/admin/financial" />
           <Link href="/admin/financial/employees/new">
             <Button variant="primary">
@@ -37,7 +25,7 @@ export default async function EmployeesPage() {
 
         <Card>
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold text-foreground mb-2">
+            <h1 className="mb-2 text-3xl font-semibold text-foreground">
               Funcionários
             </h1>
             <p className="text-muted-foreground">

@@ -45,9 +45,9 @@ export default function ParentForm() {
         toast.success(data.message);
         router.push("/admin/financial/parents");
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
-    } catch (error) {
+    } catch {
       toast.error("Erro ao criar responsável");
     } finally {
       setLoading(false);
@@ -58,10 +58,10 @@ export default function ParentForm() {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Personal Information */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Dados Pessoais</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h2 className="mb-4 text-xl font-bold text-gray-900">Dados Pessoais</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Nome *
             </label>
             <input
@@ -70,12 +70,12 @@ export default function ParentForm() {
               value={formData.firstName}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Sobrenome *
             </label>
             <input
@@ -84,12 +84,12 @@ export default function ParentForm() {
               value={formData.lastName}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               CPF
             </label>
             <input
@@ -98,12 +98,12 @@ export default function ParentForm() {
               value={formData.cpf}
               onChange={handleChange}
               placeholder="000.000.000-00"
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Telefone *
             </label>
             <input
@@ -113,12 +113,12 @@ export default function ParentForm() {
               onChange={handleChange}
               required
               placeholder="(00) 00000-0000"
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Endereço *
             </label>
             <textarea
@@ -127,12 +127,12 @@ export default function ParentForm() {
               onChange={handleChange}
               required
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Ocupação
             </label>
             <input
@@ -140,12 +140,12 @@ export default function ParentForm() {
               name="occupation"
               value={formData.occupation}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Email Adicional
             </label>
             <input
@@ -153,7 +153,7 @@ export default function ParentForm() {
               name="additionalEmail"
               value={formData.additionalEmail}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
         </div>
@@ -161,10 +161,12 @@ export default function ParentForm() {
 
       {/* Login Information */}
       <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Dados de Acesso</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h2 className="mb-4 text-xl font-bold text-gray-900">
+          Dados de Acesso
+        </h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Email (Login) *
             </label>
             <input
@@ -173,12 +175,12 @@ export default function ParentForm() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-semibold text-gray-700">
               Senha *
             </label>
             <input
@@ -188,7 +190,7 @@ export default function ParentForm() {
               onChange={handleChange}
               required
               minLength={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
         </div>
@@ -199,13 +201,13 @@ export default function ParentForm() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-sm bg-green-600 px-6 py-2 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Salvando..." : "Salvar Responsável"}
         </button>
         <Link
           href="/admin/financial/parents"
-          className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-6 rounded-sm transition"
+          className="rounded-sm bg-gray-200 px-6 py-2 font-semibold text-gray-700 transition hover:bg-gray-300"
         >
           Cancelar
         </Link>

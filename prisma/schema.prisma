@@ -18,7 +18,12 @@ enum UserRole {
   ADMIN
   PARENT
   STUDENT
-  TEACHER // 🆕 Adicionado para login de professores
+  TEACHER
+  SECRETARY
+  COORDINATOR
+  FINANCE
+  /// Employee with a login but no portal access (support staff).
+  STAFF
 }
 
 enum Gender {
@@ -30,10 +35,20 @@ enum Gender {
 enum PaymentStatus {
   DRAFT
   PENDING
+  /// Some payments received, still short of the full amount.
+  PARTIALLY_PAID
   PAID
   OVERDUE
-  RENEGOTIATED // 🆕 Para renegociações
+  RENEGOTIATED
   CANCELLED
+}
+
+enum PaymentMethod {
+  PIX
+  BOLETO
+  CARD
+  CASH
+  TRANSFER
 }
 
 enum AttendanceStatus {
@@ -57,11 +72,6 @@ enum EmployeeType {
   ADMIN
 }
 
-enum DiscountType {
-  PERCENTAGE
-  FIXED_AMOUNT
-}
-
 enum BillingCycle {
   MONTHLY
   QUARTERLY
@@ -80,6 +90,26 @@ enum RecurrenceType {
   MONTHLY
   QUARTERLY
   ANNUALLY
+}
+
+enum AcademicYearStatus {
+  /// Being set up: classes and staffing defined, enrolments not open yet.
+  PLANNING
+  /// In progress. Exactly one year is ACTIVE and isCurrent at a time.
+  ACTIVE
+  /// Finished. Kept for history; nothing new is written against it.
+  CLOSED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  /// Finished the year and was promoted.
+  COMPLETED
+  /// Finished the year and was held back.
+  RETAINED
+  /// Left the school during the year.
+  TRANSFERRED
+  CANCELLED
 }
 
 enum PayrollStatus {
@@ -101,9 +131,9 @@ enum EnrollmentRequestStatus {
 }
 
 enum GuardianType {
-  FINANCIAL    // Responsável Financeiro
-  PEDAGOGICAL  // Responsável Pedagógico
-  BOTH         // Ambos
+  FINANCIAL // Responsável Financeiro
+  PEDAGOGICAL // Responsável Pedagógico
+  BOTH // Ambos
 }
 
 enum ReminderType {
@@ -121,11 +151,11 @@ enum ReminderStatus {
 }
 
 enum OccurrenceType {
-  BEHAVIORAL  // Comportamento
-  ACADEMIC    // Acadêmico
-  HEALTH      // Saúde
-  ATTENDANCE  // Frequência
-  POSITIVE    // Elogio/Reconhecimento
+  BEHAVIORAL // Comportamento
+  ACADEMIC // Acadêmico
+  HEALTH // Saúde
+  ATTENDANCE // Frequência
+  POSITIVE // Elogio/Reconhecimento
   OTHER
 }
 
@@ -138,11 +168,11 @@ enum OccurrenceSeverity {
 
 enum DocumentType {
   ENROLLMENT_DECLARATION // Declaração de Matrícula
-  SERVICE_CONTRACT       // Contrato de Prestação de Serviços
-  ACADEMIC_TRANSCRIPT    // Histórico Escolar
-  CONDUCT_CERTIFICATE    // Atestado de Conduta
+  SERVICE_CONTRACT // Contrato de Prestação de Serviços
+  ACADEMIC_TRANSCRIPT // Histórico Escolar
+  CONDUCT_CERTIFICATE // Atestado de Conduta
   ENROLLMENT_CERTIFICATE // Certificado de Matrícula
-  CUSTOM                 // Personalizado
+  CUSTOM // Personalizado
 }
 
 // ============================================
@@ -160,13 +190,18 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  /// Accounts created by the school start with a temporary password.
+  mustChangePassword Boolean   @default(false)
+  passwordChangedAt  DateTime?
+
   // Relations
-  student       Student?
-  parent        Parent?
-  employee      Employee?
-  accounts      Account[]
-  sessions      Session[]
-  notifications Notification[]
+  student             Student?
+  parent              Parent?
+  employee            Employee?
+  accounts            Account[]
+  sessions            Session[]
+  notifications       Notification[]
+  passwordResetTokens PasswordResetToken[]
 
   @@index([email])
   @@index([role])
@@ -185,8 +220,6 @@ model Student {
   gender         Gender
   address        String
   phoneNumber    String?
-  gradeLevel     String
-  section        String
   enrollmentDate DateTime @default(now())
   profilePhoto   String?
 
@@ -195,9 +228,6 @@ model Student {
 
   // Relations existentes
   enrollments Enrollment[]
-  grades      Grade[]
-  attendance  Attendance[]
-  tuitions    Tuition[]
   reports     AcademicReport[]
 
   // 🆕 Novos relacionamentos - Módulos Avançados
@@ -208,12 +238,15 @@ model Student {
   occurrences           Occurrence[]
   generatedDocuments    GeneratedDocument[]
 
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([studentId])
   @@index([parentId])
-  @@index([gradeLevel, section])
+  @@index([deletedAt])
 }
 
 // Parent Model
@@ -241,10 +274,14 @@ model Parent {
   guardianRelationships GuardianRelationship[]
   financialContacts     FinancialContact[]
 
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([cpf])
+  @@index([deletedAt])
 }
 
 // Employee Model
@@ -263,7 +300,7 @@ model Employee {
   employeeType EmployeeType
   position     String
   department   String?
-  salary       Float
+  salary       Decimal      @db.Decimal(10, 2)
   hireDate     DateTime     @default(now())
   profilePhoto String?
   cpf          String?      @unique
@@ -276,12 +313,16 @@ model Employee {
   teacher  Teacher?
   payrolls Payroll[]
 
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([employeeId])
   @@index([employeeType])
   @@index([cpf])
+  @@index([deletedAt])
 }
 
 // Teacher Model (extends Employee)
@@ -296,11 +337,11 @@ model Teacher {
 
   // Relations existentes
   subjects TeacherSubject[]
-  grades   Grade[]
 
   // 🆕 Novos relacionamentos - Módulo 2
   assessments       Assessment[]
   attendanceRecords AttendanceRecord[]
+  classAssignments  ClassSubjectTeacher[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -319,11 +360,11 @@ model Subject {
 
   // Relations existentes
   teachers TeacherSubject[]
-  grades   Grade[]
 
   // 🆕 Novos relacionamentos - Módulo 2
   assessments       Assessment[]
   attendanceRecords AttendanceRecord[]
+  classAssignments  ClassSubjectTeacher[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -347,146 +388,154 @@ model TeacherSubject {
   @@index([subjectId])
 }
 
-// Class Model
-model Class {
-  id           String  @id @default(cuid())
-  name         String
-  gradeLevel   String
-  section      String
-  academicYear String
-  roomNumber   String?
-  schedule     String?
-  capacity     Int?
+/// The school year. Everything academic — a class, an enrolment, a grade, a
+/// register entry — belongs to exactly one of these, so "3º Ano" is always a
+/// statement about a particular year.
+model AcademicYear {
+  id        String             @id @default(cuid())
+  year      Int                @unique
+  startDate DateTime           @db.Date
+  endDate   DateTime           @db.Date
+  /// Exactly one row is true; enforced by a partial unique index.
+  isCurrent Boolean            @default(false)
+  status    AcademicYearStatus @default(PLANNING)
 
-  // Relations existentes
-  enrollments Enrollment[]
-
-  // 🆕 Novos relacionamentos - Módulo 2
+  classes           Class[]
+  enrollments       Enrollment[]
+  assignments       ClassSubjectTeacher[]
   assessments       Assessment[]
   attendanceRecords AttendanceRecord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([gradeLevel, section, academicYear])
+  @@index([isCurrent])
+  @@index([status])
+}
+
+// Class Model
+/// A classroom in a given year: "6º Ano A / 2026". Not subject-specific — the
+/// curriculum lives in ClassSubjectTeacher.
+model Class {
+  id             String       @id @default(cuid())
+  name           String
+  gradeLevel     String
+  section        String
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  roomNumber     String?
+  schedule       String?
+  capacity       Int?
+
+  enrollments Enrollment[]
+  assignments ClassSubjectTeacher[]
+
+  assessments       Assessment[]
+  attendanceRecords AttendanceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([gradeLevel, section, academicYearId])
+  @@index([academicYearId])
   @@index([gradeLevel, section])
 }
 
+/// Who teaches which subject in which class, for a given year. This is the
+/// curriculum of a class, and the only thing that authorizes a teacher to enter
+/// grades or attendance for it.
+model ClassSubjectTeacher {
+  id             String       @id @default(cuid())
+  classId        String
+  class          Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId      String
+  subject        Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId      String?
+  teacher        Teacher?     @relation(fields: [teacherId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  /// Weekly periods, for timetable and workload reports.
+  weeklyPeriods Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classId, subjectId])
+  @@index([classId])
+  @@index([subjectId])
+  @@index([teacherId])
+  @@index([academicYearId])
+}
+
 // Enrollment Model (Student-Class relationship)
+/// A student's placement for one school year. This — not Student — is where the
+/// grade level lives: a student is in 3º Ano *in 2026*, and in 4º Ano in 2027.
+///
+/// `gradeLevel` and `section` are copied from the class on creation and kept in
+/// step by src/lib/enrollment.ts, which is the only place that writes them. The
+/// copy is deliberate: a report card, a transcript and the promotion routine all
+/// ask "which grade was this student in, that year?", and that must survive the
+/// class being renamed or the student moving section.
 model Enrollment {
-  id        String  @id @default(cuid())
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  classId   String
-  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+  id             String           @id @default(cuid())
+  studentId      String
+  student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId        String
+  class          Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  academicYearId String
+  academicYear   AcademicYear     @relation(fields: [academicYearId], references: [id])
+  gradeLevel     String
+  section        String
+  status         EnrollmentStatus @default(ACTIVE)
 
-  enrolledAt DateTime @default(now())
+  enrolledAt DateTime  @default(now())
+  /// Set when the year closes or the student leaves.
+  endedAt    DateTime?
 
-  @@unique([studentId, classId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// One placement per student per year.
+  @@unique([studentId, academicYearId])
   @@index([studentId])
   @@index([classId])
+  @@index([academicYearId])
+  @@index([gradeLevel, section])
+  @@index([status])
 }
 
 // ============================================
 // FINANCEIRO (Existente)
 // ============================================
 
-// Tuition Plan Model
-model TuitionPlan {
-  id           String       @id @default(cuid())
-  name         String
-  gradeLevel   String
-  amount       Float
-  billingCycle BillingCycle
-  description  String?
-  isActive     Boolean      @default(true)
-
-  // Relations
-  tuitions Tuition[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([gradeLevel])
-}
-
-// Tuition/Invoice Model
-model Tuition {
-  id            String  @id @default(cuid())
-  invoiceNumber String  @unique
-  studentId     String
-  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  planId String
-  plan   TuitionPlan @relation(fields: [planId], references: [id])
-
-  amount        Float
-  dueDate       DateTime
-  paidDate      DateTime?
-  status        PaymentStatus @default(PENDING)
-  paymentMethod String?
-  transactionId String?
-
-  discountId     String?
-  discount       Discount? @relation(fields: [discountId], references: [id])
-  discountAmount Float     @default(0)
-
-  notes String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([studentId])
-  @@index([status])
-  @@index([dueDate])
-  @@index([invoiceNumber])
-}
-
-// Discount Model
-model Discount {
-  id          String       @id @default(cuid())
-  code        String       @unique
-  name        String
-  type        DiscountType
-  value       Float // percentage (0-100) or fixed amount
-  maxUses     Int? // null = unlimited
-  usedCount   Int          @default(0)
-  validFrom   DateTime
-  validUntil  DateTime
-  isActive    Boolean      @default(true)
-  description String?
-
-  // Relations
-  tuitions Tuition[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([code])
-}
-
 // Billing Model (Contas a Receber)
 model Billing {
-  id            String         @id @default(cuid())
-  invoiceNumber String         @unique
-  parentId      String
-  parent        Parent         @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  type          BillingType
-  description   String
-  amount        Float
-  dueDate       DateTime
-  paidDate      DateTime?
-  status        PaymentStatus  @default(PENDING)
-  isRecurring   Boolean        @default(false)
-  recurrence    RecurrenceType @default(NONE)
+  id              String         @id @default(cuid())
+  invoiceNumber   String         @unique
+  parentId        String
+  parent          Parent         @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  type            BillingType
+  description     String
+  amount          Decimal        @db.Decimal(10, 2)
+  dueDate         DateTime
+  paidDate        DateTime?
+  status          PaymentStatus  @default(PENDING)
+  isRecurring     Boolean        @default(false)
+  recurrence      RecurrenceType @default(NONE)
   nextBillingDate DateTime?
-  paymentMethod String?
-  transactionId String?
-  notes         String?
+  paymentMethod   String?
+  transactionId   String?
+  notes           String?
 
   // 🆕 Novos relacionamentos - Módulo 3
   reminders      PaymentReminder[]
   renegotiations PaymentRenegotiation[]
+  /// Receipts against this charge. `status` is derived from their sum.
+  payments       Payment[]
+
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -495,6 +544,7 @@ model Billing {
   @@index([status])
   @@index([dueDate])
   @@index([invoiceNumber])
+  @@index([deletedAt])
 }
 
 // Payroll Model (Folha de Pagamento)
@@ -503,10 +553,10 @@ model Payroll {
   paymentId      String        @unique
   employeeId     String
   employee       Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  baseSalary     Float
-  bonus          Float         @default(0)
-  deductions     Float         @default(0)
-  totalAmount    Float
+  baseSalary     Decimal       @db.Decimal(10, 2)
+  bonus          Decimal       @default(0) @db.Decimal(10, 2)
+  deductions     Decimal       @default(0) @db.Decimal(10, 2)
+  totalAmount    Decimal       @db.Decimal(10, 2)
   referenceMonth Int
   referenceYear  Int
   status         PayrollStatus @default(SCHEDULED)
@@ -530,7 +580,7 @@ model Expense {
   id            String   @id @default(cuid())
   category      String
   description   String
-  amount        Float
+  amount        Decimal  @db.Decimal(10, 2)
   date          DateTime
   paymentMethod String?
   receiptUrl    String?
@@ -546,52 +596,6 @@ model Expense {
 // ============================================
 // ACADÊMICO (Existente)
 // ============================================
-
-// Grade Model (mantido para compatibilidade)
-model Grade {
-  id        String  @id @default(cuid())
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  teacherId String?
-  teacher   Teacher? @relation(fields: [teacherId], references: [id])
-
-  term         String
-  academicYear String
-  score        Float
-  maxScore     Float   @default(100)
-  grade        String // A, B, C, etc.
-  remarks      String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([studentId, subjectId, term, academicYear])
-  @@index([studentId])
-  @@index([subjectId])
-  @@index([term])
-}
-
-// Attendance Model (mantido para compatibilidade)
-model Attendance {
-  id        String  @id @default(cuid())
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-
-  date    DateTime
-  status  AttendanceStatus
-  remarks String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([studentId, date])
-  @@index([studentId])
-  @@index([date])
-}
 
 // Academic Report Model
 model AcademicReport {
@@ -676,9 +680,9 @@ model Settings {
 // ============================================
 
 model EnrollmentRequest {
-  id            String                   @id @default(cuid())
-  requestNumber String                   @unique
-  status        EnrollmentRequestStatus  @default(PENDING)
+  id            String                  @id @default(cuid())
+  requestNumber String                  @unique
+  status        EnrollmentRequestStatus @default(PENDING)
 
   // Dados do Aluno
   studentFirstName String
@@ -715,6 +719,10 @@ model EnrollmentRequest {
   proofOfAddressUrl   String?
   previousSchoolUrl   String?
 
+  // Consentimento LGPD (art. 7º, I e V): registrado com data e versão do texto
+  consentGivenAt DateTime?
+  consentVersion String?
+
   // Campos administrativos
   reviewedBy      String?
   reviewedAt      DateTime?
@@ -725,12 +733,16 @@ model EnrollmentRequest {
   approvedStudentId String?  @unique
   approvedStudent   Student? @relation(fields: [approvedStudentId], references: [id])
 
+  /// Soft delete: personal and financial records are never hard deleted.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status])
   @@index([requestNumber])
   @@index([createdAt])
+  @@index([deletedAt])
 }
 
 model GuardianRelationship {
@@ -784,46 +796,53 @@ model Assessment {
   assessmentTypeId String
   assessmentType   AssessmentType @relation(fields: [assessmentTypeId], references: [id])
 
+  academicYearId String
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
   term           String
-  academicYear   String
   score          Float
-  maxScore       Float    @default(10.0)
+  maxScore       Float        @default(10.0)
   grade          String?
   remarks        String?
-  assessmentDate DateTime @default(now())
+  assessmentDate DateTime     @default(now())
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentId, subjectId, assessmentTypeId, term, academicYear])
+  @@unique([studentId, subjectId, assessmentTypeId, term, academicYearId])
   @@index([studentId])
   @@index([subjectId])
   @@index([classId])
   @@index([teacherId])
-  @@index([term, academicYear])
+  @@index([academicYearId, term])
 }
 
 model AttendanceRecord {
-  id        String           @id @default(cuid())
-  studentId String
-  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  classId   String
-  class     Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subjectId String?
-  subject   Subject?         @relation(fields: [subjectId], references: [id])
-  teacherId String?
-  teacher   Teacher?         @relation(fields: [teacherId], references: [id])
-  date      DateTime
-  status    AttendanceStatus
-  remarks   String?
+  id             String           @id @default(cuid())
+  studentId      String
+  student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId        String
+  class          Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId      String?
+  subject        Subject?         @relation(fields: [subjectId], references: [id])
+  teacherId      String?
+  teacher        Teacher?         @relation(fields: [teacherId], references: [id])
+  academicYearId String
+  academicYear   AcademicYear     @relation(fields: [academicYearId], references: [id])
+  date           DateTime         @db.Date
+  status         AttendanceStatus
+  remarks        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// One register entry per student per class per day. Deliberately not keyed on
+  /// subjectId: it is nullable, and Postgres treats NULLs as distinct, which
+  /// would let the same day be recorded twice.
   @@unique([studentId, classId, date])
   @@index([studentId])
   @@index([classId])
   @@index([subjectId])
+  @@index([academicYearId])
   @@index([date])
 }
 
@@ -858,13 +877,13 @@ model PaymentReminder {
 }
 
 model PaymentRenegotiation {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   billingId          String
-  billing            Billing  @relation(fields: [billingId], references: [id], onDelete: Cascade)
-  originalAmount     Float
-  renegotiatedAmount Float
-  discount           Float    @default(0)
-  installments       Int      @default(1)
+  billing            Billing   @relation(fields: [billingId], references: [id], onDelete: Cascade)
+  originalAmount     Decimal   @db.Decimal(10, 2)
+  renegotiatedAmount Decimal   @db.Decimal(10, 2)
+  discount           Decimal   @default(0) @db.Decimal(10, 2)
+  installments       Int       @default(1)
   newDueDate         DateTime
   renegotiatedBy     String
   parentApprovedAt   DateTime?
@@ -928,7 +947,7 @@ model Occurrence {
 }
 
 model CommunicationThread {
-  id            String    @id @default(cuid())
+  id            String   @id @default(cuid())
   subject       String
   senderId      String
   senderName    String
@@ -936,8 +955,8 @@ model CommunicationThread {
   recipientId   String
   recipientName String
   recipientRole String
-  lastMessageAt DateTime  @default(now())
-  isArchived    Boolean   @default(false)
+  lastMessageAt DateTime @default(now())
+  isArchived    Boolean  @default(false)
 
   messages Message[]
 
@@ -972,13 +991,13 @@ model Message {
 // ============================================
 
 model DocumentTemplate {
-  id                 String     @id @default(cuid())
+  id                 String       @id @default(cuid())
   name               String
   type               DocumentType
   description        String?
   htmlTemplate       String
   availableVariables String
-  isActive           Boolean  @default(true)
+  isActive           Boolean      @default(true)
 
   generatedDocuments GeneratedDocument[]
 
@@ -1042,10 +1061,110 @@ model Session {
   @@index([userId])
 }
 
+/// Password reset tokens. Only the SHA-256 hash is stored, so a dump of this
+/// table cannot be replayed against an account.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  requestIp String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// ============================================
+// LGPD: AUDITORIA E DIREITOS DO TITULAR
+// ============================================
+
+/// Append-only trail of privileged operations. Never updated, never deleted by
+/// the application: retention is an operational decision (docs/OPERATIONS.md).
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  actorRole  String?
+  action     String
+  entity     String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+enum DataSubjectRequestType {
+  ACCESS
+  DELETION
+  CORRECTION
+  PORTABILITY
+}
+
+enum DataSubjectRequestStatus {
+  RECEIVED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+/// LGPD art. 18 requests (access, deletion, correction, portability) filed by
+/// the data subject or their guardian.
+model DataSubjectRequest {
+  id             String                   @id @default(cuid())
+  protocol       String                   @unique
+  type           DataSubjectRequestType
+  status         DataSubjectRequestStatus @default(RECEIVED)
+  requesterName  String
+  requesterEmail String
+  requesterCpf   String?
+  studentName    String?
+  description    String
+  response       String?
+  handledBy      String?
+  handledAt      DateTime?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  @@index([status])
+  @@index([protocol])
+  @@index([createdAt])
+}
+
+/// A payment received against a charge. Partial payments are the norm in a
+/// school, so Billing.status is derived from the sum of these rows rather than
+/// being set by hand.
+model Payment {
+  id         String        @id @default(cuid())
+  billingId  String
+  billing    Billing       @relation(fields: [billingId], references: [id], onDelete: Cascade)
+  amount     Decimal       @db.Decimal(10, 2)
+  paidAt     DateTime      @db.Date
+  method     PaymentMethod
+  /// Staff member who registered a manual payment.
+  receivedBy String?
+  /// Identifier from the payment provider; unique so a replayed webhook is a
+  /// no-op instead of a duplicate receipt.
+  externalId String?       @unique
+  notes      String?
+  createdAt  DateTime      @default(now())
+
+  @@index([billingId])
+  @@index([paidAt])
 }

@@ -1,61 +1,74 @@
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 // GET - Fetch all settings
-export async function GET() {
-  try {
-    const user = await getCurrentUser();
+export const GET = withAuth(
+  async (_request) => {
+    try {
+      const settings = await prisma.settings.findMany({
+        orderBy: {
+          label: "asc",
+        },
+      });
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return ok(settings);
+    } catch (error: any) {
+      return serverError(error, "Erro ao buscar configurações");
     }
-
-    const settings = await prisma.settings.findMany({
-      orderBy: {
-        label: 'asc',
-      },
-    });
-
-    return NextResponse.json({ data: settings });
-  } catch (error: any) {
-    console.error("Error fetching settings:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar configurações" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { permission: "settings:read" }
+);
 
 // PUT - Update settings
-export async function PUT(request: Request) {
-  try {
-    const user = await getCurrentUser();
+export const PUT = withAuth(
+  async (request, { user }) => {
+    try {
+      const { settings } = (await request.json()) as {
+        settings: Record<string, unknown>;
+      };
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      const keys = Object.keys(settings ?? {});
+
+      if (keys.length === 0) {
+        return fail("Nenhuma configuração informada", 400);
+      }
+
+      // Snapshot for the audit trail, before anything changes.
+      const previousRows = await prisma.settings.findMany({
+        where: { key: { in: keys } },
+        select: { key: true, value: true },
+      });
+      const previous = Object.fromEntries(
+        previousRows.map((row) => [row.key, row.value])
+      );
+
+      // One transaction, and upsert rather than update: a key that does not exist
+      // yet used to abort the request halfway through, leaving some keys saved.
+      await prisma.$transaction(
+        Object.entries(settings).map(([key, value]) =>
+          prisma.settings.upsert({
+            where: { key },
+            update: { value: String(value) },
+            create: { key, value: String(value), label: key, type: "text" },
+          })
+        )
+      );
+
+      await recordAudit({
+        action: "settings.update",
+        entity: "Settings",
+        actor: user,
+        request,
+        before: previous,
+        after: settings,
+      });
+
+      return ok(null, { message: "Configurações atualizadas com sucesso" });
+    } catch (error: any) {
+      return serverError(error, "Erro ao atualizar configurações");
     }
-
-    const { settings } = await request.json();
-
-    // Update each setting
-    const updates = Object.entries(settings).map(([key, value]) =>
-      prisma.settings.update({
-        where: { key },
-        data: { value: String(value) },
-      })
-    );
-
-    await Promise.all(updates);
-
-    return NextResponse.json({
-      message: "Configurações atualizadas com sucesso"
-    });
-  } catch (error: any) {
-    console.error("Error updating settings:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao atualizar configurações" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { permission: "settings:write" }
+);

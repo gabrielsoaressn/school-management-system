@@ -1,133 +1,149 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { z } from 'zod';
+import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+import {
+  created,
+  notFound,
+  serverError,
+  validationFailed,
+} from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
 const generateDocumentSchema = z.object({
   studentId: z.string(),
   documentType: z.enum([
-    'ENROLLMENT_DECLARATION',
-    'SERVICE_CONTRACT',
-    'ACADEMIC_TRANSCRIPT',
-    'CONDUCT_CERTIFICATE',
-    'ENROLLMENT_CERTIFICATE',
+    "ENROLLMENT_DECLARATION",
+    "SERVICE_CONTRACT",
+    "ACADEMIC_TRANSCRIPT",
+    "CONDUCT_CERTIFICATE",
+    "ENROLLMENT_CERTIFICATE",
   ]),
   additionalData: z.record(z.string()).optional(),
 });
 
 // POST - Gerar documento
-export async function POST(req: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
+export const POST = withAuth(
+  async (request, { user }) => {
+    try {
+      const body = await request.json();
+      const validatedData = generateDocumentSchema.parse(body);
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
-    }
-
-    const body = await req.json();
-    const validatedData = generateDocumentSchema.parse(body);
-
-    // Buscar dados do aluno
-    const student = await prisma.student.findUnique({
-      where: { id: validatedData.studentId },
-      include: {
-        user: true,
-        parent: true,
-        enrollments: {
-          include: {
-            class: true,
+      // Buscar dados do aluno
+      const student = await prisma.student.findUnique({
+        where: { id: validatedData.studentId },
+        include: {
+          user: true,
+          parent: true,
+          enrollments: {
+            where: { status: "ACTIVE", academicYear: { isCurrent: true } },
+            include: { class: true, academicYear: true },
+            take: 1,
           },
         },
-      },
-    });
+      });
 
-    if (!student) {
-      return NextResponse.json({
-        success: false,
-        message: 'Aluno não encontrado',
-      }, { status: 404 });
+      if (!student) {
+        return notFound("Aluno não encontrado");
+      }
+
+      // Buscar ou criar template
+      let template = await prisma.documentTemplate.findFirst({
+        where: {
+          type: validatedData.documentType,
+          isActive: true,
+        },
+      });
+
+      if (!template) {
+        // Criar template padrão se não existir
+        template = await createDefaultTemplate(validatedData.documentType);
+      }
+
+      const currentEnrollment = student.enrollments[0] ?? null;
+
+      // Gerar HTML do documento
+      const htmlContent = generateHTMLFromTemplate(template.htmlTemplate, {
+        studentName: `${student.firstName} ${student.lastName}`,
+        studentId: student.studentId,
+        dateOfBirth: new Date(student.dateOfBirth).toLocaleDateString("pt-BR"),
+        // Placement comes from the current enrolment: a declaration must state
+        // the grade the student is in *this* year.
+        gradeLevel: currentEnrollment?.gradeLevel ?? "Não matriculado",
+        section: currentEnrollment?.section ?? "-",
+        academicYear: String(currentEnrollment?.academicYear.year ?? "-"),
+        className: currentEnrollment?.class.name ?? "-",
+        enrollmentDate: new Date(student.enrollmentDate).toLocaleDateString(
+          "pt-BR"
+        ),
+        parentName: student.parent
+          ? `${student.parent.firstName} ${student.parent.lastName}`
+          : "Não informado",
+        parentCPF: student.parent?.cpf || "Não informado",
+        currentDate: new Date().toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        }),
+        schoolName: "Escola Davilla",
+        ...validatedData.additionalData,
+      });
+
+      // Salvar documento gerado
+      const generatedDocument = await prisma.generatedDocument.create({
+        data: {
+          templateId: template.id,
+          studentId: validatedData.studentId,
+          type: validatedData.documentType,
+          generatedHtml: htmlContent,
+          generatedBy: user.id,
+          metadata: JSON.stringify(validatedData.additionalData || {}),
+        },
+      });
+
+      // The PDF is generated on demand from this HTML; the URL is the route, not
+      // a file, so the document can never drift from the record.
+      await prisma.generatedDocument.update({
+        where: { id: generatedDocument.id },
+        data: { pdfUrl: `/api/admin/documents/${generatedDocument.id}/pdf` },
+      });
+
+      await recordAudit({
+        action: "document.generate",
+        entity: "GeneratedDocument",
+        entityId: generatedDocument.id,
+        actor: user,
+        request,
+        after: {
+          type: generatedDocument.type,
+          studentId: generatedDocument.studentId,
+        },
+      });
+
+      return created(
+        {
+          id: generatedDocument.id,
+          html: htmlContent,
+        },
+        { message: "Documento gerado com sucesso!" }
+      );
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return validationFailed(error);
+      }
+      return serverError(error, "Erro ao gerar documento");
     }
-
-    // Buscar ou criar template
-    let template = await prisma.documentTemplate.findFirst({
-      where: {
-        type: validatedData.documentType,
-        isActive: true,
-      },
-    });
-
-    if (!template) {
-      // Criar template padrão se não existir
-      template = await createDefaultTemplate(validatedData.documentType);
-    }
-
-    // Gerar HTML do documento
-    const htmlContent = generateHTMLFromTemplate(template.htmlTemplate, {
-      studentName: `${student.firstName} ${student.lastName}`,
-      studentId: student.studentId,
-      dateOfBirth: new Date(student.dateOfBirth).toLocaleDateString('pt-BR'),
-      gradeLevel: student.gradeLevel,
-      section: student.section,
-      enrollmentDate: new Date(student.enrollmentDate).toLocaleDateString('pt-BR'),
-      parentName: student.parent
-        ? `${student.parent.firstName} ${student.parent.lastName}`
-        : 'Não informado',
-      parentCPF: student.parent?.cpf || 'Não informado',
-      currentDate: new Date().toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      }),
-      schoolName: 'Escola Davilla',
-      ...validatedData.additionalData,
-    });
-
-    // Salvar documento gerado
-    const generatedDocument = await prisma.generatedDocument.create({
-      data: {
-        templateId: template.id,
-        studentId: validatedData.studentId,
-        type: validatedData.documentType,
-        generatedHtml: htmlContent,
-        generatedBy: session.user.id,
-        metadata: JSON.stringify(validatedData.additionalData || {}),
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Documento gerado com sucesso!',
-      data: {
-        id: generatedDocument.id,
-        html: htmlContent,
-      },
-    }, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors,
-      }, { status: 400 });
-    }
-
-    console.error('Error generating document:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao gerar documento',
-    }, { status: 500 });
-  }
-}
+  },
+  { permission: "document:generate" }
+);
 
 // Função para criar templates padrão
 async function createDefaultTemplate(type: string) {
-  const templates: Record<string, { name: string; html: string; vars: string }> = {
+  const templates: Record<
+    string,
+    { name: string; html: string; vars: string }
+  > = {
     ENROLLMENT_DECLARATION: {
-      name: 'Declaração de Matrícula',
+      name: "Declaração de Matrícula",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px;">
           <div style="text-align: center; margin-bottom: 40px;">
@@ -155,10 +171,10 @@ async function createDefaultTemplate(type: string) {
           </div>
         </div>
       `,
-      vars: 'studentName, studentId, dateOfBirth, gradeLevel, section, enrollmentDate, currentDate, schoolName, currentYear',
+      vars: "studentName, studentId, dateOfBirth, gradeLevel, section, enrollmentDate, currentDate, schoolName, currentYear",
     },
     SERVICE_CONTRACT: {
-      name: 'Contrato de Prestação de Serviços',
+      name: "Contrato de Prestação de Serviços",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px;">
           <div style="text-align: center; margin-bottom: 40px;">
@@ -216,7 +232,7 @@ async function createDefaultTemplate(type: string) {
           </div>
         </div>
       `,
-      vars: 'studentName, studentId, gradeLevel, section, parentName, parentCPF, currentDate, schoolName',
+      vars: "studentName, studentId, gradeLevel, section, parentName, parentCPF, currentDate, schoolName",
     },
   };
 
@@ -234,11 +250,14 @@ async function createDefaultTemplate(type: string) {
 }
 
 // Função para substituir variáveis no template
-function generateHTMLFromTemplate(template: string, data: Record<string, string>) {
+function generateHTMLFromTemplate(
+  template: string,
+  data: Record<string, string>
+) {
   let html = template;
 
   Object.entries(data).forEach(([key, value]) => {
-    const regex = new RegExp(`{{${key}}}`, 'g');
+    const regex = new RegExp(`{{${key}}}`, "g");
     html = html.replace(regex, value);
   });
 

@@ -1,56 +1,52 @@
-import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
+import { recordAudit } from "@/lib/audit";
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await getCurrentUser();
+export const POST = withAuth<{ params: Promise<{ id: string }> }>(
+  async (request, { params, user }) => {
+    try {
+      const { id } = await params;
 
-    if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      // Check if billing exists and is in DRAFT status
+      const billing = await prisma.billing.findUnique({
+        where: { id },
+      });
+
+      if (!billing) {
+        return fail("Cobrança não encontrada", 404);
+      }
+
+      if (billing.status !== "DRAFT") {
+        return fail("Esta cobrança já foi processada", 400);
+      }
+
+      // Update status to PENDING
+      await prisma.billing.update({
+        where: { id },
+        data: {
+          status: "PENDING",
+          notes: billing.notes?.replace(
+            "Aguardando aprovação do administrador",
+            "Aprovado pelo administrador"
+          ),
+        },
+      });
+
+      await recordAudit({
+        action: "billing.approve",
+        entity: "Billing",
+        entityId: id,
+        actor: user,
+        request,
+        before: { status: billing.status, amount: billing.amount },
+        after: { status: "PENDING" },
+      });
+
+      return ok(null, { message: "Cobrança aprovada com sucesso" });
+    } catch (error: any) {
+      return serverError(error, "Erro ao aprovar cobrança");
     }
-
-    const { id } = params;
-
-    // Check if billing exists and is in DRAFT status
-    const billing = await prisma.billing.findUnique({
-      where: { id },
-    });
-
-    if (!billing) {
-      return NextResponse.json(
-        { message: "Cobrança não encontrada" },
-        { status: 404 }
-      );
-    }
-
-    if (billing.status !== "DRAFT") {
-      return NextResponse.json(
-        { message: "Esta cobrança já foi processada" },
-        { status: 400 }
-      );
-    }
-
-    // Update status to PENDING
-    await prisma.billing.update({
-      where: { id },
-      data: {
-        status: "PENDING",
-        notes: billing.notes?.replace("Aguardando aprovação do administrador", "Aprovado pelo administrador"),
-      },
-    });
-
-    return NextResponse.json({
-      message: "Cobrança aprovada com sucesso",
-    });
-  } catch (error: any) {
-    console.error("Error approving billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao aprovar cobrança" },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { permission: "billing:approve" }
+);

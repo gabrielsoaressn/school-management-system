@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/money";
 
 interface Employee {
   id: string;
@@ -22,7 +23,9 @@ interface PayrollFormProps {
 export default function PayrollForm({ employees }: PayrollFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
 
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
@@ -52,7 +55,9 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     setFormData({
       ...formData,
@@ -92,7 +97,7 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Erro ao criar pagamento");
+        throw new Error(error.error || "Erro ao criar pagamento");
       }
 
       toast.success("Pagamento criado com sucesso!");
@@ -106,15 +111,25 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
   };
 
   const monthNames = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
   ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Funcionário *
           </label>
           <select
@@ -122,7 +137,7 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
             required
             value={formData.employeeId}
             onChange={handleEmployeeChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Selecione um funcionário</option>
             {employees.map((employee) => (
@@ -134,18 +149,19 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
         </div>
 
         {selectedEmployee && (
-          <div className="bg-blue-50 border border-blue-200 rounded-sm p-4">
+          <div className="rounded-sm border border-blue-200 bg-blue-50 p-4">
             <p className="text-sm text-blue-900">
               <strong>ID:</strong> {selectedEmployee.employeeId} |
               <strong> Cargo:</strong> {selectedEmployee.position} |
-              <strong> Salário Base:</strong> R$ {selectedEmployee.salary.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              <strong> Salário Base:</strong>{" "}
+              {formatCurrency(selectedEmployee.salary)}
             </p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Mês de Referência *
             </label>
             <select
@@ -153,7 +169,7 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
               required
               value={formData.referenceMonth}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             >
               {monthNames.map((month, index) => (
                 <option key={index + 1} value={index + 1}>
@@ -164,7 +180,7 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Ano de Referência *
             </label>
             <input
@@ -175,14 +191,14 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
               onChange={handleChange}
               min="2020"
               max="2030"
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Salário Base (R$) *
             </label>
             <input
@@ -192,12 +208,12 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
               required
               value={formData.baseSalary}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Bônus (R$)
             </label>
             <input
@@ -206,12 +222,12 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
               name="bonus"
               value={formData.bonus}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Descontos (R$)
             </label>
             <input
@@ -220,20 +236,20 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
               name="deductions"
               value={formData.deductions}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-sm p-4">
+        <div className="rounded-sm border border-green-200 bg-green-50 p-4">
           <p className="text-lg font-semibold text-green-900">
-            Total a Pagar: R$ {calculateTotal().toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            Total a Pagar: {formatCurrency(calculateTotal())}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Data de Pagamento *
             </label>
             <input
@@ -242,23 +258,25 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
               required
               value={formData.scheduledDate}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
               Método de Pagamento
             </label>
             <select
               name="paymentMethod"
               value={formData.paymentMethod}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Selecione</option>
               <option value="PIX">PIX</option>
-              <option value="Transferência Bancária">Transferência Bancária</option>
+              <option value="Transferência Bancária">
+                Transferência Bancária
+              </option>
               <option value="Dinheiro">Dinheiro</option>
               <option value="Cheque">Cheque</option>
             </select>
@@ -266,7 +284,7 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Observações
           </label>
           <textarea
@@ -274,23 +292,23 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
             value={formData.notes}
             onChange={handleChange}
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full rounded-sm border border-gray-300 px-4 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500"
             placeholder="Observações adicionais sobre este pagamento"
           />
         </div>
       </div>
 
-      <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
+      <div className="flex justify-end space-x-4 border-t border-gray-200 pt-4">
         <Link
           href="/admin/financial/payroll"
-          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-sm transition"
+          className="rounded-sm bg-gray-200 px-6 py-2 font-semibold text-gray-800 transition hover:bg-gray-300"
         >
           Cancelar
         </Link>
         <button
           type="submit"
           disabled={loading}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-sm transition disabled:opacity-50"
+          className="rounded-sm bg-purple-600 px-6 py-2 font-semibold text-white transition hover:bg-purple-700 disabled:opacity-50"
         >
           {loading ? "Criando..." : "Criar Pagamento"}
         </button>

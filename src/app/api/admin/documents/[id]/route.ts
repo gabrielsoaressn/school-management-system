@@ -1,51 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { prisma } from "@/lib/prisma";
+import { notFound, ok, serverError } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 // GET - Buscar documento específico
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const session = await getServerSession(authOptions);
+export const GET = withAuth<{ params: Promise<{ id: string }> }>(
+  async (request, { params }) => {
+    try {
+      const { id } = await params;
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
-    }
-
-    const document = await prisma.generatedDocument.findUnique({
-      where: { id: params.id },
-      include: {
-        template: true,
-        student: {
-          include: {
-            parent: true,
+      const document = await prisma.generatedDocument.findUnique({
+        where: { id: id },
+        include: {
+          template: true,
+          student: {
+            include: {
+              parent: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    if (!document) {
-      return NextResponse.json({
-        success: false,
-        message: 'Documento não encontrado',
-      }, { status: 404 });
+      if (!document) {
+        return notFound("Documento não encontrado");
+      }
+
+      return ok(document);
+    } catch (error) {
+      return serverError(error, "Erro ao buscar documento");
     }
-
-    return NextResponse.json({
-      success: true,
-      data: document,
-    });
-  } catch (error) {
-    console.error('Error fetching document:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar documento',
-    }, { status: 500 });
-  }
-}
+  },
+  { permission: "document:read" }
+);
