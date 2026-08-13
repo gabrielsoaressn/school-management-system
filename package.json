@@ -14,7 +14,10 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "lint:fix": "eslint . --fix",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "demo:dev": "next dev demo -p 3001",
+    "demo:build": "next build demo && touch demo/out/.nojekyll",
+    "demo:typecheck": "tsc --noEmit -p demo"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"

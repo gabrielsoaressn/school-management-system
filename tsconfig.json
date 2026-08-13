@@ -25,6 +25,9 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
+    // A demo estática é um segundo app Next, com o próprio tsconfig: o alias
+    // "@/*" lá aponta para ../src. `npm run demo:typecheck` cobre essa pasta.
+    "demo",
     // One-off data migrations, already applied. They reference models that the
     // migration itself removed, so they no longer typecheck against the current
     // schema: kept as the record of how the data was moved.

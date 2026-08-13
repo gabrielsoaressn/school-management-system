@@ -10,14 +10,17 @@ export default [
   {
     ignores: [
       "node_modules/**",
-      ".next/**",
+      // Build de qualquer app do repositório, inclusive o da demo em demo/:
+      // ".next/**" só casaria com a raiz.
+      "**/.next/**",
+      "**/out/**",
       "coverage/**",
       "storage/**",
       // One-off data migrations: they reference models the migration removed.
       "prisma/migrations-data/**",
-      "*.config.js",
-      "*.config.mjs",
-      "next-env.d.ts",
+      "**/*.config.js",
+      "**/*.config.mjs",
+      "**/next-env.d.ts",
     ],
   },
   ...nextCoreWebVitals,

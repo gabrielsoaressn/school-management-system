@@ -373,3 +373,19 @@ pegavam:
 
 O terceiro valia por si: era defeito de acessibilidade em todos os formulários do
 sistema, não só no que o teste tocou.
+
+## Demo estática (GitHub Pages)
+
+`demo/` é um segundo app Next com `output: "export"`, publicado por
+`.github/workflows/pages.yml`. As telas são próprias e leem `demo/lib/mock.ts`;
+os componentes de UI e a paleta vêm de `src/`, para o visual não divergir.
+
+Escrever a demo expôs dois defeitos que também estão no app:
+
+| Defeito                                                                                                                                                                | Onde                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| card "Professores" fica branco com texto branco: `Card` traz `bg-card`, que o Tailwind emite **depois** de `bg-accent` — mesma especificidade, `bg-card` vence         | `src/app/admin/dashboard/page.tsx` (na demo, corrigido com `!bg-accent`) |
+| `src/lib/storage/` nunca foi versionado: o padrão `storage/` do `.gitignore` casa em qualquer nível, então `npm run typecheck` e `npm run build` falham em clone limpo | `.gitignore:32`                                                          |
+
+O segundo não afeta a demo (ela não compila `src/app/`), mas quebra o CI a
+partir de um checkout novo.
