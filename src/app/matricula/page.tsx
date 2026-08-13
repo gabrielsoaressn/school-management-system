@@ -12,6 +12,7 @@ import { HONEYPOT_FIELD } from '@/lib/rate-limit';
 import Link from 'next/link';
 import { CONSENT_TEXT, CONSENT_VERSION } from '@/lib/privacy';
 import { GRADE_LEVELS } from '@/lib/constants';
+import DocumentUpload from '@/components/forms/DocumentUpload';
 
 type FormData = {
   // Aluno
@@ -92,6 +93,13 @@ export default function MatriculaPage() {
   // Honeypot: hidden from users, tempting to bots. Filled in => request dropped.
   const [honeypot, setHoneypot] = useState('');
   const [consentGiven, setConsentGiven] = useState(false);
+  // Uploaded ahead of submission: the payload carries only the storage keys.
+  const [documents, setDocuments] = useState<Record<string, string | null>>({
+    birthCertificateUrl: null,
+    cpfUrl: null,
+    proofOfAddressUrl: null,
+    previousSchoolUrl: null,
+  });
   const [requestNumber, setRequestNumber] = useState<string | null>(null);
 
   const updateFormData = (field: keyof FormData, value: any) => {
@@ -165,6 +173,10 @@ export default function MatriculaPage() {
           [HONEYPOT_FIELD]: honeypot,
           consentGiven,
           consentVersion: CONSENT_VERSION,
+          birthCertificateUrl: documents.birthCertificateUrl ?? undefined,
+          cpfUrl: documents.cpfUrl ?? undefined,
+          proofOfAddressUrl: documents.proofOfAddressUrl ?? undefined,
+          previousSchoolUrl: documents.previousSchoolUrl ?? undefined,
           financialGuardianCPF: formData.financialGuardianCPF.replace(/\D/g, ''),
           pedagogicalGuardianCPF: formData.isSameGuardian ? '' : formData.pedagogicalGuardianCPF.replace(/\D/g, ''),
           zipCode: formData.zipCode.replace(/\D/g, ''),
@@ -512,6 +524,54 @@ export default function MatriculaPage() {
                     <p>CEP: {formData.zipCode}</p>
                   </div>
                 </div>
+              </div>
+
+              <div className="rounded-lg border border-border p-4">
+                <h3 className="mb-1 font-semibold text-foreground">
+                  Documentos (opcional)
+                </h3>
+                <p className="mb-3 text-sm text-muted-foreground">
+                  Anexar agora agiliza a análise. Também é possível entregar na
+                  secretaria depois.
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <DocumentUpload
+                    slot="birthCertificate"
+                    label="Certidão de nascimento"
+                    value={documents.birthCertificateUrl}
+                    onChange={(key) =>
+                      setDocuments((prev) => ({ ...prev, birthCertificateUrl: key }))
+                    }
+                  />
+                  <DocumentUpload
+                    slot="cpf"
+                    label="CPF do responsável"
+                    value={documents.cpfUrl}
+                    onChange={(key) =>
+                      setDocuments((prev) => ({ ...prev, cpfUrl: key }))
+                    }
+                  />
+                  <DocumentUpload
+                    slot="proofOfAddress"
+                    label="Comprovante de residência"
+                    value={documents.proofOfAddressUrl}
+                    onChange={(key) =>
+                      setDocuments((prev) => ({ ...prev, proofOfAddressUrl: key }))
+                    }
+                  />
+                  <DocumentUpload
+                    slot="previousSchool"
+                    label="Histórico da escola anterior"
+                    value={documents.previousSchoolUrl}
+                    onChange={(key) =>
+                      setDocuments((prev) => ({ ...prev, previousSchoolUrl: key }))
+                    }
+                  />
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  PDF, JPG, PNG ou WEBP, até 8 MB. Os arquivos ficam acessíveis
+                  apenas à equipe da escola.
+                </p>
               </div>
 
               <div className="rounded-lg border border-border bg-muted/40 p-4">

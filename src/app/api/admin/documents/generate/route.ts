@@ -95,6 +95,13 @@ export const POST = withAuth(async (request, { user }) => {
       },
     });
 
+    // The PDF is generated on demand from this HTML; the URL is the route, not
+    // a file, so the document can never drift from the record.
+    await prisma.generatedDocument.update({
+      where: { id: generatedDocument.id },
+      data: { pdfUrl: `/api/admin/documents/${generatedDocument.id}/pdf` },
+    });
+
     await recordAudit({
       action: "document.generate",
       entity: "GeneratedDocument",

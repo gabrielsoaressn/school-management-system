@@ -45,18 +45,10 @@ export default function DocumentViewPage() {
     window.print();
   };
 
-  const handleDownload = () => {
-    // Criar elemento temporário para download
-    const element = document.createElement('a');
-    const file = new Blob([document.generatedHtml], { type: 'text/html' });
-    element.href = URL.createObjectURL(file);
-    element.download = `documento-${documentId}.html`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-
-    toast.success('Documento baixado com sucesso!');
-  };
+  // The PDF is produced by the server from the same HTML shown here, so the
+  // file the school hands over cannot differ from the record. The old button
+  // downloaded raw HTML, which is not a document anyone can file.
+  const pdfHref = `/api/admin/documents/${documentId}/pdf`;
 
   if (loading) {
     return (
@@ -77,10 +69,12 @@ export default function DocumentViewPage() {
           <BackButton href="/admin/dashboard" />
 
           <div className="flex gap-2">
-            <Button onClick={handleDownload} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Baixar HTML
-            </Button>
+            <a href={pdfHref}>
+              <Button variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Baixar PDF
+              </Button>
+            </a>
             <Button onClick={handlePrint}>
               <Printer className="w-4 h-4 mr-2" />
               Imprimir

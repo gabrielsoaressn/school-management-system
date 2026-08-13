@@ -39,6 +39,8 @@ export type AuditAction =
   | "enrollment.re_enroll"
   | "class.curriculum_update"
   | "document.generate"
+  | "document.download"
+  | "enrollment_document.access"
   | "settings.update"
   | "password.change"
   | "cpf_list.access"
