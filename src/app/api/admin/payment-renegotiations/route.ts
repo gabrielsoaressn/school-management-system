@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { created, fail, forbidden, notFound, paginated, serverError, validationFailed } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 const renegotiationSchema = z.object({
   billingId: z.string(),
@@ -16,15 +16,10 @@ const renegotiationSchema = z.object({
 });
 
 // POST - Criar renegociação
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return forbidden();
-    }
-
-    const body = await req.json();
+    const body = await request.json();
     const validatedData = renegotiationSchema.parse(body);
 
     // Buscar billing
@@ -50,7 +45,7 @@ export async function POST(req: NextRequest) {
           discount: validatedData.discount,
           installments: validatedData.installments,
           newDueDate: validatedData.newDueDate,
-          renegotiatedBy: session.user.id,
+          renegotiatedBy: user.id,
           reason: validatedData.reason,
           notes: validatedData.notes,
         },
@@ -79,18 +74,13 @@ export async function POST(req: NextRequest) {
     }
     return serverError(error, 'Erro ao criar renegociação');
   }
-}
+}, { permission: "billing:renegotiate" });
 
 // GET - Listar renegociações
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return forbidden();
-    }
-
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const billingId = searchParams.get('billingId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -128,4 +118,4 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return serverError(error, 'Erro ao buscar renegociações');
   }
-}
+}, { permission: "billing:read" });

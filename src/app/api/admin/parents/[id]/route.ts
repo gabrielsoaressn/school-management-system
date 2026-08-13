@@ -1,19 +1,11 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 // GET - Get single parent
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
   try {
     const { id } = await params;
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const parent = await prisma.parent.findUnique({
       where: { id: id },
@@ -50,20 +42,12 @@ export async function GET(
   } catch (error: any) {
     return serverError(error, "Erro ao buscar responsável");
   }
-}
+}, { permission: "parent:read" });
 
 // PUT - Update parent
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
   try {
     const { id } = await params;
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const body = await request.json();
     const {
@@ -129,20 +113,12 @@ export async function PUT(
   } catch (error: any) {
     return serverError(error, "Erro ao atualizar responsável");
   }
-}
+}, { permission: "parent:write" });
 
 // DELETE - Delete parent
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
   try {
     const { id } = await params;
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     // Check if parent exists and has students
     const parent = await prisma.parent.findUnique({
@@ -170,4 +146,4 @@ export async function DELETE(
   } catch (error: any) {
     return serverError(error, "Erro ao excluir responsável");
   }
-}
+}, { permission: "parent:delete" });

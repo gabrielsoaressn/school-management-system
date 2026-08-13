@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { created, forbidden, paginated, serverError, validationFailed } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 const announcementSchema = z.object({
   title: z.string().min(3, 'Título deve ter no mínimo 3 caracteres'),
@@ -16,21 +16,16 @@ const announcementSchema = z.object({
 });
 
 // POST - Criar aviso
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return forbidden();
-    }
-
-    const body = await req.json();
+    const body = await request.json();
     const validatedData = announcementSchema.parse(body);
 
     const announcement = await prisma.announcement.create({
       data: {
         ...validatedData,
-        createdBy: session.user.id,
+        createdBy: user.id,
       },
     });
 
@@ -79,18 +74,13 @@ export async function POST(req: NextRequest) {
     }
     return serverError(error, 'Erro ao criar aviso');
   }
-}
+}, { permission: "announcement:write" });
 
 // GET - Listar avisos
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return forbidden();
-    }
-
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const targetRole = searchParams.get('targetRole');
     const targetGrade = searchParams.get('targetGrade');
     const page = parseInt(searchParams.get('page') || '1');
@@ -110,17 +100,17 @@ export async function GET(req: NextRequest) {
         { targetRole: null },
         { targetRole: targetRole },
       ];
-    } else if (session.user.role) {
+    } else if (user.role) {
       where.OR = [
         { targetRole: null },
-        { targetRole: session.user.role },
+        { targetRole: user.role },
       ];
     }
 
     // Filtrar por série (se for aluno)
-    if (session.user.role === 'STUDENT' && !targetGrade) {
+    if (user.role === 'STUDENT' && !targetGrade) {
       const student = await prisma.student.findUnique({
-        where: { userId: session.user.id },
+        where: { userId: user.id },
       });
 
       if (student) {
@@ -150,4 +140,4 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return serverError(error, 'Erro ao buscar avisos');
   }
-}
+}, { permission: "announcement:read" });

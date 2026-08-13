@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { created, forbidden, ok, serverError, validationFailed } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 const attendanceRecordSchema = z.object({
   studentId: z.string(),
@@ -26,15 +26,10 @@ const bulkAttendanceSchema = z.object({
 });
 
 // POST - Registrar frequência (individual ou em lote)
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
-      return forbidden();
-    }
-
-    const body = await req.json();
+    const body = await request.json();
 
     // Verificar se é registro em lote
     if (body.records && Array.isArray(body.records)) {
@@ -42,9 +37,9 @@ export async function POST(req: NextRequest) {
 
       // Buscar o teacher ID
       let teacherId = null;
-      if (session.user.role === 'TEACHER') {
+      if (user.role === 'TEACHER') {
         const employee = await prisma.employee.findUnique({
-          where: { userId: session.user.id },
+          where: { userId: user.id },
           include: { teacher: true },
         });
         teacherId = employee?.teacher?.id;
@@ -87,9 +82,9 @@ export async function POST(req: NextRequest) {
       const validatedData = attendanceRecordSchema.parse(body);
 
       let teacherId = null;
-      if (session.user.role === 'TEACHER') {
+      if (user.role === 'TEACHER') {
         const employee = await prisma.employee.findUnique({
-          where: { userId: session.user.id },
+          where: { userId: user.id },
           include: { teacher: true },
         });
         teacherId = employee?.teacher?.id;
@@ -122,18 +117,13 @@ export async function POST(req: NextRequest) {
     }
     return serverError(error, 'Erro ao registrar frequência');
   }
-}
+}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "attendance:write" });
 
 // GET - Buscar registros de frequência
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return forbidden();
-    }
-
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const classId = searchParams.get('classId');
     const studentId = searchParams.get('studentId');
     const date = searchParams.get('date');
@@ -187,4 +177,4 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return serverError(error, 'Erro ao buscar registros');
   }
-}
+}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "attendance:read" });

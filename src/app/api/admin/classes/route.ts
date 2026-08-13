@@ -1,14 +1,9 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { created, fail, ok, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
-export async function GET() {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const classes = await prisma.class.findMany({
       include: {
@@ -25,15 +20,10 @@ export async function GET() {
   } catch (error: any) {
     return serverError(error, "Erro ao buscar turmas");
   }
-}
+}, { permission: "class:read" });
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const body = await request.json();
     const { name, gradeLevel, section, academicYear, capacity, schedule, roomNumber } =
@@ -74,4 +64,4 @@ export async function POST(request: Request) {
   } catch (error: any) {
     return serverError(error, "Erro ao criar turma");
   }
-}
+}, { permission: "class:write" });

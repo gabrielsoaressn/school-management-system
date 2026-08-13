@@ -1,21 +1,16 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { forbidden, notFound, ok, serverError } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 // GET - Buscar turmas do professor
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
-      return forbidden();
-    }
 
     let classes;
 
-    if (session.user.role === 'ADMIN') {
+    if (user.role === 'ADMIN') {
       // Admin vê todas as turmas
       classes = await prisma.class.findMany({
         include: {
@@ -48,7 +43,7 @@ export async function GET(req: NextRequest) {
     } else {
       // Professor vê apenas suas turmas (baseado em subjects)
       const employee = await prisma.employee.findUnique({
-        where: { userId: session.user.id },
+        where: { userId: user.id },
         include: {
           teacher: {
             include: {
@@ -103,4 +98,4 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return serverError(error, 'Erro ao buscar turmas');
   }
-}
+}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "class:read" });

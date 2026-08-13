@@ -1,15 +1,12 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 import { fail, forbidden, notFound, ok, serverError } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 // GET - Obter detalhes de uma solicitação específica
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
   try {
     const { id } = await params;
     const enrollmentRequest = await prisma.enrollmentRequest.findUnique({
@@ -37,22 +34,14 @@ export async function GET(
   } catch (error) {
     return serverError(error, 'Erro ao buscar solicitação');
   }
-}
+}, { permission: "enrollment:read" });
 
 // PUT - Aprovar ou Rejeitar solicitação
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return forbidden();
-    }
-
-    const body = await req.json();
+    const body = await request.json();
     const { action, rejectionReason, notes } = body;
 
     const enrollmentRequest = await prisma.enrollmentRequest.findUnique({
@@ -196,7 +185,7 @@ export async function PUT(
           where: { id: id },
           data: {
             status: 'APPROVED',
-            reviewedBy: session.user.id,
+            reviewedBy: user.id,
             reviewedAt: new Date(),
             notes,
             approvedStudentId: student.id,
@@ -214,7 +203,7 @@ export async function PUT(
         where: { id: id },
         data: {
           status: 'REJECTED',
-          reviewedBy: session.user.id,
+          reviewedBy: user.id,
           reviewedAt: new Date(),
           rejectionReason,
           notes,
@@ -230,20 +219,12 @@ export async function PUT(
   } catch (error) {
     return serverError(error, 'Erro ao processar solicitação');
   }
-}
+}, { permission: "enrollment:write" });
 
 // DELETE - Cancelar solicitação
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
   try {
     const { id } = await params;
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== 'ADMIN') {
-      return forbidden();
-    }
 
     await prisma.enrollmentRequest.update({
       where: { id: id },
@@ -257,4 +238,4 @@ export async function DELETE(
   } catch (error) {
     return serverError(error, 'Erro ao cancelar solicitação');
   }
-}
+}, { permission: "enrollment:write" });

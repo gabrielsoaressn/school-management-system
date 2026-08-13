@@ -1,16 +1,13 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
+import { userRoleForEmployeeType } from "@/lib/employee-types";
+import { redactEmployeeList } from "@/lib/redact";
 
 // GET - List all employees
-export async function GET(request: Request) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
@@ -62,20 +59,19 @@ export async function GET(request: Request) {
       prisma.employee.count({ where }),
     ]);
 
-    return paginated(employees, { total: total, page: page, limit: limit });
+    return paginated(redactEmployeeList(employees, user), {
+      total: total,
+      page: page,
+      limit: limit,
+    });
   } catch (error: any) {
     return serverError(error, "Erro ao buscar funcionários");
   }
-}
+}, { permission: "employee:read" });
 
 // POST - Create new employee
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const body = await request.json();
     const {
@@ -153,7 +149,7 @@ export async function POST(request: Request) {
         data: {
           email,
           password: hashedPassword,
-          role: "ADMIN", // You can change this based on employeeType
+          role: userRoleForEmployeeType(employeeType),
           isActive: true,
         },
       });
@@ -206,4 +202,4 @@ export async function POST(request: Request) {
   } catch (error: any) {
     return serverError(error, "Erro ao criar funcionário");
   }
-}
+}, { permission: "employee:write" });

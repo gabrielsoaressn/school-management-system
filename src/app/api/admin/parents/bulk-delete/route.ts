@@ -1,14 +1,9 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
-export async function DELETE(request: Request) {
+export const DELETE = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const { ids, deleteAll, search } = await request.json();
 
@@ -79,4 +74,4 @@ export async function DELETE(request: Request) {
   } catch (error: any) {
     return serverError(error, "Erro ao excluir responsáveis");
   }
-}
+}, { permission: "parent:delete" });

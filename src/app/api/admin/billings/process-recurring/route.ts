@@ -1,15 +1,10 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ok, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 // POST - Process recurring billings (create new billings from recurring ones)
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -113,4 +108,4 @@ export async function POST(request: Request) {
   } catch (error: any) {
     return serverError(error, "Erro ao processar cobranças recorrentes");
   }
-}
+}, { permission: "billing:write" });

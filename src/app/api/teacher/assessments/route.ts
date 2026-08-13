@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { created, forbidden, ok, serverError, validationFailed } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 const assessmentSchema = z.object({
   studentId: z.string(),
@@ -45,21 +45,16 @@ function calculateGrade(score: number, maxScore: number): string {
 }
 
 // POST - Criar avaliações (individual ou em lote)
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
-      return forbidden();
-    }
-
-    const body = await req.json();
+    const body = await request.json();
 
     // Buscar o teacher ID
     let teacherId = null;
-    if (session.user.role === 'TEACHER') {
+    if (user.role === 'TEACHER') {
       const employee = await prisma.employee.findUnique({
-        where: { userId: session.user.id },
+        where: { userId: user.id },
         include: { teacher: true },
       });
       teacherId = employee?.teacher?.id;
@@ -149,18 +144,13 @@ export async function POST(req: NextRequest) {
     }
     return serverError(error, 'Erro ao lançar nota');
   }
-}
+}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "assessment:write" });
 
 // GET - Buscar avaliações
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return forbidden();
-    }
-
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const classId = searchParams.get('classId');
     const studentId = searchParams.get('studentId');
     const subjectId = searchParams.get('subjectId');
@@ -223,4 +213,4 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return serverError(error, 'Erro ao buscar avaliações');
   }
-}
+}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "assessment:read" });

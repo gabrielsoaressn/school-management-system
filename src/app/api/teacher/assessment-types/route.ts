@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { created, fail, forbidden, ok, serverError, validationFailed } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 const assessmentTypeSchema = z.object({
   name: z.string().min(2, 'Nome é obrigatório'),
@@ -14,7 +14,7 @@ const assessmentTypeSchema = z.object({
 });
 
 // GET - Listar tipos de avaliação
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
     const assessmentTypes = await prisma.assessmentType.findMany({
       orderBy: { name: 'asc' },
@@ -32,18 +32,13 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return serverError(error, 'Erro ao buscar tipos de avaliação');
   }
-}
+}, { roles: ["ADMIN", "TEACHER", "COORDINATOR", "SECRETARY"], permission: "assessment:read" });
 
 // POST - Criar tipo de avaliação (apenas ADMIN)
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return forbidden();
-    }
-
-    const body = await req.json();
+    const body = await request.json();
     const validatedData = assessmentTypeSchema.parse(body);
 
     // Verificar se código já existe
@@ -67,4 +62,4 @@ export async function POST(req: NextRequest) {
     }
     return serverError(error, 'Erro ao criar tipo de avaliação');
   }
-}
+}, { roles: ["ADMIN", "COORDINATOR"] });

@@ -1,15 +1,10 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { created, fail, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const body = await request.json();
     const { name, email, phone, subjectIds, qualification, experience } = body;
@@ -43,7 +38,7 @@ export async function POST(request: Request) {
         data: {
           email,
           password: hashedPassword,
-          role: "ADMIN", // Teachers are admins in the system
+          role: "TEACHER",
           isActive: true,
         },
       });
@@ -97,4 +92,4 @@ export async function POST(request: Request) {
   } catch (error: any) {
     return serverError(error, "Erro ao criar professor");
   }
-}
+}, { permission: "employee:write" });

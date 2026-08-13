@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { created, forbidden, paginated, serverError, validationFailed } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 const occurrenceSchema = z.object({
   studentId: z.string(),
@@ -16,33 +16,28 @@ const occurrenceSchema = z.object({
 });
 
 // POST - Criar ocorrência
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER')) {
-      return forbidden();
-    }
-
-    const body = await req.json();
+    const body = await request.json();
     const validatedData = occurrenceSchema.parse(body);
 
-    // Buscar informações do usuário
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+    // Nome de quem registrou, para manter o histórico legível
+    const reporter = await prisma.user.findUnique({
+      where: { id: user.id },
       include: {
         employee: true,
       },
     });
 
-    const reporterName = user?.employee
-      ? `${user.employee.firstName} ${user.employee.lastName}`
-      : session.user.email || 'Sistema';
+    const reporterName = reporter?.employee
+      ? `${reporter.employee.firstName} ${reporter.employee.lastName}`
+      : user.email || 'Sistema';
 
     const occurrence = await prisma.occurrence.create({
       data: {
         ...validatedData,
-        reportedBy: session.user.id,
+        reportedBy: user.id,
         reportedByName: reporterName,
         parentNotified: false,
       },
@@ -55,7 +50,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // TODO: Criar notificação para o responsável
+    // Notifica o responsável vinculado ao aluno
     if (occurrence.student.parent) {
       await prisma.notification.create({
         data: {
@@ -75,18 +70,13 @@ export async function POST(req: NextRequest) {
     }
     return serverError(error, 'Erro ao registrar ocorrência');
   }
-}
+}, { permission: "occurrence:write" });
 
 // GET - Listar ocorrências
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session) {
-      return forbidden();
-    }
-
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const studentId = searchParams.get('studentId');
     const type = searchParams.get('type');
     const severity = searchParams.get('severity');
@@ -101,9 +91,9 @@ export async function GET(req: NextRequest) {
     if (severity) where.severity = severity;
 
     // Se for responsável, mostrar apenas ocorrências dos filhos
-    if (session.user.role === 'PARENT') {
+    if (user.role === 'PARENT') {
       const parent = await prisma.parent.findUnique({
-        where: { userId: session.user.id },
+        where: { userId: user.id },
         include: { students: true },
       });
 
@@ -136,4 +126,4 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return serverError(error, 'Erro ao buscar ocorrências');
   }
-}
+}, { permission: "occurrence:read" });

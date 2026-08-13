@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { created, paginated, serverError, validationFailed } from "@/lib/api-response";
+import { withAuth, withoutAuth } from "@/lib/api-auth";
 
 const enrollmentRequestSchema = z.object({
   // Dados do Aluno
@@ -41,9 +42,9 @@ const enrollmentRequestSchema = z.object({
 });
 
 // POST - Criar nova solicitação de matrícula
-export async function POST(req: NextRequest) {
+export const POST = withoutAuth(async (request) => {
   try {
-    const body = await req.json();
+    const body = await request.json();
     const validatedData = enrollmentRequestSchema.parse(body);
 
     // Gerar número único de solicitação
@@ -83,12 +84,12 @@ export async function POST(req: NextRequest) {
     }
     return serverError(error, 'Erro ao criar solicitação de matrícula');
   }
-}
+});
 
 // GET - Listar solicitações (com filtros)
-export async function GET(req: NextRequest) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -137,4 +138,4 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     return serverError(error, 'Erro ao buscar solicitações');
   }
-}
+}, { permission: "enrollment:read" });

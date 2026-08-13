@@ -1,17 +1,9 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const POST = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const { id } = await params;
 
@@ -41,4 +33,4 @@ export async function POST(
   } catch (error: any) {
     return serverError(error, "Erro ao aprovar cobrança");
   }
-}
+}, { permission: "billing:approve" });

@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { created, forbidden, notFound, serverError, validationFailed } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 const generateDocumentSchema = z.object({
   studentId: z.string(),
@@ -18,15 +18,10 @@ const generateDocumentSchema = z.object({
 });
 
 // POST - Gerar documento
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'ADMIN') {
-      return forbidden();
-    }
-
-    const body = await req.json();
+    const body = await request.json();
     const validatedData = generateDocumentSchema.parse(body);
 
     // Buscar dados do aluno
@@ -88,7 +83,7 @@ export async function POST(req: NextRequest) {
         studentId: validatedData.studentId,
         type: validatedData.documentType,
         generatedHtml: htmlContent,
-        generatedBy: session.user.id,
+        generatedBy: user.id,
         metadata: JSON.stringify(validatedData.additionalData || {}),
       },
     });
@@ -103,7 +98,7 @@ export async function POST(req: NextRequest) {
     }
     return serverError(error, 'Erro ao gerar documento');
   }
-}
+}, { permission: "document:generate" });
 
 // Função para criar templates padrão
 async function createDefaultTemplate(type: string) {

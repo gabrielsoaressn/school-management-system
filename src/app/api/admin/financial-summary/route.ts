@@ -1,15 +1,10 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ok, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
 // GET - Financial summary for dashboard
-export async function GET(request: Request) {
+export const GET = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     const { searchParams } = new URL(request.url);
     const month = searchParams.get("month") || String(new Date().getMonth() + 1);
@@ -235,4 +230,4 @@ export async function GET(request: Request) {
   } catch (error: any) {
     return serverError(error, "Erro ao buscar resumo financeiro");
   }
-}
+}, { permission: "billing:read" });

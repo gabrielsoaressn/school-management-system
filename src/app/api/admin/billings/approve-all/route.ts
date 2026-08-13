@@ -1,14 +1,9 @@
-import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
+import { withAuth } from "@/lib/api-auth";
 
-export async function POST() {
+export const POST = withAuth(async (request, { user }) => {
   try {
-    const user = await getCurrentUser();
-
-    if (!user || user.role !== "ADMIN") {
-      return unauthorized();
-    }
 
     // Count draft billings
     const count = await prisma.billing.count({
@@ -29,4 +24,4 @@ export async function POST() {
   } catch (error: any) {
     return serverError(error, "Erro ao aprovar cobranças");
   }
-}
+}, { permission: "billing:approve" });
