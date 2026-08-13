@@ -66,6 +66,22 @@ Stripe foi removido do projeto (Fase 5.9) — a decisão é usar um PSP brasilei
   `[studentId, academicYearId]`. Correto para o ensino fundamental regular; reforço e
   contraturno exigiriam outro modelo.
 
+## Engenharia
+
+- **Smoke E2E incompleto.** `e2e/portals.spec.ts` cobre os quatro portais e a
+  separação de acesso; 2 dos 10 casos passam. Os outros 8 falham por **seletor**,
+  não por regressão do app: foram escritos a partir do código, não do DOM
+  renderizado. Ajustar rodando `npx playwright test --ui` e corrigindo os
+  `getByLabel`/`getByText` um a um. Não está no CI justamente por isso.
+- **~17 telas cliente com `setState` dentro de `useEffect`** e função de fetch
+  declarada depois do efeito. Nove regras do preset novo do React apontam isso;
+  estão como *warning* em `eslint.config.mjs`, não silenciadas. A correção é
+  reestruturar cada tela em torno de estado derivado ou de um hook de dados —
+  vale fazer por tela, com verificação, não em lote.
+- **`no-explicit-any`**: ~76 avisos, a maioria em `where: any` de filtros do
+  Prisma e em `useState<any>` de telas cliente. Tipar os filtros com
+  `Prisma.XWhereInput` resolve a maior parte.
+
 ## Produto / UX
 
 - **Portal do aluno e do responsável são somente leitura e rasos** (uma tela cada). Depois da

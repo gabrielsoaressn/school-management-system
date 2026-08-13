@@ -40,3 +40,7 @@ logs/
 
 # claude
 .claude/settings.local.json
+
+# playwright
+playwright-report/
+test-results/
