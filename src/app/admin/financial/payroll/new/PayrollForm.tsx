@@ -92,7 +92,7 @@ export default function PayrollForm({ employees }: PayrollFormProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Erro ao criar pagamento");
+        throw new Error(error.error || "Erro ao criar pagamento");
       }
 
       toast.success("Pagamento criado com sucesso!");

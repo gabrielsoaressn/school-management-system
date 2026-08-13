@@ -47,7 +47,7 @@ export default function EmployeesTable() {
         setTotalPages(data.pagination?.totalPages || 1);
         setTotalCount(data.pagination?.total || 0);
       } else {
-        const errorMsg = data.message || "Erro ao carregar funcionários";
+        const errorMsg = data.error || "Erro ao carregar funcionários";
         setError(errorMsg);
         toast.error(errorMsg);
       }
@@ -120,7 +120,7 @@ export default function EmployeesTable() {
         setSelectAll(false);
         fetchEmployees();
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao excluir funcionários");
@@ -147,7 +147,7 @@ export default function EmployeesTable() {
         toast.success(data.message);
         fetchEmployees();
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao excluir funcionário");

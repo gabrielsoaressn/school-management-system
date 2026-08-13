@@ -169,7 +169,7 @@ export default function MatriculaPage() {
         setRequestNumber(data.data.requestNumber);
         toast.success('Matrícula solicitada com sucesso!');
       } else {
-        toast.error(data.message || 'Erro ao enviar solicitação');
+        toast.error(data.error || 'Erro ao enviar solicitação');
       }
     } catch (error) {
       console.error('Error submitting enrollment:', error);

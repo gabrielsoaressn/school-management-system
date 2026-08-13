@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { created, fail, forbidden, ok, serverError, validationFailed } from "@/lib/api-response";
 
 const assessmentTypeSchema = z.object({
   name: z.string().min(2, 'Nome é obrigatório'),
@@ -26,17 +27,10 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      data: assessmentTypes,
-    });
+    return ok(assessmentTypes);
 
   } catch (error) {
-    console.error('Error fetching assessment types:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar tipos de avaliação',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar tipos de avaliação');
   }
 }
 
@@ -46,10 +40,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const body = await req.json();
@@ -61,35 +52,19 @@ export async function POST(req: NextRequest) {
     });
 
     if (existing) {
-      return NextResponse.json({
-        success: false,
-        message: 'Código já está em uso',
-      }, { status: 400 });
+      return fail('Código já está em uso');
     }
 
     const assessmentType = await prisma.assessmentType.create({
       data: validatedData,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Tipo de avaliação criado com sucesso!',
-      data: assessmentType,
-    }, { status: 201 });
+    return created(assessmentType, { message: 'Tipo de avaliação criado com sucesso!' });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors,
-      }, { status: 400 });
+      return validationFailed(error);
     }
-
-    console.error('Error creating assessment type:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao criar tipo de avaliação',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao criar tipo de avaliação');
   }
 }

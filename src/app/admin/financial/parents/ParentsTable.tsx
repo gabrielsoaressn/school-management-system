@@ -49,7 +49,7 @@ export default function ParentsTable() {
         setTotalPages(data.pagination.totalPages);
         setTotalCount(data.pagination.total);
       } else {
-        toast.error(data.message || "Erro ao carregar responsáveis");
+        toast.error(data.error || "Erro ao carregar responsáveis");
       }
     } catch (error) {
       toast.error("Erro ao carregar responsáveis");
@@ -116,7 +116,7 @@ export default function ParentsTable() {
         setSelectAll(false);
         fetchParents();
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao excluir responsáveis");

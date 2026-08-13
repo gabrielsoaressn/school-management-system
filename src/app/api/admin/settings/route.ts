@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ok, serverError, unauthorized } from "@/lib/api-response";
 
 // GET - Fetch all settings
 export async function GET() {
@@ -8,7 +8,7 @@ export async function GET() {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const settings = await prisma.settings.findMany({
@@ -17,13 +17,9 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ data: settings });
+    return ok(settings);
   } catch (error: any) {
-    console.error("Error fetching settings:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar configurações" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao buscar configurações");
   }
 }
 
@@ -33,7 +29,7 @@ export async function PUT(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const { settings } = await request.json();
@@ -48,14 +44,8 @@ export async function PUT(request: Request) {
 
     await Promise.all(updates);
 
-    return NextResponse.json({
-      message: "Configurações atualizadas com sucesso"
-    });
+    return ok(null, { message: "Configurações atualizadas com sucesso" });
   } catch (error: any) {
-    console.error("Error updating settings:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao atualizar configurações" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao atualizar configurações");
   }
 }

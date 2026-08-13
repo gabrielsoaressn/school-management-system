@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { created, forbidden, ok, serverError, validationFailed } from "@/lib/api-response";
 
 const assessmentSchema = z.object({
   studentId: z.string(),
@@ -49,10 +50,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const body = await req.json();
@@ -110,11 +108,7 @@ export async function POST(req: NextRequest) {
         })
       );
 
-      return NextResponse.json({
-        success: true,
-        message: `${createdAssessments.length} notas lançadas com sucesso!`,
-        data: createdAssessments,
-      }, { status: 201 });
+      return created(createdAssessments, { message: `${createdAssessments.length} notas lançadas com sucesso!` });
 
     } else {
       // Lançamento individual
@@ -146,27 +140,14 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        message: 'Nota lançada com sucesso!',
-        data: assessment,
-      }, { status: 201 });
+      return created(assessment, { message: 'Nota lançada com sucesso!' });
     }
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors,
-      }, { status: 400 });
+      return validationFailed(error);
     }
-
-    console.error('Error creating assessment:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao lançar nota',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao lançar nota');
   }
 }
 
@@ -176,10 +157,7 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session) {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const { searchParams } = new URL(req.url);
@@ -240,16 +218,9 @@ export async function GET(req: NextRequest) {
       ],
     });
 
-    return NextResponse.json({
-      success: true,
-      data: assessments,
-    });
+    return ok(assessments);
 
   } catch (error) {
-    console.error('Error fetching assessments:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar avaliações',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar avaliações');
   }
 }

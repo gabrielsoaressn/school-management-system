@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { getSettingAsNumber, getSettingAsBoolean } from "@/lib/settings";
+import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 
 // GET - List all students
 export async function GET(request: Request) {
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const { searchParams } = new URL(request.url);
@@ -73,21 +73,9 @@ export async function GET(request: Request) {
       prisma.student.count({ where }),
     ]);
 
-    return NextResponse.json({
-      data: students,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+    return paginated(students, { total: total, page: page, limit: limit });
   } catch (error: any) {
-    console.error("Error fetching students:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar alunos" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao buscar alunos");
   }
 }
 
@@ -96,7 +84,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -131,18 +119,12 @@ export async function POST(request: Request) {
 
     // Validate required fields
     if (!firstName || !lastName || !email || !password || !dateOfBirth || !gender || !gradeLevel || !section) {
-      return NextResponse.json(
-        { message: "Campos obrigatórios do aluno faltando" },
-        { status: 400 }
-      );
+      return fail("Campos obrigatórios do aluno faltando", 400);
     }
 
     // Validate parent: either parentId or parent data must be provided
     if (!parentId && (!parentFirstName || !parentLastName || !parentEmail || !parentPassword || !parentPhone)) {
-      return NextResponse.json(
-        { message: "Dados do responsável são obrigatórios" },
-        { status: 400 }
-      );
+      return fail("Dados do responsável são obrigatórios", 400);
     }
 
     // Check if student email already exists
@@ -151,10 +133,7 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { message: "Email do aluno já está em uso" },
-        { status: 400 }
-      );
+      return fail("Email do aluno já está em uso", 400);
     }
 
     // If creating new parent, check parent email
@@ -164,10 +143,7 @@ export async function POST(request: Request) {
       });
 
       if (existingParentUser) {
-        return NextResponse.json(
-          { message: "Email do responsável já está em uso" },
-          { status: 400 }
-        );
+        return fail("Email do responsável já está em uso", 400);
       }
     }
 
@@ -180,10 +156,7 @@ export async function POST(request: Request) {
     });
 
     if (!targetClass) {
-      return NextResponse.json(
-        { message: `Não foi encontrada uma turma ativa para ${gradeLevel} - Seção ${section}` },
-        { status: 400 }
-      );
+      return fail(`Não foi encontrada uma turma ativa para ${gradeLevel} - Seção ${section}`, 400);
     }
 
     // Get system settings
@@ -324,18 +297,8 @@ export async function POST(request: Request) {
       ? " Mensalidade gerada automaticamente."
       : "";
 
-    return NextResponse.json(
-      {
-        message: responseMessage + billingMessage,
-        data: result,
-      },
-      { status: 201 }
-    );
+    return created(result, { message: responseMessage + billingMessage });
   } catch (error: any) {
-    console.error("Error creating student:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao criar aluno" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao criar aluno");
   }
 }

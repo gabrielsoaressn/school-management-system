@@ -36,7 +36,7 @@ export default function ClassForm() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Erro ao criar turma");
+        throw new Error(error.error || "Erro ao criar turma");
       }
 
       toast.success("Turma criada com sucesso!");

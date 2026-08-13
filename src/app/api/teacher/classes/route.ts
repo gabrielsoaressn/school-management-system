@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { forbidden, notFound, ok, serverError } from "@/lib/api-response";
 
 // GET - Buscar turmas do professor
 export async function GET(req: NextRequest) {
@@ -9,10 +10,7 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || (session.user.role !== 'TEACHER' && session.user.role !== 'ADMIN')) {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     let classes;
@@ -65,10 +63,7 @@ export async function GET(req: NextRequest) {
       });
 
       if (!employee?.teacher) {
-        return NextResponse.json({
-          success: false,
-          message: 'Professor não encontrado',
-        }, { status: 404 });
+        return notFound('Professor não encontrado');
       }
 
       // Buscar turmas onde existem alunos (via enrollments)
@@ -103,16 +98,9 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: classes,
-    });
+    return ok(classes);
 
   } catch (error) {
-    console.error('Error fetching teacher classes:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar turmas',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar turmas');
   }
 }

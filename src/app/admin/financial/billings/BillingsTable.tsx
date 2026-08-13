@@ -39,7 +39,7 @@ export default function BillingsTable() {
         setBillings(data.data);
         setTotalPages(data.pagination.totalPages);
       } else {
-        toast.error(data.message || "Erro ao carregar cobranças");
+        toast.error(data.error || "Erro ao carregar cobranças");
       }
     } catch (error) {
       toast.error("Erro ao carregar cobranças");

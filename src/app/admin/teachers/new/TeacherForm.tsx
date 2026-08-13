@@ -49,7 +49,7 @@ export default function TeacherForm({ subjects }: TeacherFormProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Erro ao criar professor");
+        throw new Error(error.error || "Erro ao criar professor");
       }
 
       const result = await response.json();

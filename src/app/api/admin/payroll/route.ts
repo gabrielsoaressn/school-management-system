@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 
 // GET - List all payroll records
 export async function GET(request: Request) {
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const { searchParams } = new URL(request.url);
@@ -81,21 +81,9 @@ export async function GET(request: Request) {
       prisma.payroll.count({ where }),
     ]);
 
-    return NextResponse.json({
-      data: payrolls,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+    return paginated(payrolls, { total: total, page: page, limit: limit });
   } catch (error: any) {
-    console.error("Error fetching payrolls:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar folha de pagamento" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao buscar folha de pagamento");
   }
 }
 
@@ -105,7 +93,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -128,10 +116,7 @@ export async function POST(request: Request) {
       !referenceYear ||
       !scheduledDate
     ) {
-      return NextResponse.json(
-        { message: "Campos obrigatórios faltando" },
-        { status: 400 }
-      );
+      return fail("Campos obrigatórios faltando", 400);
     }
 
     // Check if employee exists
@@ -140,10 +125,7 @@ export async function POST(request: Request) {
     });
 
     if (!employee) {
-      return NextResponse.json(
-        { message: "Funcionário não encontrado" },
-        { status: 404 }
-      );
+      return fail("Funcionário não encontrado", 404);
     }
 
     // Check if payroll already exists for this employee in this period
@@ -158,12 +140,7 @@ export async function POST(request: Request) {
     });
 
     if (existingPayroll) {
-      return NextResponse.json(
-        {
-          message: "Já existe um pagamento para este funcionário neste período",
-        },
-        { status: 400 }
-      );
+      return fail("Já existe um pagamento para este funcionário neste período", 400);
     }
 
     // Calculate total amount
@@ -201,15 +178,8 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(
-      { message: "Pagamento programado com sucesso", data: payroll },
-      { status: 201 }
-    );
+    return created(payroll, { message: "Pagamento programado com sucesso" });
   } catch (error: any) {
-    console.error("Error creating payroll:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao criar pagamento" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao criar pagamento");
   }
 }

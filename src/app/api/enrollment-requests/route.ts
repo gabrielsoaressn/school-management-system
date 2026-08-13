@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { created, paginated, serverError, validationFailed } from "@/lib/api-response";
 
 const enrollmentRequestSchema = z.object({
   // Dados do Aluno
@@ -71,29 +72,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Solicitação de matrícula criada com sucesso!',
-      data: {
+    return created({
         requestNumber: enrollmentRequest.requestNumber,
         id: enrollmentRequest.id,
-      },
-    }, { status: 201 });
+      }, { message: 'Solicitação de matrícula criada com sucesso!' });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors,
-      }, { status: 400 });
+      return validationFailed(error);
     }
-
-    console.error('Error creating enrollment request:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao criar solicitação de matrícula',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao criar solicitação de matrícula');
   }
 }
 
@@ -144,22 +132,9 @@ export async function GET(req: NextRequest) {
       prisma.enrollmentRequest.count({ where }),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: requests,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return paginated(requests, { total: total, page: page, limit: limit });
 
   } catch (error) {
-    console.error('Error fetching enrollment requests:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar solicitações',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar solicitações');
   }
 }

@@ -186,7 +186,7 @@ export default function AttendancePage() {
       if (data.success) {
         toast.success('Chamada salva com sucesso!');
       } else {
-        toast.error(data.message || 'Erro ao salvar chamada');
+        toast.error(data.error || 'Erro ao salvar chamada');
       }
     } catch (error) {
       console.error('Error saving attendance:', error);

@@ -77,7 +77,7 @@ export default function GradesPage() {
     try {
       const [classRes, subjectsRes, typesRes] = await Promise.all([
         fetch('/api/teacher/classes'),
-        fetch('/api/admin/classes'), // TODO: Create specific subjects API
+        fetch(`/api/teacher/subjects?classId=${classId}`),
         fetch('/api/teacher/assessment-types'),
       ]);
 
@@ -105,14 +105,11 @@ export default function GradesPage() {
         }
       }
 
-      // Mock subjects - TODO: fetch real subjects
-      setSubjects([
-        { id: '1', name: 'Matemática', code: 'MAT' },
-        { id: '2', name: 'Português', code: 'PORT' },
-        { id: '3', name: 'História', code: 'HIST' },
-        { id: '4', name: 'Geografia', code: 'GEO' },
-        { id: '5', name: 'Ciências', code: 'CIEN' },
-      ]);
+      if (subjectsData.success) {
+        setSubjects(subjectsData.data);
+      } else {
+        toast.error(subjectsData.error || 'Erro ao carregar disciplinas');
+      }
 
       if (typesData.success) {
         setAssessmentTypes(typesData.data);
@@ -231,7 +228,7 @@ export default function GradesPage() {
       if (data.success) {
         toast.success('Notas salvas com sucesso!');
       } else {
-        toast.error(data.message || 'Erro ao salvar notas');
+        toast.error(data.error || 'Erro ao salvar notas');
       }
     } catch (error) {
       console.error('Error saving grades:', error);

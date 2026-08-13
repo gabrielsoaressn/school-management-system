@@ -91,7 +91,7 @@ export default function EmployeeForm() {
         toast.success(data.message);
         router.push("/admin/financial/employees");
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao criar funcionário");

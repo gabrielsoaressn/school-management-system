@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 
 // GET - List all billings
 export async function GET(request: Request) {
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const { searchParams } = new URL(request.url);
@@ -74,21 +74,9 @@ export async function GET(request: Request) {
       prisma.billing.count({ where }),
     ]);
 
-    return NextResponse.json({
-      data: billings,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+    return paginated(billings, { total: total, page: page, limit: limit });
   } catch (error: any) {
-    console.error("Error fetching billings:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar cobranças" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao buscar cobranças");
   }
 }
 
@@ -98,7 +86,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -115,10 +103,7 @@ export async function POST(request: Request) {
 
     // Validate required fields
     if (!parentId || !type || !description || !amount || !dueDate) {
-      return NextResponse.json(
-        { message: "Campos obrigatórios faltando" },
-        { status: 400 }
-      );
+      return fail("Campos obrigatórios faltando", 400);
     }
 
     // Check if parent exists
@@ -127,10 +112,7 @@ export async function POST(request: Request) {
     });
 
     if (!parent) {
-      return NextResponse.json(
-        { message: "Responsável não encontrado" },
-        { status: 404 }
-      );
+      return fail("Responsável não encontrado", 404);
     }
 
     // Generate unique invoice number
@@ -182,15 +164,8 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(
-      { message: "Cobrança criada com sucesso", data: billing },
-      { status: 201 }
-    );
+    return created(billing, { message: "Cobrança criada com sucesso" });
   } catch (error: any) {
-    console.error("Error creating billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao criar cobrança" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao criar cobrança");
   }
 }

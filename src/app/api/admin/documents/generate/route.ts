@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { created, forbidden, notFound, serverError, validationFailed } from "@/lib/api-response";
 
 const generateDocumentSchema = z.object({
   studentId: z.string(),
@@ -22,10 +23,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const body = await req.json();
@@ -46,10 +44,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!student) {
-      return NextResponse.json({
-        success: false,
-        message: 'Aluno não encontrado',
-      }, { status: 404 });
+      return notFound('Aluno não encontrado');
     }
 
     // Buscar ou criar template
@@ -98,28 +93,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Documento gerado com sucesso!',
-      data: {
+    return created({
         id: generatedDocument.id,
         html: htmlContent,
-      },
-    }, { status: 201 });
+      }, { message: 'Documento gerado com sucesso!' });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors,
-      }, { status: 400 });
+      return validationFailed(error);
     }
-
-    console.error('Error generating document:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao gerar documento',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao gerar documento');
   }
 }
 

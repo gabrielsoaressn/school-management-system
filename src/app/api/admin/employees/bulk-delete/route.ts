@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 
 // POST - Bulk delete employees
 export async function POST(request: Request) {
@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -33,10 +33,7 @@ export async function POST(request: Request) {
     } else {
       // Use specific IDs
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
-        return NextResponse.json(
-          { message: "IDs de funcionários são obrigatórios" },
-          { status: 400 }
-        );
+        return fail("IDs de funcionários são obrigatórios", 400);
       }
 
       employeeWhere.id = {
@@ -56,10 +53,7 @@ export async function POST(request: Request) {
     });
 
     if (employees.length === 0) {
-      return NextResponse.json(
-        { message: "Nenhum funcionário encontrado" },
-        { status: 404 }
-      );
+      return fail("Nenhum funcionário encontrado", 404);
     }
 
     const employeeIds = employees.map((e) => e.id);
@@ -95,17 +89,8 @@ export async function POST(request: Request) {
       });
     });
 
-    return NextResponse.json(
-      {
-        message: `${employees.length} funcionário(s) excluído(s) com sucesso`,
-      },
-      { status: 200 }
-    );
+    return ok(null, { message: `${employees.length} funcionário(s) excluído(s) com sucesso` });
   } catch (error: any) {
-    console.error("Error bulk deleting employees:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir funcionários" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao excluir funcionários");
   }
 }

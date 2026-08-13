@@ -158,7 +158,7 @@ Escola Davilla`;
         setSelectedBillings([]);
         fetchData();
       } else {
-        toast.error(data.message || 'Erro ao enviar lembretes');
+        toast.error(data.error || 'Erro ao enviar lembretes');
       }
     } catch (error) {
       console.error('Error sending reminders:', error);
@@ -204,7 +204,7 @@ Escola Davilla`;
         setShowRenegotiationModal(false);
         fetchData();
       } else {
-        toast.error(data.message || 'Erro ao criar renegociação');
+        toast.error(data.error || 'Erro ao criar renegociação');
       }
     } catch (error) {
       console.error('Error creating renegotiation:', error);

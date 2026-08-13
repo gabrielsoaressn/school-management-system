@@ -46,7 +46,7 @@ export default function PayrollTable() {
         setPayrolls(data.data);
         setTotalPages(data.pagination.totalPages);
       } else {
-        toast.error(data.message || "Erro ao carregar folha de pagamento");
+        toast.error(data.error || "Erro ao carregar folha de pagamento");
       }
     } catch (error) {
       toast.error("Erro ao carregar folha de pagamento");

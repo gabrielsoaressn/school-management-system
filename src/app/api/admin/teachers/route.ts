@@ -1,14 +1,14 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { created, fail, serverError, unauthorized } from "@/lib/api-response";
 
 export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -20,10 +20,7 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { message: "Email já está em uso" },
-        { status: 400 }
-      );
+      return fail("Email já está em uso", 400);
     }
 
     // Split name into first and last name
@@ -93,19 +90,11 @@ export async function POST(request: Request) {
       return { user: newUser, employee: newEmployee, teacher };
     });
 
-    return NextResponse.json(
-      {
-        message: "Professor criado com sucesso",
-        data: result,
-        info: `Senha padrão: ${defaultPassword}`,
-      },
-      { status: 201 }
+    return created(
+      { ...result, defaultPassword },
+      { message: "Professor criado com sucesso" }
     );
   } catch (error: any) {
-    console.error("Error creating teacher:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao criar professor" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao criar professor");
   }
 }

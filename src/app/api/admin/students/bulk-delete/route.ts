@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 
 // POST - Bulk delete students
 export async function POST(request: Request) {
@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -32,10 +32,7 @@ export async function POST(request: Request) {
     } else {
       // Use specific IDs
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
-        return NextResponse.json(
-          { message: "IDs de alunos são obrigatórios" },
-          { status: 400 }
-        );
+        return fail("IDs de alunos são obrigatórios", 400);
       }
 
       studentWhere.id = {
@@ -55,10 +52,7 @@ export async function POST(request: Request) {
     });
 
     if (students.length === 0) {
-      return NextResponse.json(
-        { message: "Nenhum aluno encontrado" },
-        { status: 404 }
-      );
+      return fail("Nenhum aluno encontrado", 404);
     }
 
     const studentIds = students.map((s) => s.id);
@@ -130,17 +124,8 @@ export async function POST(request: Request) {
       });
     });
 
-    return NextResponse.json(
-      {
-        message: `${students.length} aluno(s) excluído(s) com sucesso`,
-      },
-      { status: 200 }
-    );
+    return ok(null, { message: `${students.length} aluno(s) excluído(s) com sucesso` });
   } catch (error: any) {
-    console.error("Error bulk deleting students:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir alunos" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao excluir alunos");
   }
 }

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 
 // GET - Get single parent
 export async function GET(
@@ -12,7 +12,7 @@ export async function GET(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const parent = await prisma.parent.findUnique({
@@ -43,19 +43,12 @@ export async function GET(
     });
 
     if (!parent) {
-      return NextResponse.json(
-        { message: "Responsável não encontrado" },
-        { status: 404 }
-      );
+      return fail("Responsável não encontrado", 404);
     }
 
-    return NextResponse.json({ data: parent });
+    return ok(parent);
   } catch (error: any) {
-    console.error("Error fetching parent:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar responsável" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao buscar responsável");
   }
 }
 
@@ -69,7 +62,7 @@ export async function PUT(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -91,10 +84,7 @@ export async function PUT(
     });
 
     if (!existingParent) {
-      return NextResponse.json(
-        { message: "Responsável não encontrado" },
-        { status: 404 }
-      );
+      return fail("Responsável não encontrado", 404);
     }
 
     // Check if CPF is being changed and if it's already in use
@@ -104,10 +94,7 @@ export async function PUT(
       });
 
       if (existingCpf) {
-        return NextResponse.json(
-          { message: "CPF já está cadastrado" },
-          { status: 400 }
-        );
+        return fail("CPF já está cadastrado", 400);
       }
     }
 
@@ -138,16 +125,9 @@ export async function PUT(
       return updatedParent;
     });
 
-    return NextResponse.json({
-      message: "Responsável atualizado com sucesso",
-      data: result,
-    });
+    return ok(result, { message: "Responsável atualizado com sucesso" });
   } catch (error: any) {
-    console.error("Error updating parent:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao atualizar responsável" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao atualizar responsável");
   }
 }
 
@@ -161,7 +141,7 @@ export async function DELETE(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     // Check if parent exists and has students
@@ -174,17 +154,11 @@ export async function DELETE(
     });
 
     if (!parent) {
-      return NextResponse.json(
-        { message: "Responsável não encontrado" },
-        { status: 404 }
-      );
+      return fail("Responsável não encontrado", 404);
     }
 
     if (parent.students.length > 0) {
-      return NextResponse.json(
-        { message: "Não é possível excluir um responsável com alunos vinculados" },
-        { status: 400 }
-      );
+      return fail("Não é possível excluir um responsável com alunos vinculados", 400);
     }
 
     // Delete parent (user will be deleted by cascade)
@@ -192,14 +166,8 @@ export async function DELETE(
       where: { id: parent.userId },
     });
 
-    return NextResponse.json({
-      message: "Responsável excluído com sucesso",
-    });
+    return ok(null, { message: "Responsável excluído com sucesso" });
   } catch (error: any) {
-    console.error("Error deleting parent:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir responsável" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao excluir responsável");
   }
 }

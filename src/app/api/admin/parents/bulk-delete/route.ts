@@ -1,13 +1,13 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 
 export async function DELETE(request: Request) {
   try {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const { ids, deleteAll, search } = await request.json();
@@ -52,10 +52,7 @@ export async function DELETE(request: Request) {
     } else {
       // Delete specific IDs
       if (!ids || ids.length === 0) {
-        return NextResponse.json(
-          { message: "Nenhum ID fornecido" },
-          { status: 400 }
-        );
+        return fail("Nenhum ID fornecido", 400);
       }
 
       // Get user IDs
@@ -78,14 +75,8 @@ export async function DELETE(request: Request) {
       deletedCount = ids.length;
     }
 
-    return NextResponse.json({
-      message: `${deletedCount} responsável(is) excluído(s) com sucesso`,
-    });
+    return ok(null, { message: `${deletedCount} responsável(is) excluído(s) com sucesso` });
   } catch (error: any) {
-    console.error("Error bulk deleting parents:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir responsáveis" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao excluir responsáveis");
   }
 }

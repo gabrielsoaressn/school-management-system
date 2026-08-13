@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { created, forbidden, paginated, serverError, validationFailed } from "@/lib/api-response";
 
 const announcementSchema = z.object({
   title: z.string().min(3, 'Título deve ter no mínimo 3 caracteres'),
@@ -20,10 +21,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const body = await req.json();
@@ -74,25 +72,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: `Aviso publicado para ${filteredUsers.length} usuários!`,
-      data: announcement,
-    }, { status: 201 });
+    return created(announcement, { message: `Aviso publicado para ${filteredUsers.length} usuários!` });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors,
-      }, { status: 400 });
+      return validationFailed(error);
     }
-
-    console.error('Error creating announcement:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao criar aviso',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao criar aviso');
   }
 }
 
@@ -102,10 +87,7 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session) {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const { searchParams } = new URL(req.url);
@@ -164,21 +146,8 @@ export async function GET(req: NextRequest) {
       prisma.announcement.count({ where }),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: announcements,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return paginated(announcements, { total: total, page: page, limit: limit });
   } catch (error) {
-    console.error('Error fetching announcements:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar avisos',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar avisos');
   }
 }

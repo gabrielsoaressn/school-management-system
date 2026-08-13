@@ -94,7 +94,7 @@ export default function EnrollmentRequestsPage() {
 
       if (data.success) {
         setRequests(data.data);
-        setTotalPages(data.pagination.pages);
+        setTotalPages(data.pagination.totalPages);
         setTotal(data.pagination.total);
       }
     } catch (error) {
@@ -150,7 +150,7 @@ export default function EnrollmentRequestsPage() {
         setShowDetailsModal(false);
         fetchRequests();
       } else {
-        toast.error(data.message || 'Erro ao processar solicitação');
+        toast.error(data.error || 'Erro ao processar solicitação');
       }
     } catch (error) {
       console.error('Error processing request:', error);

@@ -154,7 +154,7 @@ export default function StudentForm({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Erro ao criar aluno");
+        throw new Error(error.error || "Erro ao criar aluno");
       }
 
       const result = await response.json();

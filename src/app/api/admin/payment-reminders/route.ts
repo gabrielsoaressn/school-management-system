@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { created, fail, forbidden, notFound, paginated, serverError, validationFailed } from "@/lib/api-response";
 
 const reminderSchema = z.object({
   billingId: z.string(),
@@ -24,10 +25,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const body = await req.json();
@@ -48,10 +46,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (billings.length === 0) {
-        return NextResponse.json({
-          success: false,
-          message: 'Nenhuma fatura encontrada para enviar lembretes',
-        }, { status: 400 });
+        return fail('Nenhuma fatura encontrada para enviar lembretes');
       }
 
       // Criar lembretes em lote
@@ -101,11 +96,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        message: `${reminders.length} lembretes enviados com sucesso!`,
-        data: reminders,
-      }, { status: 201 });
+      return created(reminders, { message: `${reminders.length} lembretes enviados com sucesso!` });
     } else {
       // Envio individual
       const validatedData = reminderSchema.parse(body);
@@ -116,10 +107,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (!billing) {
-        return NextResponse.json({
-          success: false,
-          message: 'Fatura não encontrada',
-        }, { status: 404 });
+        return notFound('Fatura não encontrada');
       }
 
       const reminder = await prisma.paymentReminder.create({
@@ -161,26 +149,13 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        message: 'Lembrete enviado com sucesso!',
-        data: reminder,
-      }, { status: 201 });
+      return created(reminder, { message: 'Lembrete enviado com sucesso!' });
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors,
-      }, { status: 400 });
+      return validationFailed(error);
     }
-
-    console.error('Error sending reminder:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao enviar lembrete',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao enviar lembrete');
   }
 }
 
@@ -190,10 +165,7 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const { searchParams } = new URL(req.url);
@@ -232,21 +204,8 @@ export async function GET(req: NextRequest) {
       prisma.paymentReminder.count({ where }),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: reminders,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return paginated(reminders, { total: total, page: page, limit: limit });
   } catch (error) {
-    console.error('Error fetching reminders:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar lembretes',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar lembretes');
   }
 }

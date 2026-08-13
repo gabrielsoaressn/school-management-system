@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { created, forbidden, paginated, serverError, validationFailed } from "@/lib/api-response";
 
 const occurrenceSchema = z.object({
   studentId: z.string(),
@@ -20,10 +21,7 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'TEACHER')) {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const body = await req.json();
@@ -70,25 +68,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Ocorrência registrada com sucesso!',
-      data: occurrence,
-    }, { status: 201 });
+    return created(occurrence, { message: 'Ocorrência registrada com sucesso!' });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        message: 'Dados inválidos',
-        errors: error.errors,
-      }, { status: 400 });
+      return validationFailed(error);
     }
-
-    console.error('Error creating occurrence:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao registrar ocorrência',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao registrar ocorrência');
   }
 }
 
@@ -98,10 +83,7 @@ export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
 
     if (!session) {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const { searchParams } = new URL(req.url);
@@ -150,21 +132,8 @@ export async function GET(req: NextRequest) {
       prisma.occurrence.count({ where }),
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: occurrences,
-      pagination: {
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      },
-    });
+    return paginated(occurrences, { total: total, page: page, limit: limit });
   } catch (error) {
-    console.error('Error fetching occurrences:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar ocorrências',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar ocorrências');
   }
 }

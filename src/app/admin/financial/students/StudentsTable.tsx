@@ -57,7 +57,7 @@ export default function StudentsTable() {
         setTotalPages(data.pagination?.totalPages || 1);
         setTotalCount(data.pagination?.total || 0);
       } else {
-        const errorMsg = data.message || "Erro ao carregar alunos";
+        const errorMsg = data.error || "Erro ao carregar alunos";
         setError(errorMsg);
         toast.error(errorMsg);
       }
@@ -130,7 +130,7 @@ export default function StudentsTable() {
         setSelectAll(false);
         fetchStudents();
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao excluir alunos");

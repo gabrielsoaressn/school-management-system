@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ok, serverError, unauthorized } from "@/lib/api-response";
 
 // POST - Process recurring billings (create new billings from recurring ones)
 export async function POST(request: Request) {
@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const today = new Date();
@@ -31,10 +31,7 @@ export async function POST(request: Request) {
     });
 
     if (recurringBillings.length === 0) {
-      return NextResponse.json({
-        message: "Nenhuma cobrança recorrente pendente para processar",
-        data: { processed: 0 },
-      });
+      return ok({ processed: 0 }, { message: "Nenhuma cobrança recorrente pendente para processar" });
     }
 
     // Process each recurring billing
@@ -108,19 +105,12 @@ export async function POST(request: Request) {
     const successCount = results.filter((r) => r.success).length;
     const failureCount = results.filter((r) => !r.success).length;
 
-    return NextResponse.json({
-      message: `Processadas ${successCount} cobranças recorrentes com sucesso`,
-      data: {
+    return ok({
         processed: successCount,
         failed: failureCount,
         details: results,
-      },
-    });
+      }, { message: `Processadas ${successCount} cobranças recorrentes com sucesso` });
   } catch (error: any) {
-    console.error("Error processing recurring billings:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao processar cobranças recorrentes" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao processar cobranças recorrentes");
   }
 }

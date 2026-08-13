@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 
 // GET - Get single employee
 export async function GET(
@@ -12,7 +12,7 @@ export async function GET(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const employee = await prisma.employee.findUnique({
@@ -35,19 +35,12 @@ export async function GET(
     });
 
     if (!employee) {
-      return NextResponse.json(
-        { message: "Funcionário não encontrado" },
-        { status: 404 }
-      );
+      return fail("Funcionário não encontrado", 404);
     }
 
-    return NextResponse.json({ data: employee });
+    return ok(employee);
   } catch (error: any) {
-    console.error("Error fetching employee:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar funcionário" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao buscar funcionário");
   }
 }
 
@@ -61,7 +54,7 @@ export async function PUT(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -90,10 +83,7 @@ export async function PUT(
     });
 
     if (!existingEmployee) {
-      return NextResponse.json(
-        { message: "Funcionário não encontrado" },
-        { status: 404 }
-      );
+      return fail("Funcionário não encontrado", 404);
     }
 
     // Check if CPF is being changed and if it's already in use
@@ -103,10 +93,7 @@ export async function PUT(
       });
 
       if (existingCpf) {
-        return NextResponse.json(
-          { message: "CPF já está cadastrado" },
-          { status: 400 }
-        );
+        return fail("CPF já está cadastrado", 400);
       }
     }
 
@@ -144,16 +131,9 @@ export async function PUT(
       return updatedEmployee;
     });
 
-    return NextResponse.json({
-      message: "Funcionário atualizado com sucesso",
-      data: result,
-    });
+    return ok(result, { message: "Funcionário atualizado com sucesso" });
   } catch (error: any) {
-    console.error("Error updating employee:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao atualizar funcionário" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao atualizar funcionário");
   }
 }
 
@@ -167,7 +147,7 @@ export async function DELETE(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     // Check if employee exists
@@ -180,23 +160,14 @@ export async function DELETE(
     });
 
     if (!employee) {
-      return NextResponse.json(
-        { message: "Funcionário não encontrado" },
-        { status: 404 }
-      );
+      return fail("Funcionário não encontrado", 404);
     }
 
     // Check if employee has payroll records
     const hasPayrolls = employee.payrolls.length > 0;
 
     if (hasPayrolls) {
-      return NextResponse.json(
-        {
-          message:
-            "Não é possível excluir um funcionário com registros de pagamento. Considere desativá-lo.",
-        },
-        { status: 400 }
-      );
+      return fail("Não é possível excluir um funcionário com registros de pagamento. Considere desativá-lo.", 400);
     }
 
     // Delete employee (user will be deleted by cascade)
@@ -204,14 +175,8 @@ export async function DELETE(
       where: { id: employee.userId },
     });
 
-    return NextResponse.json({
-      message: "Funcionário excluído com sucesso",
-    });
+    return ok(null, { message: "Funcionário excluído com sucesso" });
   } catch (error: any) {
-    console.error("Error deleting employee:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir funcionário" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao excluir funcionário");
   }
 }

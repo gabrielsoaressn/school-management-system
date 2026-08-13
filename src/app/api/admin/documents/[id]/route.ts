@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { forbidden, notFound, ok, serverError } from "@/lib/api-response";
 
 // GET - Buscar documento específico
 export async function GET(
@@ -13,10 +14,7 @@ export async function GET(
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const document = await prisma.generatedDocument.findUnique({
@@ -32,21 +30,11 @@ export async function GET(
     });
 
     if (!document) {
-      return NextResponse.json({
-        success: false,
-        message: 'Documento não encontrado',
-      }, { status: 404 });
+      return notFound('Documento não encontrado');
     }
 
-    return NextResponse.json({
-      success: true,
-      data: document,
-    });
+    return ok(document);
   } catch (error) {
-    console.error('Error fetching document:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar documento',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar documento');
   }
 }

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 
 export async function POST(
   request: Request,
@@ -10,7 +10,7 @@ export async function POST(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const { id } = await params;
@@ -21,17 +21,11 @@ export async function POST(
     });
 
     if (!billing) {
-      return NextResponse.json(
-        { message: "Cobrança não encontrada" },
-        { status: 404 }
-      );
+      return fail("Cobrança não encontrada", 404);
     }
 
     if (billing.status !== "DRAFT") {
-      return NextResponse.json(
-        { message: "Esta cobrança já foi processada" },
-        { status: 400 }
-      );
+      return fail("Esta cobrança já foi processada", 400);
     }
 
     // Update status to PENDING
@@ -43,14 +37,8 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({
-      message: "Cobrança aprovada com sucesso",
-    });
+    return ok(null, { message: "Cobrança aprovada com sucesso" });
   } catch (error: any) {
-    console.error("Error approving billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao aprovar cobrança" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao aprovar cobrança");
   }
 }

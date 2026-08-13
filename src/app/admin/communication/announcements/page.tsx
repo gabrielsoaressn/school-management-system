@@ -106,7 +106,7 @@ export default function AnnouncementsPage() {
         });
         fetchAnnouncements();
       } else {
-        toast.error(data.message || 'Erro ao publicar aviso');
+        toast.error(data.error || 'Erro ao publicar aviso');
       }
     } catch (error) {
       console.error('Error creating announcement:', error);

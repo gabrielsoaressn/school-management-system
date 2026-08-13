@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { fail, forbidden, notFound, ok, serverError } from "@/lib/api-response";
 
 // GET - Obter detalhes de uma solicitação específica
 export async function GET(
@@ -28,23 +29,13 @@ export async function GET(
     });
 
     if (!enrollmentRequest) {
-      return NextResponse.json({
-        success: false,
-        message: 'Solicitação não encontrada',
-      }, { status: 404 });
+      return notFound('Solicitação não encontrada');
     }
 
-    return NextResponse.json({
-      success: true,
-      data: enrollmentRequest,
-    });
+    return ok(enrollmentRequest);
 
   } catch (error) {
-    console.error('Error fetching enrollment request:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao buscar solicitação',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao buscar solicitação');
   }
 }
 
@@ -58,10 +49,7 @@ export async function PUT(
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     const body = await req.json();
@@ -72,17 +60,11 @@ export async function PUT(
     });
 
     if (!enrollmentRequest) {
-      return NextResponse.json({
-        success: false,
-        message: 'Solicitação não encontrada',
-      }, { status: 404 });
+      return notFound('Solicitação não encontrada');
     }
 
     if (enrollmentRequest.status !== 'PENDING' && enrollmentRequest.status !== 'UNDER_REVIEW') {
-      return NextResponse.json({
-        success: false,
-        message: 'Esta solicitação já foi processada',
-      }, { status: 400 });
+      return fail('Esta solicitação já foi processada');
     }
 
     if (action === 'approve') {
@@ -224,11 +206,7 @@ export async function PUT(
         return { student, parent };
       });
 
-      return NextResponse.json({
-        success: true,
-        message: 'Matrícula aprovada com sucesso!',
-        data: result,
-      });
+      return ok(result, { message: 'Matrícula aprovada com sucesso!' });
 
     } else if (action === 'reject') {
       // Rejeitar solicitação
@@ -243,25 +221,14 @@ export async function PUT(
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        message: 'Solicitação rejeitada',
-      });
+      return ok(null, { message: 'Solicitação rejeitada' });
 
     } else {
-      return NextResponse.json({
-        success: false,
-        message: 'Ação inválida',
-      }, { status: 400 });
+      return fail('Ação inválida');
     }
 
   } catch (error) {
-    console.error('Error processing enrollment request:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao processar solicitação',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao processar solicitação');
   }
 }
 
@@ -275,10 +242,7 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
 
     if (!session || session.user.role !== 'ADMIN') {
-      return NextResponse.json({
-        success: false,
-        message: 'Não autorizado',
-      }, { status: 403 });
+      return forbidden();
     }
 
     await prisma.enrollmentRequest.update({
@@ -288,16 +252,9 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Solicitação cancelada',
-    });
+    return ok(null, { message: 'Solicitação cancelada' });
 
   } catch (error) {
-    console.error('Error cancelling enrollment request:', error);
-    return NextResponse.json({
-      success: false,
-      message: 'Erro ao cancelar solicitação',
-    }, { status: 500 });
+    return serverError(error, 'Erro ao cancelar solicitação');
   }
 }

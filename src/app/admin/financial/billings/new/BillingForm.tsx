@@ -66,7 +66,7 @@ export default function BillingForm({ parents }: BillingFormProps) {
         toast.success(data.message);
         router.push("/admin/financial/billings");
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao criar cobrança");

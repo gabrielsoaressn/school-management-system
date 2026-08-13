@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { fail, ok, serverError, unauthorized } from "@/lib/api-response";
 
 // GET - Get single billing
 export async function GET(
@@ -12,7 +12,7 @@ export async function GET(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const billing = await prisma.billing.findUnique({
@@ -38,19 +38,12 @@ export async function GET(
     });
 
     if (!billing) {
-      return NextResponse.json(
-        { message: "Cobrança não encontrada" },
-        { status: 404 }
-      );
+      return fail("Cobrança não encontrada", 404);
     }
 
-    return NextResponse.json({ data: billing });
+    return ok(billing);
   } catch (error: any) {
-    console.error("Error fetching billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar cobrança" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao buscar cobrança");
   }
 }
 
@@ -64,7 +57,7 @@ export async function PUT(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const body = await request.json();
@@ -88,10 +81,7 @@ export async function PUT(
     });
 
     if (!existingBilling) {
-      return NextResponse.json(
-        { message: "Cobrança não encontrada" },
-        { status: 404 }
-      );
+      return fail("Cobrança não encontrada", 404);
     }
 
     // Calculate next billing date if recurring settings changed
@@ -143,16 +133,9 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({
-      message: "Cobrança atualizada com sucesso",
-      data: updatedBilling,
-    });
+    return ok(updatedBilling, { message: "Cobrança atualizada com sucesso" });
   } catch (error: any) {
-    console.error("Error updating billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao atualizar cobrança" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao atualizar cobrança");
   }
 }
 
@@ -166,7 +149,7 @@ export async function DELETE(
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     // Check if billing exists
@@ -175,21 +158,12 @@ export async function DELETE(
     });
 
     if (!billing) {
-      return NextResponse.json(
-        { message: "Cobrança não encontrada" },
-        { status: 404 }
-      );
+      return fail("Cobrança não encontrada", 404);
     }
 
     // Don't allow deletion of paid billings
     if (billing.status === "PAID") {
-      return NextResponse.json(
-        {
-          message:
-            "Não é possível excluir uma cobrança que já foi paga. Considere cancelá-la.",
-        },
-        { status: 400 }
-      );
+      return fail("Não é possível excluir uma cobrança que já foi paga. Considere cancelá-la.", 400);
     }
 
     // Delete billing
@@ -197,14 +171,8 @@ export async function DELETE(
       where: { id: id },
     });
 
-    return NextResponse.json({
-      message: "Cobrança excluída com sucesso",
-    });
+    return ok(null, { message: "Cobrança excluída com sucesso" });
   } catch (error: any) {
-    console.error("Error deleting billing:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao excluir cobrança" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao excluir cobrança");
   }
 }

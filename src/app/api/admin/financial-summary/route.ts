@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ok, serverError, unauthorized } from "@/lib/api-response";
 
 // GET - Financial summary for dashboard
 export async function GET(request: Request) {
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const user = await getCurrentUser();
 
     if (!user || user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      return unauthorized();
     }
 
     const { searchParams } = new URL(request.url);
@@ -231,12 +231,8 @@ export async function GET(request: Request) {
       },
     };
 
-    return NextResponse.json({ data: summary });
+    return ok(summary);
   } catch (error: any) {
-    console.error("Error fetching financial summary:", error);
-    return NextResponse.json(
-      { message: error.message || "Erro ao buscar resumo financeiro" },
-      { status: 500 }
-    );
+    return serverError(error, "Erro ao buscar resumo financeiro");
   }
 }

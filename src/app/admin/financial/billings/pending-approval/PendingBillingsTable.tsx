@@ -30,7 +30,7 @@ export default function PendingBillingsTable() {
       if (response.ok) {
         setBillings(data.data);
       } else {
-        toast.error(data.message || "Erro ao carregar cobranças");
+        toast.error(data.error || "Erro ao carregar cobranças");
       }
     } catch (error) {
       toast.error("Erro ao carregar cobranças");
@@ -56,7 +56,7 @@ export default function PendingBillingsTable() {
         toast.success(`Cobrança ${invoiceNumber} aprovada!`);
         fetchPendingBillings();
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao aprovar cobrança");
@@ -82,7 +82,7 @@ export default function PendingBillingsTable() {
         toast.success(`Cobrança ${invoiceNumber} rejeitada e cancelada`);
         fetchPendingBillings();
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao rejeitar cobrança");
@@ -108,7 +108,7 @@ export default function PendingBillingsTable() {
         toast.success(data.message);
         fetchPendingBillings();
       } else {
-        toast.error(data.message);
+        toast.error(data.error);
       }
     } catch (error) {
       toast.error("Erro ao aprovar cobranças");
