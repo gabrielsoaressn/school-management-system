@@ -1,16 +1,11 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Link from "next/link";
 import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import StudentForm from "./StudentForm";
 
 export default async function NewStudentPage() {
-  const user = await getCurrentUser();
-
-  if (!user || user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  await requirePermission("student:write");
 
   // Fetch parents for the form
   const parents = await prisma.parent.findMany({

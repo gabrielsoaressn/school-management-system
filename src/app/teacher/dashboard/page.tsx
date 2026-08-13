@@ -31,7 +31,11 @@ export default function TeacherDashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
-    } else if (status === 'authenticated' && session?.user?.role !== 'TEACHER') {
+    } else if (
+      status === 'authenticated' &&
+      session?.user?.role !== 'TEACHER' &&
+      session?.user?.role !== 'ADMIN'
+    ) {
       router.push('/login');
     }
   }, [status, session, router]);

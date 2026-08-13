@@ -1,18 +1,9 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Logo from "@/components/ui/logo";
 import ParentForm from "./ParentForm";
 
 export default async function NewParentPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  const user = await requirePermission("parent:write");
 
   return (
     <div className="min-h-screen bg-gray-50">

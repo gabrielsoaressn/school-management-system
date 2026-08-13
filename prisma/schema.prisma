@@ -18,7 +18,12 @@ enum UserRole {
   ADMIN
   PARENT
   STUDENT
-  TEACHER // 🆕 Adicionado para login de professores
+  TEACHER
+  SECRETARY
+  COORDINATOR
+  FINANCE
+  /// Employee with a login but no portal access (support staff).
+  STAFF
 }
 
 enum Gender {

@@ -1,19 +1,10 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import BillingForm from "./BillingForm";
 
 export default async function NewBillingPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  const user = await requirePermission("billing:write");
 
   // Fetch parents for the dropdown
   const parents = await prisma.parent.findMany({

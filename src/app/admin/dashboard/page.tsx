@@ -1,5 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import FloatingAddButton from "@/components/FloatingAddButton";
@@ -9,15 +8,7 @@ import Card from "@/components/ui/Card";
 import { Users, GraduationCap, BookOpen, TrendingUp } from "lucide-react";
 
 export default async function AdminDashboard() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  const user = await requirePermission("admin:panel");
 
   // Fetch dashboard data
   const [studentsCount, teachersCount, classesCount, monthlyRevenue, pendingEnrollments] = await Promise.all([

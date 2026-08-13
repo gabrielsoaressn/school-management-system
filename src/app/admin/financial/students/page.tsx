@@ -1,5 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Link from "next/link";
 import PageHeader from "@/components/layout/PageHeader";
 import PageWrapper from "@/components/layout/PageWrapper";
@@ -10,15 +9,7 @@ import StudentsTable from "./StudentsTable";
 import { GraduationCap } from "lucide-react";
 
 export default async function StudentsPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  const user = await requirePermission("student:read");
 
   return (
     <>

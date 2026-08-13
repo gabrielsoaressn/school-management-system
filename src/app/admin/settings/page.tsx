@@ -1,5 +1,4 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import PageHeader from "@/components/layout/PageHeader";
 import PageWrapper from "@/components/layout/PageWrapper";
 import BackButton from "@/components/ui/BackButton";
@@ -8,15 +7,7 @@ import { prisma } from "@/lib/prisma";
 import SettingsForm from "@/components/settings/SettingsForm";
 
 export default async function SettingsPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  const user = await requirePermission("settings:write");
 
   // Fetch all settings
   const settings = await prisma.settings.findMany({

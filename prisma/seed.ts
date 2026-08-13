@@ -209,14 +209,16 @@ async function main() {
 
   // Create additional staff members
   console.log('👥 Criando equipe de apoio...');
+  // `role` is the login role: support staff must not get admin access.
   const staffMembers = [
-    { type: EmployeeType.COORDINATOR, position: 'Coordenador Pedagógico', salary: 8000 },
-    { type: EmployeeType.PSYCHOLOGIST, position: 'Psicólogo Escolar', salary: 6000 },
-    { type: EmployeeType.ADMINISTRATIVE, position: 'Secretário', salary: 4000 },
-    { type: EmployeeType.CLASSROOM_ASSISTANT, position: 'Auxiliar de Sala', salary: 3000 },
-    { type: EmployeeType.HALLWAY_ASSISTANT, position: 'Auxiliar de Corredor', salary: 2800 },
-    { type: EmployeeType.MAINTENANCE, position: 'Zelador', salary: 2500 },
-    { type: EmployeeType.CLEANING, position: 'Auxiliar de Limpeza', salary: 2300 },
+    { type: EmployeeType.COORDINATOR, position: 'Coordenador Pedagógico', salary: 8000, role: UserRole.COORDINATOR },
+    { type: EmployeeType.ADMINISTRATIVE, position: 'Secretário', salary: 4000, role: UserRole.SECRETARY },
+    { type: EmployeeType.ADMINISTRATIVE, position: 'Analista Financeiro', salary: 5000, role: UserRole.FINANCE },
+    { type: EmployeeType.PSYCHOLOGIST, position: 'Psicólogo Escolar', salary: 6000, role: UserRole.STAFF },
+    { type: EmployeeType.CLASSROOM_ASSISTANT, position: 'Auxiliar de Sala', salary: 3000, role: UserRole.STAFF },
+    { type: EmployeeType.HALLWAY_ASSISTANT, position: 'Auxiliar de Corredor', salary: 2800, role: UserRole.STAFF },
+    { type: EmployeeType.MAINTENANCE, position: 'Zelador', salary: 2500, role: UserRole.STAFF },
+    { type: EmployeeType.CLEANING, position: 'Auxiliar de Limpeza', salary: 2300, role: UserRole.STAFF },
   ];
 
   for (let i = 0; i < staffMembers.length; i++) {
@@ -229,7 +231,7 @@ async function main() {
       data: {
         email: `staff${i + 1}@davilla.com`,
         password: hashedPassword,
-        role: UserRole.ADMIN,
+        role: staff.role,
         isActive: true,
       },
     });
@@ -282,7 +284,7 @@ async function main() {
       data: {
         email: `professor${i}@davilla.com`,
         password: hashedPassword,
-        role: UserRole.ADMIN,
+        role: UserRole.TEACHER,
         isActive: true,
       },
     });

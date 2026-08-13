@@ -1,18 +1,9 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Logo from "@/components/ui/logo";
 import EmployeeForm from "./EmployeeForm";
 
 export default async function NewEmployeePage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  const user = await requirePermission("employee:write");
 
   return (
     <div className="min-h-screen bg-gray-50">

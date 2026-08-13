@@ -1,19 +1,10 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import PayrollForm from "./PayrollForm";
 
 export default async function NewPayrollPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  const user = await requirePermission("payroll:write");
 
   // Fetch employees for the dropdown
   const employees = await prisma.employee.findMany({

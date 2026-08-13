@@ -26,12 +26,12 @@ export default function LoginPage() {
       if (result?.error) {
         toast.error(result.error);
       } else {
-        toast.success("Login successful!");
+        toast.success("Login realizado com sucesso!");
         router.push("/");
         router.refresh();
       }
     } catch (error) {
-      toast.error("An error occurred during login");
+      toast.error("Erro ao entrar. Tente novamente.");
     } finally {
       setIsLoading(false);
     }

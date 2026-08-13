@@ -1,19 +1,10 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Link from "next/link";
 import Logo from "@/components/ui/logo";
 import PayrollTable from "./PayrollTable";
 
 export default async function PayrollPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  if (user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  const user = await requirePermission("payroll:read");
 
   return (
     <div className="min-h-screen bg-gray-50">

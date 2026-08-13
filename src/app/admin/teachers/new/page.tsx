@@ -1,16 +1,11 @@
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission } from "@/lib/auth-guards";
 import Link from "next/link";
 import Logo from "@/components/ui/logo";
 import { prisma } from "@/lib/prisma";
 import TeacherForm from "./TeacherForm";
 
 export default async function NewTeacherPage() {
-  const user = await getCurrentUser();
-
-  if (!user || user.role !== "ADMIN") {
-    redirect("/login");
-  }
+  await requirePermission("employee:write");
 
   // Fetch subjects for the form (distinct by name to avoid duplicates)
   const allSubjects = await prisma.subject.findMany({
