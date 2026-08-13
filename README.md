@@ -86,8 +86,12 @@ duplica de propósito: as telas, porque as do app são componentes de servidor q
 consultam o banco.
 
 `.github/workflows/pages.yml` publica a cada push em `master` que toque
-`demo/`, `src/components/` ou a paleta. Requer, uma vez, **Settings → Pages →
-Source: GitHub Actions** no repositório.
+`demo/`, `src/components/` ou a paleta, e também sob demanda pelo botão **Run
+workflow** na aba Actions. Depende de **Settings → Pages → Source: GitHub
+Actions**; com "Deploy from a branch" o job de deploy falha na hora, sem rodar
+nenhum passo, porque o ambiente `github-pages` não existe nessa configuração.
+
+A branch `gh-pages` é resquício da configuração anterior e não é mais servida.
 
 ```bash
 npm run demo:dev                     # localhost:3001, sem basePath
