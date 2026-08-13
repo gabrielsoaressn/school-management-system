@@ -13,7 +13,6 @@ export default async function ParentsPage() {
 
   return (
     <>
-      <PageHeader />
 
       <PageWrapper>
         <div className="flex items-center justify-between mb-6">

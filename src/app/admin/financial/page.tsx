@@ -203,7 +203,6 @@ export default async function FinancialDashboard() {
 
   return (
     <>
-      <PageHeader />
 
       <PageWrapper>
         <div className="flex items-center justify-between mb-6">

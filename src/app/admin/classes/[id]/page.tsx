@@ -43,7 +43,6 @@ export default async function ClassDetailPage({ params }: Props) {
 
   return (
     <>
-      <PageHeader />
 
       <PageWrapper>
         <div className="mb-6">

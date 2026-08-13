@@ -26,7 +26,7 @@ Cada item registra o contexto necessário para ser retomado sem redescobrir o pr
   `api/admin/students/route.ts:287`) e `INV2026000001` (criação manual,
   `api/admin/billings/route.ts:138`). Unificado na Fase 3.4.
 
-## Integração com PSP brasileiro (substitui Stripe)
+## Integração com PSP brasileiro (Stripe removido do projeto na fase 5.9)
 
 Stripe foi removido do projeto (Fase 5.9) — a decisão é usar um PSP brasileiro com boleto + PIX
 (candidatos: Asaas, Iugu, Efí, Cora). Escopo da integração quando houver conta:

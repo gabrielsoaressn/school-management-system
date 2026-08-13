@@ -34,7 +34,6 @@ export default async function ClassesPage() {
 
   return (
     <>
-      <PageHeader />
 
       <PageWrapper>
         <div className="mb-6">

@@ -18,7 +18,6 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader />
 
       <PageWrapper>
         <div className="flex items-center justify-between mb-6">

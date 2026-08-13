@@ -37,7 +37,6 @@ export default async function AdminDashboard() {
 
   return (
     <>
-      <PageHeader />
       <PageWrapper>
         <Card>
           {/* Header Section */}
