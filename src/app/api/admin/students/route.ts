@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { getSettingAsNumber, getSettingAsBoolean } from "@/lib/settings";
 import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { hashPassword, validatePassword } from "@/lib/password";
 
 // GET - List all students
 export const GET = withAuth(async (request, { user }) => {
@@ -155,8 +155,22 @@ export const POST = withAuth(async (request, { user }) => {
     const billingDueDay = await getSettingAsNumber('billing_due_day', 10);
 
     // Hash passwords
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const hashedParentPassword = parentPassword ? await bcrypt.hash(parentPassword, 10) : null;
+    // Passwords typed by the staff still have to clear the policy, and the
+    // account owner must replace them on first login.
+    const studentCheck = validatePassword(password, { email });
+    if (!studentCheck.valid) {
+      return fail(studentCheck.errors[0], 400, { errors: studentCheck.errors });
+    }
+
+    if (parentPassword) {
+      const parentCheck = validatePassword(parentPassword, { email: parentEmail });
+      if (!parentCheck.valid) {
+        return fail(parentCheck.errors[0], 400, { errors: parentCheck.errors });
+      }
+    }
+
+    const hashedPassword = await hashPassword(password);
+    const hashedParentPassword = parentPassword ? await hashPassword(parentPassword) : null;
 
     // Generate unique student ID
     const studentCount = await prisma.student.count();
@@ -175,6 +189,7 @@ export const POST = withAuth(async (request, { user }) => {
             password: hashedParentPassword!,
             role: "PARENT",
             isActive: true,
+            mustChangePassword: true,
           },
         });
 
@@ -201,6 +216,7 @@ export const POST = withAuth(async (request, { user }) => {
           password: hashedPassword,
           role: "STUDENT",
           isActive: true,
+          mustChangePassword: true,
         },
       });
 

@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { created, fail, paginated, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
 import { userRoleForEmployeeType } from "@/lib/employee-types";
 import { redactEmployeeList } from "@/lib/redact";
+import { hashPassword, validatePassword } from "@/lib/password";
 
 // GET - List all employees
 export const GET = withAuth(async (request, { user }) => {
@@ -135,8 +135,12 @@ export const POST = withAuth(async (request, { user }) => {
       }
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const passwordCheck = validatePassword(password, { email });
+    if (!passwordCheck.valid) {
+      return fail(passwordCheck.errors[0], 400, { errors: passwordCheck.errors });
+    }
+
+    const hashedPassword = await hashPassword(password);
 
     // Generate unique employee ID
     const employeeCount = await prisma.employee.count();
@@ -151,6 +155,7 @@ export const POST = withAuth(async (request, { user }) => {
           password: hashedPassword,
           role: userRoleForEmployeeType(employeeType),
           isActive: true,
+          mustChangePassword: true,
         },
       });
 

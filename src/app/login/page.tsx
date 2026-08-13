@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Logo from "@/components/ui/logo";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -89,33 +90,55 @@ export default function LoginPage() {
           >
             {isLoading ? "Entrando..." : "Entrar"}
           </button>
+
+          <div className="text-center">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-primary hover:underline"
+            >
+              Esqueci minha senha
+            </Link>
+          </div>
         </form>
 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+        {/* Seed credentials, useful in development and never shipped. */}
+        {process.env.NODE_ENV !== "production" && (
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Contas de teste (apenas em desenvolvimento)
+                </span>
+              </div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Contas de Teste</span>
-            </div>
-          </div>
 
-          <div className="mt-4 space-y-2 text-xs text-gray-600">
-            <p>
-              <span className="font-semibold">Admin:</span> admin@davilla.com /
-              password123
-            </p>
-            <p>
-              <span className="font-semibold">Responsável:</span> responsavel1@davilla.com
-              / password123
-            </p>
-            <p>
-              <span className="font-semibold">Aluno:</span>{" "}
-              aluno1@davilla.com / password123
-            </p>
+            <div className="mt-4 space-y-2 text-xs text-gray-600">
+              <p>
+                <span className="font-semibold">Admin:</span> admin@davilla.com
+              </p>
+              <p>
+                <span className="font-semibold">Financeiro:</span> staff3@davilla.com
+              </p>
+              <p>
+                <span className="font-semibold">Secretaria:</span> staff2@davilla.com
+              </p>
+              <p>
+                <span className="font-semibold">Professor:</span> professor1@davilla.com
+              </p>
+              <p>
+                <span className="font-semibold">Responsável:</span>{" "}
+                responsavel1@davilla.com
+              </p>
+              <p>
+                <span className="font-semibold">Aluno:</span> aluno1@davilla.com
+              </p>
+              <p className="pt-1 text-gray-500">Senha de todas: password123</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

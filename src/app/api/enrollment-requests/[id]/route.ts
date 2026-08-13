@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import bcrypt from 'bcryptjs';
 import { fail, forbidden, notFound, ok, serverError } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { generateTemporaryPassword, hashPassword } from "@/lib/password";
+import { sendTemporaryPasswordEmail } from "@/lib/notifications";
 
 // GET - Obter detalhes de uma solicitação específica
 export const GET = withAuth<{ params: Promise<{ id: string }> }>(async (request, { params, user }) => {
@@ -60,13 +61,18 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
       // Aprovar e criar aluno + responsável
       const result = await prisma.$transaction(async (tx) => {
         // 1. Criar usuário para o responsável financeiro
-        const hashedPassword = await bcrypt.hash('senha123', 10);
+        // One temporary password per account, never shared between them.
+        const parentTemporaryPassword = generateTemporaryPassword();
+        const studentTemporaryPassword = generateTemporaryPassword();
+        const hashedParentPassword = await hashPassword(parentTemporaryPassword);
+        const hashedStudentPassword = await hashPassword(studentTemporaryPassword);
         const parentUser = await tx.user.create({
           data: {
             email: enrollmentRequest.financialGuardianEmail,
-            password: hashedPassword,
+            password: hashedParentPassword,
             role: 'PARENT',
             isActive: true,
+            mustChangePassword: true,
           },
         });
 
@@ -103,10 +109,11 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
         // 4. Criar usuário para o aluno
         const studentUser = await tx.user.create({
           data: {
-            email: `${studentId.toLowerCase()}@student.school.com`,
-            password: hashedPassword,
+            email: `${studentId.toLowerCase()}@aluno.davilla.local`,
+            password: hashedStudentPassword,
             role: 'STUDENT',
             isActive: true,
+            mustChangePassword: true,
           },
         });
 
@@ -149,9 +156,10 @@ export const PUT = withAuth<{ params: Promise<{ id: string }> }>(async (request,
             const pedUser = await tx.user.create({
               data: {
                 email: enrollmentRequest.pedagogicalGuardianEmail || `${enrollmentRequest.pedagogicalGuardianCPF}@parent.school.com`,
-                password: hashedPassword,
+                password: await hashPassword(generateTemporaryPassword()),
                 role: 'PARENT',
                 isActive: true,
+                mustChangePassword: true,
               },
             });
 

@@ -25,6 +25,11 @@ export default withAuth(
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
+    // Accounts created with a temporary password cannot go anywhere else.
+    if (token?.mustChangePassword === true) {
+      return NextResponse.redirect(new URL("/trocar-senha", req.url));
+    }
+
     const permission = requiredPermissionFor(pathname);
 
     if (permission && !can({ role }, permission)) {

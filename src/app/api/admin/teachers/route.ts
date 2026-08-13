@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { created, fail, serverError, unauthorized } from "@/lib/api-response";
 import { withAuth } from "@/lib/api-auth";
+import { generateTemporaryPassword, hashPassword } from "@/lib/password";
+import { sendTemporaryPasswordEmail } from "@/lib/notifications";
 
 export const POST = withAuth(async (request, { user }) => {
   try {
@@ -23,9 +24,9 @@ export const POST = withAuth(async (request, { user }) => {
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(" ") || firstName;
 
-    // Generate a default password
-    const defaultPassword = "teacher123";
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    // First-access password: random, e-mailed, and must be replaced on login.
+    const temporaryPassword = generateTemporaryPassword();
+    const hashedPassword = await hashPassword(temporaryPassword);
 
     // Generate unique employee ID
     const employeeCount = await prisma.employee.count();
@@ -40,6 +41,7 @@ export const POST = withAuth(async (request, { user }) => {
           password: hashedPassword,
           role: "TEACHER",
           isActive: true,
+          mustChangePassword: true,
         },
       });
 
@@ -85,10 +87,12 @@ export const POST = withAuth(async (request, { user }) => {
       return { user: newUser, employee: newEmployee, teacher };
     });
 
-    return created(
-      { ...result, defaultPassword },
-      { message: "Professor criado com sucesso" }
-    );
+    await sendTemporaryPasswordEmail(email, temporaryPassword);
+
+    return created(result, {
+      message:
+        "Professor criado com sucesso. A senha provisória foi enviada por e-mail.",
+    });
   } catch (error: any) {
     return serverError(error, "Erro ao criar professor");
   }

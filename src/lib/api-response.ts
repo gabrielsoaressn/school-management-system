@@ -40,9 +40,33 @@ interface OkOptions {
   status?: number;
 }
 
+/**
+ * Keys that must never reach a client, stripped from every success payload at
+ * any depth. Creation endpoints used to return the new User row verbatim,
+ * bcrypt hash included, which is enough for an offline attack on that account.
+ */
+const NEVER_SERIALIZE = new Set(["password", "tokenHash"]);
+
+function stripSecrets<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripSecrets(item)) as unknown as T;
+  }
+
+  if (value instanceof Date || value === null || typeof value !== "object") {
+    return value;
+  }
+
+  const clean: Record<string, unknown> = {};
+  for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+    if (NEVER_SERIALIZE.has(key)) continue;
+    clean[key] = stripSecrets(nested);
+  }
+  return clean as T;
+}
+
 export function ok<T>(data: T, options: OkOptions = {}) {
   const { message, pagination, status = 200 } = options;
-  const body: ApiSuccessBody<T> = { success: true, data };
+  const body: ApiSuccessBody<T> = { success: true, data: stripSecrets(data) };
   if (message) body.message = message;
   if (pagination) body.pagination = pagination;
   return NextResponse.json(body, { status });
